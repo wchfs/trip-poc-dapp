@@ -2,6 +2,17 @@
 
 This DApp is based on the example Echo Rust DApp
 
+The real-life goal of this proof of concept:
+- Be able to pay for the parking based on your localization and predefined paid parking regions.
+
+Stages for this DApp:
+1. Be able to send GPS coordinates and check if the point is in the defined polygon (DONE)
+2. User interface that provides functionality to send user localization (Point with coordinates) (TODO)
+3. Be able to provide generated GEOJSON file that defines a new polygon or multi polygon.
+4. UI is able to GET GEOJSON and generate a map based on that data.
+5. User is able to pay.
+6. And there are a few other ideas!
+
 ## Running the back-end in host mode
 
 Docker Host environment up
@@ -52,5 +63,5 @@ The response should be something like this:
 [{"epoch":"0","input":"1","notice":"0","payload":"1"}]
 ```
 
-1 - means that point is in the zone
-0 - means that point is not in the zone
+- 1 - means that point is in the zone
+- 0 - means that point is not in the zone
