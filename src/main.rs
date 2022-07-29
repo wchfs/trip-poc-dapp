@@ -12,6 +12,9 @@
 
 use json::{object, JsonValue};
 use std::env;
+use hex::FromHex;
+use geo::{Coordinate, Point, LineString, Polygon};
+use geo::Contains;
 
 async fn print_response<T: hyper::body::HttpBody>(
     response: hyper::Response<T>,
@@ -43,17 +46,96 @@ fn process_initial(metadata: &JsonValue) -> Option<String> {
     return None;
 }
 
+fn point_mapper(mut _payload: String) -> Result<Point, String>
+{
+    //We don't need "0x" for conversion.
+    _payload.remove(0);
+    _payload.remove(0);
+
+    //Handling conversion: hex string -> vec<u8> -> &str -> String
+    let converted_string = match Vec::from_hex(&_payload) {
+        Ok(vec) => {
+            match std::str::from_utf8(&vec) {
+                Ok(v) => v.to_string(),
+                Err(_e) => panic!("Invalid UTF-8 sequence: {}", _e),
+            }
+        },
+        Err(_e) => panic!("Invalid HEX sequence: {}", _e)
+    };
+
+    //On default data format is: "{latitude},{longitude}"
+    let split = converted_string.split(",").collect::<Vec<&str>>();
+
+    //Check if we have an exact number of data.
+    if split.len() != 2 {
+        return Err(split.len().to_string());
+    }
+
+    return Ok(
+        Point(
+            Coordinate {
+                x: split[0].parse::<f64>().unwrap(),
+                y: split[1].parse::<f64>().unwrap()
+            }
+        )
+    );
+}
+
+fn get_polygon() -> Polygon
+{
+    //Mock-up data - geojson in the future
+    //Example point in the zone: 50.0565299987793,19.943540573120117
+    return Polygon::new(
+        LineString(
+            vec![
+                Coordinate {
+                    x: 50.05842838065494,
+                    y: 19.94080872302984
+                },
+                Coordinate {
+                    x: 50.05642587449102,
+                    y: 19.94541994324063
+                },
+                Coordinate {
+                    x: 50.05432662964047,
+                    y: 19.939593766165125
+                },
+            ]
+        ),
+        vec![]
+    );
+}
+
+fn is_in_the_toll_zone(gps_data: Point) -> bool
+{
+    // TODO This is the mock-up. In the python app, there is geojson here it needs to be thought out.
+    let polygon = get_polygon();
+
+    return polygon.contains(&gps_data);
+}
+
 pub async fn handle_advance(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
     request: JsonValue,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
-    let payload = request["data"]["payload"]
-        .as_str()
-        .ok_or("Missing payload")?;
+
+    //I created this function at first to convert GPGGA to a proper Point object but for now, we are using standard latitude and longitude.
+    let _point: Point = match point_mapper(request["data"]["payload"].to_string()) {
+        Ok(point) => point,
+        Err(_e) => panic!("Invalid GPS data: {}", _e),
+    };
+
+    //I'm not sure if this representation of boolean true and false is a good idea but let's leave it here for now.
+    let payload: &str = match is_in_the_toll_zone(_point) {
+        true => "1",
+        false => "0"
+    };
+
     println!("Adding notice");
-    let notice = object! {"payload" => format!("{}", payload)};
+    //Quick string -> hex conversion with "0x" prefix
+    let notice = object! {"payload" => format!("0x{}", hex::encode(payload))};
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")

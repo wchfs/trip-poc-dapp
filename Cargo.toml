@@ -8,3 +8,5 @@ authors = ["Alex Mikhalevich <alex.mikhalevich@cartesi.io>"]
 json = "0.12"
 hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
 tokio = { version = "1.18", features = ["macros", "rt-multi-thread"] }
+hex = { version = "0.4.3" }
+geo = { version = "0.22.1" }
