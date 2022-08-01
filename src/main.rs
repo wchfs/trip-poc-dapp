@@ -12,9 +12,12 @@
 
 use json::{object, JsonValue};
 use std::env;
+use std::fs;
 use hex::FromHex;
-use geo::{Coordinate, Point, LineString, Polygon};
+use geo::{Coordinate, Point};
 use geo::Contains;
+use geo_types::GeometryCollection;
+use geojson::{quick_collection, GeoJson};
 
 async fn print_response<T: hyper::body::HttpBody>(
     response: hyper::Response<T>,
@@ -63,7 +66,7 @@ fn point_mapper(mut _payload: String) -> Result<Point, String>
         Err(_e) => panic!("Invalid HEX sequence: {}", _e)
     };
 
-    //On default data format is: "{latitude},{longitude}"
+    //Default data format is: "{Longitude},{Latitude}"
     let split = converted_string.split(",").collect::<Vec<&str>>();
 
     //Check if we have an exact number of data.
@@ -81,34 +84,21 @@ fn point_mapper(mut _payload: String) -> Result<Point, String>
     );
 }
 
-fn get_polygon() -> Polygon
+fn get_polygon() -> GeometryCollection
 {
-    //Mock-up data - geojson in the future
-    //Example point in the zone: 50.0565299987793,19.943540573120117
-    return Polygon::new(
-        LineString(
-            vec![
-                Coordinate {
-                    x: 50.05842838065494,
-                    y: 19.94080872302984
-                },
-                Coordinate {
-                    x: 50.05642587449102,
-                    y: 19.94541994324063
-                },
-                Coordinate {
-                    x: 50.05432662964047,
-                    y: 19.939593766165125
-                },
-            ]
-        ),
-        vec![]
-    );
+    //Example point in the zone: 19.943540573120117,50.0565299987793
+    let geo_json_string = fs::read_to_string("map.geojson")
+        .expect("Something went wrong reading the file");
+
+    let geo_json: GeoJson = geo_json_string.parse::<GeoJson>().unwrap();
+
+    let collection: GeometryCollection<f64> = quick_collection(&geo_json).unwrap();
+
+    return collection;
 }
 
 fn is_in_the_toll_zone(gps_data: Point) -> bool
 {
-    // TODO This is the mock-up. In the python app, there is geojson here it needs to be thought out.
     let polygon = get_polygon();
 
     return polygon.contains(&gps_data);
