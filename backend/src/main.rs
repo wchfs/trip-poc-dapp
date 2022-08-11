@@ -87,7 +87,7 @@ fn point_mapper(mut _payload: String) -> Result<Point, String>
 fn get_polygon() -> GeometryCollection
 {
     //Example point in the zone: 19.943540573120117,50.0565299987793
-    let geo_json_string = fs::read_to_string("map.geojson")
+    let geo_json_string = fs::read_to_string("./map.geojson")
         .expect("Something went wrong reading the file");
 
     let geo_json: GeoJson = geo_json_string.parse::<GeoJson>().unwrap();
