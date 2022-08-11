@@ -105,19 +105,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "echo-backend"
-version = "0.3.0"
-dependencies = [
- "geo",
- "geo-types",
- "geojson",
- "hex",
- "hyper",
- "json",
- "tokio",
-]
-
-[[package]]
 name = "embedded-hal"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -456,6 +443,19 @@ name = "pin-utils"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
+
+[[package]]
+name = "point_in_polygon_dapp_paid_parking_assistant"
+version = "0.2.0"
+dependencies = [
+ "geo",
+ "geo-types",
+ "geojson",
+ "hex",
+ "hyper",
+ "json",
+ "tokio",
+]
 
 [[package]]
 name = "proc-macro2"

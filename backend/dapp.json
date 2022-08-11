@@ -1,7 +1,7 @@
 {
   "fs": {
     "files": [
-      "target/riscv64ima-cartesi-linux-gnu/release/echo-backend",
+      "target/riscv64ima-cartesi-linux-gnu/release/point_in_polygon_dapp_paid_parking_assistant",
       "entrypoint.sh"
     ]
   }
