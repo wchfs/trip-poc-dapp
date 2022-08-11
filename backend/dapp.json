@@ -2,7 +2,8 @@
   "fs": {
     "files": [
       "target/riscv64ima-cartesi-linux-gnu/release/point_in_polygon_dapp_paid_parking_assistant",
-      "entrypoint.sh"
+      "entrypoint.sh",
+      "map.geojson"
     ]
   }
 }
