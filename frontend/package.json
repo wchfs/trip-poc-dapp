@@ -1,0 +1,52 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "codegen": "run-p codegen:typechain codegen:graphql",
+    "codegen:graphql": "graphql-codegen",
+    "codegen:typechain": "typechain --target ethers-v5 --out-dir src/generated/rollups './node_modules/@cartesi/rollups/export/artifacts/**/*.json'"
+  },
+  "dependencies": {
+    "@cartesi/rollups": "^0.4.0",
+    "@graphql-codegen/cli": "^2.11.5",
+    "@types/geojson": "^7946.0.10",
+    "@urql/vue": "^0.6.4",
+    "@vue-leaflet/vue-leaflet": "^0.6.1",
+    "@web3-onboard/injected-wallets": "^2.0.15",
+    "@web3-onboard/vue": "^2.1.5",
+    "apollo-cache-inmemory": "^1.6.6",
+    "apollo-client": "^2.6.10",
+    "apollo-link": "^1.2.14",
+    "apollo-link-http": "^1.5.17",
+    "assert": "^2.0.0",
+    "axios": "^0.27.2",
+    "buffer": "^6.0.3",
+    "core-js": "^3.8.3",
+    "ethers": "^5.6.9",
+    "graphql": "^15.8.0",
+    "graphql-tag": "^2.12.6",
+    "pinia": "^2.0.17",
+    "stream": "^0.0.2",
+    "vue": "^3.2.13",
+    "vue-apollo": "^3.1.0",
+    "vue-router": "^4.0.3"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/typescript": "^2.4.8",
+    "@graphql-codegen/typescript-operations": "^2.3.5",
+    "@graphql-codegen/typescript-vue-apollo": "^3.3.3",
+    "@graphql-codegen/typescript-vue-urql": "^2.3.3",
+    "@graphql-typed-document-node/core": "^3.1.1",
+    "@typechain/ethers-v5": "^10.0.0",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "~4.5.5"
+  }
+}
