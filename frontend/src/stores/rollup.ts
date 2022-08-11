@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ContractTransaction, ethers } from 'ethers';
+import { ContractReceipt, ContractTransaction, ethers } from 'ethers';
 import {
     InputFacet,
     InputFacet__factory,
@@ -9,6 +9,9 @@ import {
     RollupsFacet__factory
 } from '@/generated/rollups';
 import { useWalletStore } from '@/stores/wallet';
+import { NoticeKeys } from '@/generated/graphql';
+import { InputAddedEvent } from '@/generated/rollups/contracts/interfaces/IInput';
+
 
 export interface RollupsContracts {
     rollupsContract: RollupsFacet;
@@ -19,17 +22,21 @@ export interface RollupsContracts {
 export interface RollupState {
     rollupsAddress: Record<string, any>,
     contracts: RollupsContracts | null,
-    transactions: ContractTransaction[],
+}
+
+export interface ContractTransactionResponse {
+    transaction: ContractTransaction,
+    receipt: ContractReceipt,
+    response: Promise<any>,
 }
 
 export const useRollupStore = defineStore('rollup', {
     state: (): RollupState => {
         return {
             rollupsAddress: {
-                "0x539": process.env.VUE_APP_DAPP_ADDRESS, // local hardhat
+                "0x7a69": process.env.VUE_APP_DAPP_ADDRESS, // local hardhat
             },
             contracts: null,
-            transactions: [],
         }
     },
     getters: {
@@ -81,19 +88,43 @@ export const useRollupStore = defineStore('rollup', {
                 outputContract,
             };
         },
-        addInput(input: string) {
+        addInput: async function (input: string): Promise<ContractTransactionResponse> {
             if (this.contracts === null) {
                 throw new Error('Please run rollups setup first');
             }
 
-            this.contracts
-                .inputContract
-                .addInput(input)
-                .then((transaction: ContractTransaction) => {
-                    console.log(transaction);
+            const transaction = await this.contracts.inputContract.addInput(
+                ethers.utils.toUtf8Bytes(input)
+            );
 
-                    this.transactions.push(transaction);
+            const receipt = await transaction.wait(1);
+
+            return new Promise<ContractTransactionResponse>((resolve) => {
+                resolve({
+                    transaction,
+                    receipt,
+                    response: new Promise<any>(async (resolve) => {
+                        const keys = this.findNoticeKeys(receipt);
+                        console.log(keys);
+                    }),
                 });
-        }
+            });
+        },
+        findNoticeKeys: function (receipt: ContractReceipt): NoticeKeys {
+            const event = receipt.events?.find((e) => e.event === "InputAdded");
+
+            if (!event) {
+                throw new Error(
+                    `InputAdded event not found in receipt of transaction ${receipt.transactionHash}`
+                );
+            }
+
+            const inputAdded = event as InputAddedEvent;
+
+            return {
+                epoch_index: inputAdded.args.epochNumber.toString(),
+                input_index: inputAdded.args.inputIndex.toString(),
+            };
+        },
     },
 });

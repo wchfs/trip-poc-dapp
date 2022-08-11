@@ -8,11 +8,6 @@ const routes: Array<RouteRecordRaw> = [
     name: 'home',
     component: HomeView
   },
-  {
-    path: '/map',
-    name: 'map',
-    component: MapView
-  },
 ]
 
 const router = createRouter({

@@ -9,7 +9,7 @@
     <div v-else>
       <l-map style="height:70vh" ref="map" v-model:zoom="zoom" :center="locationStore.coordsArray">
         <l-tile-layer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"
             layer-type="base"
             name="OpenStreetMap"
         ></l-tile-layer>
