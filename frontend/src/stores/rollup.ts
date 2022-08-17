@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore, getActivePinia } from 'pinia';
 import { ContractReceipt, ContractTransaction, ethers } from 'ethers';
 import {
     InputFacet,
@@ -11,6 +11,10 @@ import {
 import { useWalletStore } from '@/stores/wallet';
 import { NoticeKeys } from '@/generated/graphql';
 import { InputAddedEvent } from '@/generated/rollups/contracts/interfaces/IInput';
+import gql from 'graphql-tag';
+import { inject } from 'vue';
+import { DefaultApolloClient } from '@vue/apollo-composable';
+import { ApolloClient, ApolloQueryResult } from 'apollo-client';
 
 
 export interface RollupsContracts {
@@ -105,7 +109,40 @@ export const useRollupStore = defineStore('rollup', {
                     receipt,
                     response: new Promise<any>(async (resolve) => {
                         const keys = this.findNoticeKeys(receipt);
-                        console.log(keys);
+
+                        let result: ApolloQueryResult<any> | null = null;
+
+                        const intervalId = setInterval(async () => {
+                            result = await this.apolloClient.query({
+                                fetchPolicy: 'no-cache',
+                                query: gql`
+                                    query getNoticeByInputIndex(
+                                        $inputIndex: String,
+                                        $epochIndex: String,
+                                    ) {
+                                        GetNotice(query: {
+                                            input_index: $inputIndex,
+                                            epoch_index: $epochIndex,
+                                        }) {
+                                            payload,
+                                            session_id,
+                                            notice_index,
+                                        }
+                                    }
+                                `,
+                                variables: {
+                                    inputIndex: keys.input_index,
+                                    epochIndex: keys.epoch_index,
+                                },
+                            });
+
+                            if (result?.data?.GetNotice?.length > 0) {
+                                clearInterval(intervalId);
+                                resolve(
+                                    ethers.utils.toUtf8String(`0x${result.data.GetNotice[0].payload}`)
+                                );
+                            }
+                        }, 1000);
                     }),
                 });
             });
