@@ -1,5 +1,5 @@
-schema: ./graphql/schema.graphql
-documents: ./graphql/queries.graphql
+schema: ./src/graphql/schema.graphql
+documents: ./src/graphql/queries.graphql
 generates:
     ./src/generated/graphql/index.ts:
         plugins:
