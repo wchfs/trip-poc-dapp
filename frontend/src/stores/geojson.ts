@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { GeoJSON } from 'geojson';
+import type { GeoJSON } from 'geojson';
 import axios from 'axios';
 
 export const useGeoJsonStore = defineStore('geojson', {
