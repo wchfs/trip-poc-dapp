@@ -12,12 +12,20 @@
 
 use json::{object, JsonValue};
 use std::env;
-use std::fs;
 use hex::FromHex;
 use geo::{Coordinate, Point};
 use geo::Contains;
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
+
+use point_in_polygon_dapp_paid_parking_assistant::establish_connection;
+use point_in_polygon_dapp_paid_parking_assistant::models::Zone;
+
+extern crate point_in_polygon_dapp_paid_parking_assistant;
+extern crate diesel;
+
+use self::diesel::prelude::*;
+
 
 async fn print_response<T: hyper::body::HttpBody>(
     response: hyper::Response<T>,
@@ -84,12 +92,9 @@ fn point_mapper(mut _payload: String) -> Result<Point, String>
     );
 }
 
-fn get_polygon() -> GeometryCollection
+fn get_polygon(geo_json_string: String) -> GeometryCollection
 {
     //Example point in the zone: 19.943540573120117,50.0565299987793
-    let geo_json_string = fs::read_to_string("./map.geojson")
-        .expect("Something went wrong reading the file");
-
     let geo_json: GeoJson = geo_json_string.parse::<GeoJson>().unwrap();
 
     let collection: GeometryCollection<f64> = quick_collection(&geo_json).unwrap();
@@ -99,10 +104,30 @@ fn get_polygon() -> GeometryCollection
 
 fn is_in_the_toll_zone(gps_data: Point) -> bool
 {
-    let polygon = get_polygon();
+    let zones = get_all_zones();
+    for zone in zones {
+        let polygon = get_polygon(zone.geo_json);
 
-    return polygon.contains(&gps_data);
+        if polygon.contains(&gps_data) {
+            return true;
+        }
+    }
+
+    return false;
 }
+
+fn get_all_zones() -> Vec<Zone> {
+    use point_in_polygon_dapp_paid_parking_assistant::schema::zones::dsl::*;
+
+    let connection = establish_connection();
+    let results = zones
+        .limit(5)
+        .load::<Zone>(&connection)
+        .expect("Error loading zones");
+
+    return results;
+}
+
 
 pub async fn handle_advance(
     client: &hyper::Client<hyper::client::HttpConnector>,
@@ -142,18 +167,29 @@ pub async fn handle_inspect(
     request: JsonValue,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
-    let payload = request["data"]["payload"]
-        .as_str()
-        .ok_or("Missing payload")?;
+
+    // let payload = request["data"]["payload"]
+    //     .as_str()
+    //     .ok_or("Missing payload")?;
+
     println!("Adding report");
-    let report = object! {"payload" => format!("{}", payload)};
+
+    let zones = get_all_zones();
+
+    let payload = serde_json::to_string(&zones)?;
+
+    let report = object! {"payload" => format!("0x{}", hex::encode(payload))};
+
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .uri(format!("{}/report", server_addr))
         .body(hyper::Body::from(report.dump()))?;
+
     let response = client.request(req).await?;
+
     print_response(response).await?;
+
     Ok("accept")
 }
 
