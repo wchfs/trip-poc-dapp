@@ -17,6 +17,7 @@ use geo::{Coordinate, Point};
 use geo::Contains;
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
+use serde::Deserialize;
 
 use point_in_polygon_dapp_paid_parking_assistant::establish_connection;
 use point_in_polygon_dapp_paid_parking_assistant::models::Zone;
@@ -26,6 +27,11 @@ extern crate diesel;
 
 use self::diesel::prelude::*;
 
+#[derive(Deserialize, Debug)]
+struct Request {
+    endpoint: String,
+    payload: String,
+}
 
 async fn print_response<T: hyper::body::HttpBody>(
     response: hyper::Response<T>,
@@ -57,23 +63,8 @@ fn process_initial(metadata: &JsonValue) -> Option<String> {
     return None;
 }
 
-fn point_mapper(mut _payload: String) -> Result<Point, String>
+fn point_mapper(converted_string: String) -> Result<Point, String>
 {
-    //We don't need "0x" for conversion.
-    _payload.remove(0);
-    _payload.remove(0);
-
-    //Handling conversion: hex string -> vec<u8> -> &str -> String
-    let converted_string = match Vec::from_hex(&_payload) {
-        Ok(vec) => {
-            match std::str::from_utf8(&vec) {
-                Ok(v) => v.to_string(),
-                Err(_e) => panic!("Invalid UTF-8 sequence: {}", _e),
-            }
-        },
-        Err(_e) => panic!("Invalid HEX sequence: {}", _e)
-    };
-
     //Default data format is: "{Longitude},{Latitude}"
     let split = converted_string.split(",").collect::<Vec<&str>>();
 
@@ -128,16 +119,16 @@ fn get_all_zones() -> Vec<Zone> {
     return results;
 }
 
+fn get_zones() -> String {
+    let zones = get_all_zones();
 
-pub async fn handle_advance(
-    client: &hyper::Client<hyper::client::HttpConnector>,
-    server_addr: &str,
-    request: JsonValue,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
-    println!("Received advance request data {}", &request);
+    return serde_json::to_string(&zones).unwrap();
+}
 
+fn check_point_in_zone(value: String) -> String
+{
     //I created this function at first to convert GPGGA to a proper Point object but for now, we are using standard latitude and longitude.
-    let _point: Point = match point_mapper(request["data"]["payload"].to_string()) {
+    let _point: Point = match point_mapper(value.to_string()) {
         Ok(point) => point,
         Err(_e) => panic!("Invalid GPS data: {}", _e),
     };
@@ -147,6 +138,54 @@ pub async fn handle_advance(
         true => "1",
         false => "0"
     };
+
+    return payload.to_string();
+}
+
+fn decode_payload(request: &JsonValue) -> Request
+{
+    let mut payload = request["data"]["payload"]
+        .to_string();
+
+    //We don't need "0x" for conversion.
+    payload.remove(0);
+    payload.remove(0);
+
+    //Handling conversion: hex string -> vec<u8> -> &str
+    let converted_string = match Vec::from_hex(&payload) {
+        Ok(vec) => {
+            match std::str::from_utf8(&vec) {
+                Ok(v) => v.to_string(),
+                Err(_e) => panic!("Invalid UTF-8 sequence: {}", _e),
+            }
+        },
+        Err(_e) => panic!("Invalid HEX sequence: {}", _e)
+    };
+
+    return serde_json::from_str(converted_string.as_str()).unwrap();
+}
+
+fn router(request: Request) -> String
+{
+    return match request.endpoint.as_str() {
+        "get_zones" => get_zones(),
+        "check_point_in_zones" => check_point_in_zone(request.payload),
+        &_ => todo!(),
+    };
+}
+
+pub async fn handle_advance(
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
+    request: JsonValue,
+) -> Result<&'static str, Box<dyn std::error::Error>> {
+    println!("Received advance request data {}", &request);
+
+    let data = decode_payload(&request);
+
+    println!("{:#?}", data);
+
+    let payload = "TEST";
 
     println!("Adding notice");
     //Quick string -> hex conversion with "0x" prefix
@@ -168,15 +207,11 @@ pub async fn handle_inspect(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
 
-    // let payload = request["data"]["payload"]
-    //     .as_str()
-    //     .ok_or("Missing payload")?;
-
     println!("Adding report");
 
-    let zones = get_all_zones();
+    let data = decode_payload(&request);
 
-    let payload = serde_json::to_string(&zones)?;
+    let payload = router(data);
 
     let report = object! {"payload" => format!("0x{}", hex::encode(payload))};
 
