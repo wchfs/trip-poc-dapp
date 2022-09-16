@@ -18,6 +18,7 @@ use geo::Contains;
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
 use serde::Deserialize;
+use ethabi::{ParamType, decode};
 
 use point_in_polygon_dapp_paid_parking_assistant::establish_connection;
 use point_in_polygon_dapp_paid_parking_assistant::models::Zone;
@@ -165,6 +166,37 @@ fn decode_payload(request: &JsonValue) -> Request
     return serde_json::from_str(converted_string.as_str()).unwrap();
 }
 
+fn abi_decode_payload(request: &JsonValue) -> String
+{
+    let mut payload = request["data"]["payload"].to_string();
+
+    payload.remove(0);
+    payload.remove(0);
+
+    let data: Vec<u8> = hex::decode(&payload.as_str()).unwrap();
+
+    let tokens = decode(
+        &[
+            ParamType::FixedBytes(32),
+            ParamType::Address,
+            ParamType::Uint(256),
+            ParamType::Bytes,
+        ],
+        &data).unwrap();
+    // (['bytes32', 'address', 'uint256', 'bytes'])
+
+    let deposit_payload = tokens[3].clone().to_string();
+
+    let initially_decoded_payload = hex::decode(deposit_payload).unwrap();
+
+    let mut stringify_payload = std::str::from_utf8(&initially_decoded_payload).unwrap().to_string();
+
+    stringify_payload.remove(0);
+    stringify_payload.remove(0);
+
+    return stringify_payload;
+}
+
 fn router(request: Request) -> String
 {
     return match request.endpoint.as_str() {
@@ -181,15 +213,13 @@ pub async fn handle_advance(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
-    let data = decode_payload(&request);
+    let data = abi_decode_payload(&request);
 
     println!("{:#?}", data);
 
-    let payload = "TEST";
-
     println!("Adding notice");
     //Quick string -> hex conversion with "0x" prefix
-    let notice = object! {"payload" => format!("0x{}", hex::encode(payload))};
+    let notice = object! {"payload" => format!("0x{}", hex::encode(data))};
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
