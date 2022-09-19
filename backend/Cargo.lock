@@ -204,7 +204,8 @@ dependencies = [
 [[package]]
 name = "ethabi"
 version = "17.2.0"
-source = "git+https://github.com/rust-ethereum/ethabi#ef9a62ba843bf02e152c7f7b5d164f210f11d0d6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4966fba78396ff92db3b817ee71143eccd98acf0f876b8d600e585a670c5d1b"
 dependencies = [
  "ethereum-types",
  "hex",

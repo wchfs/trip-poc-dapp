@@ -166,35 +166,29 @@ fn decode_payload(request: &JsonValue) -> Request
     return serde_json::from_str(converted_string.as_str()).unwrap();
 }
 
-fn abi_decode_payload(request: &JsonValue) -> String
+fn abi_decode_payload(request: &JsonValue) -> Result<String, String>
 {
     let mut payload = request["data"]["payload"].to_string();
 
-    payload.remove(0);
-    payload.remove(0);
+    payload.remove(0); // remove 0
+    payload.remove(0); // remove x
 
     let data: Vec<u8> = hex::decode(&payload.as_str()).unwrap();
 
-    let tokens = decode(
-        &[
-            ParamType::FixedBytes(32),
-            ParamType::Address,
-            ParamType::Uint(256),
-            ParamType::Bytes,
-        ],
-        &data).unwrap();
-    // (['bytes32', 'address', 'uint256', 'bytes'])
+    let abi_parameters = &[
+        ParamType::FixedBytes(32),
+        ParamType::Address,
+        ParamType::Uint(256),
+        ParamType::Bytes,
+    ];
 
-    let deposit_payload = tokens[3].clone().to_string();
+    let tokens = decode(abi_parameters, &data).unwrap();
 
-    let initially_decoded_payload = hex::decode(deposit_payload).unwrap();
+    let deposit_payload = tokens[3].clone().into_bytes().unwrap();
 
-    let mut stringify_payload = std::str::from_utf8(&initially_decoded_payload).unwrap().to_string();
+    let stringify_payload = std::str::from_utf8(&deposit_payload).unwrap().to_string();
 
-    stringify_payload.remove(0);
-    stringify_payload.remove(0);
-
-    return stringify_payload;
+    return Ok(stringify_payload);
 }
 
 fn router(request: Request) -> String
@@ -213,7 +207,7 @@ pub async fn handle_advance(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
-    let data = abi_decode_payload(&request);
+    let data = abi_decode_payload(&request).unwrap();
 
     println!("{:#?}", data);
 
