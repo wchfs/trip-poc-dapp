@@ -42,10 +42,13 @@ export type InspectRequest = {
 };
 
 export type InspectGetZoneReport = {
-  geo_json: string,
   id: number,
+  name: string,
+  price: number,
+  geo_json: string | GeoJSON,
   owner_address: string,
-  price_per_minute: number,
 };
+
+export type InspectCheckPointInZonesReport = number;
 
 export type InspectGetZonesReport = InspectGetZoneReport[];

@@ -17,8 +17,8 @@
       draggable
     />
     <LGeoJson
-      v-for="geoJson of geoJsonStoreRefs.geoJsons.value"
-      :geojson="geoJson"
+      v-for="zone of zones"
+      :geojson="zone.geo_json"
     />
   </LMap>
 </template>
@@ -34,8 +34,7 @@ import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
 import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
 import { useRollupStore } from '@/stores/rollup';
 import type { Error, InspectGetZonesReport } from '@/interfaces/inspect-api';
-import { useGeoJsonStore } from '@/stores/geojson';
-import type { GeoJSON } from 'geojson';
+import { useParkingZoneStore } from '@/stores/parking-zone';
 
 const zoom = ref(4);
 const center = ref({
@@ -49,8 +48,10 @@ const markerPosition = ref<{
 }|null>(null);
 
 const rollupStore = useRollupStore();
-const geoJsonStore = useGeoJsonStore();
-const geoJsonStoreRefs = storeToRefs(geoJsonStore);
+const parkingZoneStore = useParkingZoneStore();
+const {
+  zones,
+} = storeToRefs(parkingZoneStore);
 const locationStore = useLocationStore();
 const {
   coords,
@@ -94,9 +95,11 @@ onMounted(() => {
     endpoint: "get_zones",
     payload: "test",
   }).then((result) => {
-    result.forEach(geoJsons => {
-      geoJsons.forEach(geoJson => {
-        geoJsonStore.addGeoJson(JSON.parse(geoJson.geo_json) as GeoJSON);
+    parkingZoneStore.clearZones();
+
+    result.forEach(reports => {
+      reports.forEach(zoneReport => {
+        parkingZoneStore.addZone(zoneReport);
       });
     });
   }).catch((error: Error) => {

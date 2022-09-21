@@ -1,4 +1,6 @@
-table! {
+// @generated automatically by Diesel CLI.
+
+diesel::table! {
     zones (id) {
         id -> Integer,
         name -> Text,
