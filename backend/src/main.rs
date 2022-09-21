@@ -12,6 +12,7 @@
 
 use json::{object, JsonValue};
 use std::env;
+use dotenv::dotenv;
 use geo::{Coordinate, Point};
 use geo::Contains;
 use geo_types::GeometryCollection;
@@ -44,6 +45,8 @@ fn router(request: Request) -> String
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
+
     let client = hyper::Client::new();
     let server_addr = env::var("ROLLUP_HTTP_SERVER_URL")?;
 
