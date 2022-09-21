@@ -29,16 +29,17 @@ extern crate diesel;
 use self::diesel::prelude::*;
 
 #[derive(Deserialize, Debug)]
-struct Request {
+struct Route {
     endpoint: String,
     payload: String,
 }
 
-fn router(request: Request) -> String
+fn router(route: Route, request: JsonValue) -> String
 {
-    return match request.endpoint.as_str() {
+    return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
-        "check_point_in_zones" => check_point_in_zone(request.payload),
+        "check_point_in_zones" => check_point_in_zone(route.payload),
+        "buy_ticket" => buy_ticket(route.payload, request),
         &_ => todo!(),
     };
 }
@@ -103,11 +104,11 @@ pub async fn handle_advance(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
-    let input = handle_input(request);
+    let input = handle_input(request.clone());
 
     let input_abi_payload = abi_decoder(input);
 
-    let output = handle_output(input_abi_payload);
+    let output = handle_output(input_abi_payload, request);
 
     return Ok(add_response("notice", client, server_addr, output).await?);
 }
@@ -119,9 +120,9 @@ pub async fn handle_inspect(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
 
-    let input = handle_input(request);
+    let input = handle_input(request.clone());
 
-    let output = handle_output(input);
+    let output = handle_output(input, request);
 
     return Ok(add_response("report", client, server_addr, output).await?);
 }
@@ -155,11 +156,11 @@ fn handle_input(request: JsonValue) -> Vec<u8>
     return hex_decoder(request);
 }
 
-fn handle_output(data: Vec<u8>) -> String
+fn handle_output(data: Vec<u8>, request: JsonValue) -> String
 {
-    let input_payload: Request = payload_parser(data);
+    let input_payload: Route = payload_parser(data);
 
-    let output_payload: String = router(input_payload);
+    let output_payload: String = router(input_payload, request);
 
     return format!("0x{}", hex::encode(output_payload));
 }
@@ -173,7 +174,7 @@ fn abi_decoder(data: Vec<u8>) -> Vec<u8>
     return tokens[3].clone().into_bytes().unwrap();
 }
 
-fn payload_parser(data: Vec<u8>) -> Request
+fn payload_parser(data: Vec<u8>) -> Route
 {
     return serde_json::from_str(to_string(data).as_str()).unwrap();
 }
@@ -238,13 +239,7 @@ fn check_point_in_zone(value: String) -> String
         Err(_e) => panic!("Invalid GPS data: {}", _e),
     };
 
-    //I'm not sure if this representation of boolean true and false is a good idea but let's leave it here for now.
-    let payload: &str = match is_in_the_toll_zone(_point) {
-        true => "1",
-        false => "0"
-    };
-
-    return payload.to_string();
+    return is_in_the_toll_zone(_point).to_string();
 }
 
 fn point_mapper(converted_string: String) -> Result<Point, String>
@@ -267,18 +262,18 @@ fn point_mapper(converted_string: String) -> Result<Point, String>
     );
 }
 
-fn is_in_the_toll_zone(gps_data: Point) -> bool
+fn is_in_the_toll_zone(gps_data: Point) -> i32
 {
-    let zones = get_all_zones();
+    let zones: Vec<Zone> = get_all_zones();
     for zone in zones {
         let polygon = get_polygon(zone.geo_json);
 
         if polygon.contains(&gps_data) {
-            return true;
+            return zone.id
         }
     }
 
-    return false;
+    return 0;
 }
 
 fn get_polygon(geo_json_string: String) -> GeometryCollection
@@ -289,6 +284,13 @@ fn get_polygon(geo_json_string: String) -> GeometryCollection
     let collection: GeometryCollection<f64> = quick_collection(&geo_json).unwrap();
 
     return collection;
+}
+
+fn buy_ticket(data: String, request: JsonValue) -> String
+{
+    println!("{:#?}", data);
+
+    return "idk co ja robie".to_string();
 }
 
 async fn print_response<T: hyper::body::HttpBody>(
