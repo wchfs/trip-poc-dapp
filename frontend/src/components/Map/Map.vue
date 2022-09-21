@@ -4,6 +4,7 @@
     v-model:zoom="zoom"
     :center="center"
     :no-blocking-animations="true"
+    :zoom-animation="true"
   >
     <LTileLayer
       url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"
@@ -11,8 +12,13 @@
       name="OpenStreetMap"
     />
     <LMarker
-      v-if="coords"
-      :lat-lng="coordsArray"
+      v-if="markerPosition"
+      v-model:lat-lng="markerPosition"
+      draggable
+    />
+    <LGeoJson
+      v-for="geoJson of geoJsonStoreRefs.geoJsons.value"
+      :geojson="geoJson"
     />
   </LMap>
 </template>
@@ -24,7 +30,12 @@ import { onMounted, ref, watch } from 'vue';
 import "leaflet/dist/leaflet.css";
 import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
 import LMarker from '@vue-leaflet/vue-leaflet/src/components/LMarker.vue';
+import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
 import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
+import { useRollupStore } from '@/stores/rollup';
+import type { Error, InspectGetZonesReport } from '@/interfaces/inspect-api';
+import { useGeoJsonStore } from '@/stores/geojson';
+import type { GeoJSON } from 'geojson';
 
 const zoom = ref(4);
 const center = ref({
@@ -32,16 +43,28 @@ const center = ref({
   lng: 19,
 });
 
+const markerPosition = ref<{
+  lat: number,
+  lng: number,
+}|null>(null);
+
+const rollupStore = useRollupStore();
+const geoJsonStore = useGeoJsonStore();
+const geoJsonStoreRefs = storeToRefs(geoJsonStore);
 const locationStore = useLocationStore();
 const {
   coords,
-  coordsArray,
 } = storeToRefs(locationStore);
 
 watch(coords, (coords) => {
   if (coords === null) {
     return;
   }
+
+  markerPosition.value = {
+    lat: coords.latitude,
+    lng: coords.longitude,
+  };
 
   zoom.value = 14;
 
@@ -56,8 +79,29 @@ watch(coords, (coords) => {
   }, 100);
 });
 
+watch(markerPosition, (a) => {
+  if (a === null) {
+    return;
+  }
+
+  locationStore.setMarkerPosition(a.lat, a.lng);
+});
+
 onMounted(() => {
   locationStore.setup();
+
+  rollupStore.inspectState<InspectGetZonesReport>({
+    endpoint: "get_zones",
+    payload: "test",
+  }).then((result) => {
+    result.forEach(geoJsons => {
+      geoJsons.forEach(geoJson => {
+        geoJsonStore.addGeoJson(JSON.parse(geoJson.geo_json) as GeoJSON);
+      });
+    });
+  }).catch((error: Error) => {
+    console.log(error);
+  });
 });
 
 </script>

@@ -16,6 +16,9 @@ import { NoticesByEpochAndInputDocument } from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
 import { ElNotification } from 'element-plus';
 import 'element-plus/es/components/notification/style/css';
+import fetch from "cross-fetch";
+import { hex2str } from '@/helpers/helpers';
+import type { Error, InspectRequest, InspectResponse, Report } from '@/interfaces/inspect-api';
 
 export type PartialEpoch = Pick<Input, "index">;
 export type PartialInput = PartialEpoch & { epoch: PartialEpoch };
@@ -95,9 +98,11 @@ export const useRollupStore = defineStore('rollup', {
         throw new Error('Please run rollups setup first');
       }
 
-      const transaction = await this.contracts.inputContract.addInput(
-        ethers.utils.toUtf8Bytes(input)
-      );
+      const inputBytes = ethers.utils.isBytesLike(input)
+        ? input
+        : ethers.utils.toUtf8Bytes(input);
+
+      const transaction = await this.contracts.inputContract.addInput(inputBytes);
 
       ElNotification({
         title: 'Waiting for receipt',
@@ -148,6 +153,27 @@ export const useRollupStore = defineStore('rollup', {
               });
             }, 3000);
           }),
+        });
+      });
+    },
+    inspectState: async function <T>(params: InspectRequest): Promise<T[]> {
+      const url = import.meta.env.VITE_APP_INSPECT_ENDPOINT;
+      const response = await fetch(`${url}/${JSON.stringify(params)}`);
+
+      return new Promise((resolve, reject) => {
+        if (response.status !== 200) {
+          response.json().then((r: Error) => {
+            reject(r);
+            return;
+          });
+        }
+
+        response.json().then((r: InspectResponse) => {
+          const decodedReports = r.reports.map((report: Report) => {
+            return JSON.parse(hex2str(report.payload)) as T;
+          });
+
+          resolve(decodedReports);
         });
       });
     },
