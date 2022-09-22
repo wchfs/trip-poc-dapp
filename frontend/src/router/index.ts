@@ -31,7 +31,13 @@ const router = createRouter({
       },
       component: () => import('../views/DApp/DAppView.vue'),
       children: [
-
+        {
+          path: '/tickets',
+          name: 'dapp.tickets',
+          redirect: {
+            name: 'dapp',
+          }
+        },
       ],
     },
   ]

@@ -19,6 +19,7 @@
     <LGeoJson
       v-for="zone of zones"
       :geojson="zone.geo_json"
+      :visible="showOnlyZoneId === null || showOnlyZoneId === zone.id"
     />
   </LMap>
 </template>
@@ -51,6 +52,7 @@ const rollupStore = useRollupStore();
 const parkingZoneStore = useParkingZoneStore();
 const {
   zones,
+  showOnlyZoneId,
 } = storeToRefs(parkingZoneStore);
 const locationStore = useLocationStore();
 const {

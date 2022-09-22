@@ -52,6 +52,10 @@ const menuItems = ref<MenuItem[]>([
     displayName: 'Parking DApp',
     routeName: 'dapp',
   },
+  {
+    displayName: 'My Tickets',
+    routeName: 'dapp.tickets',
+  },
 ]);
 
 const currentRouteName = ref<RouteRecordName|null|undefined>('');

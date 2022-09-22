@@ -6,6 +6,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
   state: () => ({
     zones: [] as InspectGetZonesReport,
     selectedZoneId: null as number|null,
+    showOnlyZoneId: null as number|null,
   }),
   getters: {
     selectedZone: (state) => {
@@ -28,5 +29,8 @@ export const useParkingZoneStore = defineStore('parking-zone', {
     setSelectedZoneId(zoneId: number) {
       this.selectedZoneId = zoneId;
     },
+    setShowOnlyZoneId(zoneId: number|null) {
+      this.showOnlyZoneId = zoneId;
+    }
   },
 });

@@ -1,7 +1,7 @@
 <template>
   <InfoBox
     topText="Marker localization"
-    :featuredText="markerPositionWithSpaceSeparator"
+    :featuredText="markerPositionWithSpaceSeparator ? markerPositionWithSpaceSeparator : `Loading...`"
     bottomText="Drag marker on map to change"
     icon="fa-solid fa-location-dot"
     textColor="text-red-500"
@@ -19,14 +19,21 @@
     buttonText="Get price"
     @buttonClick="check()"
   />
+  <Box>
+    <DAppViewSidebarBuyTicket
+      :checkPrice="checkPrice"
+    />
+  </Box>
   <InfoBox
     v-for="zone of zones"
     :topText="zone.name"
-    :featuredText="zone.price.toString()"
+    :featuredText="`${ zone.price.toString() } ETH`"
     :bottomText="`Identifier: ${ zone.id }`"
     icon="fa-solid fa-square-parking"
     textColor="text-blue-500"
     bgColor="bg-blue-500"
+    @mouseenter="parkingZoneStore.setShowOnlyZoneId(zone.id)"
+    @mouseleave="parkingZoneStore.setShowOnlyZoneId(null)"
   />
 </template>
 
@@ -38,6 +45,8 @@ import { useParkingZoneStore } from '@/stores/parking-zone';
 import { ref, watch } from 'vue';
 import type { Error, InspectCheckPointInZonesReport } from '@/interfaces/inspect-api';
 import { useRollupStore } from '@/stores/rollup';
+import Box from '@/components/Box/Box.vue';
+import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';
 
 const locationStore = useLocationStore();
 const {
