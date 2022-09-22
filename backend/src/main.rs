@@ -13,20 +13,21 @@
 use json::{object, JsonValue};
 use std::env;
 use dotenv::dotenv;
-use geo::{Coordinate, Point};
-use geo::Contains;
+use geo::{Coordinate, Point, Contains};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
 use serde::Deserialize;
 use ethabi::{ParamType, decode};
+use diesel::insert_into;
 
 use point_in_polygon_dapp_paid_parking_assistant::establish_connection;
-use point_in_polygon_dapp_paid_parking_assistant::models::Zone;
+use point_in_polygon_dapp_paid_parking_assistant::models::{Zone, Ticket};
 
 extern crate point_in_polygon_dapp_paid_parking_assistant;
 extern crate diesel;
 
 use self::diesel::prelude::*;
+use chrono::prelude::*;
 
 #[derive(Deserialize, Debug)]
 struct Route {
@@ -34,12 +35,13 @@ struct Route {
     payload: String,
 }
 
-fn router(route: Route, request: JsonValue) -> String
+fn router(route: Route, payload: JsonValue, request: JsonValue) -> String
 {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
-        "check_point_in_zones" => check_point_in_zone(route.payload),
-        "buy_ticket" => buy_ticket(route.payload, request),
+        "check_point_in_zones" => check_point_in_zone(payload),
+        "buy_ticket" => buy_ticket(payload, request),
+        "get_ticket" => get_ticket(payload),
         &_ => todo!(),
     };
 }
@@ -158,9 +160,11 @@ fn handle_input(request: JsonValue) -> Vec<u8>
 
 fn handle_output(data: Vec<u8>, request: JsonValue) -> String
 {
-    let input_payload: Route = payload_parser(data);
+    let route: Route = payload_parser(data);
 
-    let output_payload: String = router(input_payload, request);
+    let json_payload: JsonValue = json::parse(&route.payload).unwrap();
+
+    let output_payload: String = router(route, json_payload, request);
 
     return format!("0x{}", hex::encode(output_payload));
 }
@@ -231,34 +235,20 @@ fn get_all_zones() -> Vec<Zone> {
     return results;
 }
 
-fn check_point_in_zone(value: String) -> String
+fn check_point_in_zone(point: JsonValue) -> String
 {
-    //I created this function at first to convert GPGGA to a proper Point object but for now, we are using standard latitude and longitude.
-    let _point: Point = match point_mapper(value.to_string()) {
-        Ok(point) => point,
-        Err(_e) => panic!("Invalid GPS data: {}", _e),
-    };
+    let point: Point = point_mapper(point);
 
-    return is_in_the_toll_zone(_point).to_string();
+    return is_in_the_toll_zone(point).to_string();
 }
 
-fn point_mapper(converted_string: String) -> Result<Point, String>
+fn point_mapper(json_point: JsonValue) -> Point
 {
-    //Default data format is: "{Longitude},{Latitude}"
-    let split = converted_string.split(",").collect::<Vec<&str>>();
-
-    //Check if we have an exact number of data.
-    if split.len() != 2 {
-        return Err(split.len().to_string());
-    }
-
-    return Ok(
-        Point(
-            Coordinate {
-                x: split[0].parse::<f64>().unwrap(),
-                y: split[1].parse::<f64>().unwrap()
-            }
-        )
+    return Point(
+        Coordinate {
+            x: json_point["longitude"].to_string().parse::<f64>().unwrap(),
+            y: json_point["latitude"].to_string().parse::<f64>().unwrap()
+        }
     );
 }
 
@@ -286,11 +276,52 @@ fn get_polygon(geo_json_string: String) -> GeometryCollection
     return collection;
 }
 
-fn buy_ticket(data: String, request: JsonValue) -> String
+fn buy_ticket(data: JsonValue, request: JsonValue) -> String
 {
-    println!("{:#?}", data);
+    use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
+    let connection = establish_connection();
 
-    return "idk co ja robie".to_string();
+    let is_inserted = insert_into(tickets::table)
+        .values((
+            license.eq(data["license"].to_string()),
+            longitude.eq(data["longitude"].to_string().parse::<f32>().unwrap()),
+            latitude.eq(data["latitude"].to_string().parse::<f32>().unwrap()),
+            owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()),
+            purchased_at.eq(Utc::now().to_string()),
+            duration.eq(data["duration"].to_string().parse::<i32>().unwrap()),
+            zone_id.eq(data["zone_id"].to_string().parse::<i32>().unwrap()),
+            status.eq(0)
+        ))
+        .execute(&connection)
+        .unwrap();
+
+    if is_inserted > 0 {
+        let ticket = tickets::table
+            .filter(owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()))
+            .order(id.desc())
+            .first::<Ticket>(&connection)
+            .expect("No ticket found");
+
+        return serde_json::to_string(&ticket).unwrap();
+    }
+
+    return "Ticket error!".to_string();
+}
+
+fn get_ticket(data: JsonValue) -> String
+{
+    use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
+    let connection = establish_connection();
+
+    let ticket = tickets::table
+        .filter(license.eq(&data["license"].to_string()))
+        .order(id.desc())
+        .first::<Ticket>(&connection);
+
+    return match ticket {
+        Ok(val) => serde_json::to_string(&val).unwrap(),
+        Err(val) => val.to_string(),
+    };
 }
 
 async fn print_response<T: hyper::body::HttpBody>(
