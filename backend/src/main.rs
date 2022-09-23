@@ -32,16 +32,58 @@ use chrono::prelude::*;
 #[derive(Deserialize, Debug)]
 struct Route {
     endpoint: String,
-    payload: String,
+    payload: RoutePayload
 }
 
-fn router(route: Route, payload: JsonValue, request: JsonValue) -> String
+#[derive(Deserialize, Debug)]
+enum RoutePayload {
+    Ticket(TicketActions),
+    Point(GeoPoint)
+}
+
+#[derive(Deserialize, Debug)]
+enum TicketActions
+{
+    Buy(BuyTicket),
+    Get(GetTicket),
+}
+
+#[derive(Deserialize, Debug)]
+struct GeoPoint {
+    longitude: f64,
+    latitude: f64
+}
+
+#[derive(Deserialize, Debug)]
+struct BuyTicket {
+    license: String,
+    longitude: f32,
+    latitude: f32,
+    started_at: String,
+    duration: i32,
+    zone_id: i32,
+}
+
+#[derive(Deserialize, Debug)]
+struct GetTicket {
+    license: String,
+}
+
+fn router(route: Route, request: JsonValue) -> String
 {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
-        "check_point_in_zones" => check_point_in_zone(payload),
-        "buy_ticket" => buy_ticket(payload, request),
-        "get_ticket" => get_ticket(payload),
+        "check_point_in_zones" => if let RoutePayload::Point(value) = route.payload { return check_point_in_zone(value) } else { panic!("") }
+        "buy_ticket" => if let RoutePayload::Ticket(value) = route.payload {
+            if let TicketActions::Buy(value) = value {
+                return buy_ticket(value, request)
+            } else { panic!("Validation failed! Buy Ticket does not meet requirements") }
+        } else { panic!("Validation failed! Ticket does not meet requirements") }
+        "get_ticket" => if let RoutePayload::Ticket(value) = route.payload {
+            if let TicketActions::Get(value) = value {
+                return get_ticket(value)
+            } else { panic!("Validation failed! Get Ticket does not meet requirements") }
+        } else { panic!("Validation failed! Ticket does not meet requirements") }
         &_ => todo!(),
     };
 }
@@ -162,9 +204,7 @@ fn handle_output(data: Vec<u8>, request: JsonValue) -> String
 {
     let route: Route = payload_parser(data);
 
-    let json_payload: JsonValue = json::parse(&route.payload).unwrap();
-
-    let output_payload: String = router(route, json_payload, request);
+    let output_payload: String = router(route, request);
 
     return format!("0x{}", hex::encode(output_payload));
 }
@@ -180,7 +220,7 @@ fn abi_decoder(data: Vec<u8>) -> Vec<u8>
 
 fn payload_parser(data: Vec<u8>) -> Route
 {
-    return serde_json::from_str(to_string(data).as_str()).unwrap();
+    return serde_json::from_slice(&data).unwrap();
 }
 
 fn hex_decoder(request: JsonValue) -> Vec<u8>
@@ -200,11 +240,6 @@ fn prepare_payload(request: JsonValue) -> String
     payload.remove(0);
 
     return payload;
-}
-
-fn to_string(payload: Vec<u8>) -> String
-{
-    return std::str::from_utf8(&payload).unwrap().to_string();
 }
 
 fn get_abi_ether_parameters() -> [ParamType; 4]
@@ -235,19 +270,19 @@ fn get_all_zones() -> Vec<Zone> {
     return results;
 }
 
-fn check_point_in_zone(point: JsonValue) -> String
+fn check_point_in_zone(point: GeoPoint) -> String
 {
     let point: Point = point_mapper(point);
 
     return is_in_the_toll_zone(point).to_string();
 }
 
-fn point_mapper(json_point: JsonValue) -> Point
+fn point_mapper(point: GeoPoint) -> Point
 {
     return Point(
         Coordinate {
-            x: json_point["longitude"].to_string().parse::<f64>().unwrap(),
-            y: json_point["latitude"].to_string().parse::<f64>().unwrap()
+            x: point.longitude,
+            y: point.latitude
         }
     );
 }
@@ -276,20 +311,21 @@ fn get_polygon(geo_json_string: String) -> GeometryCollection
     return collection;
 }
 
-fn buy_ticket(data: JsonValue, request: JsonValue) -> String
+fn buy_ticket(data: BuyTicket, request: JsonValue) -> String
 {
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
     let is_inserted = insert_into(tickets::table)
         .values((
-            license.eq(data["license"].to_string()),
-            longitude.eq(data["longitude"].to_string().parse::<f32>().unwrap()),
-            latitude.eq(data["latitude"].to_string().parse::<f32>().unwrap()),
+            license.eq(data.license),
+            longitude.eq(data.longitude),
+            latitude.eq(data.latitude),
             owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()),
             purchased_at.eq(Utc::now().to_string()),
-            duration.eq(data["duration"].to_string().parse::<i32>().unwrap()),
-            zone_id.eq(data["zone_id"].to_string().parse::<i32>().unwrap()),
+            started_at.eq(data.started_at),
+            duration.eq(data.duration),
+            zone_id.eq(data.zone_id),
             status.eq(0)
         ))
         .execute(&connection)
@@ -308,13 +344,13 @@ fn buy_ticket(data: JsonValue, request: JsonValue) -> String
     return "Ticket error!".to_string();
 }
 
-fn get_ticket(data: JsonValue) -> String
+fn get_ticket(data: GetTicket) -> String
 {
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
     let ticket = tickets::table
-        .filter(license.eq(&data["license"].to_string()))
+        .filter(license.eq(&data.license.to_string()))
         .order(id.desc())
         .first::<Ticket>(&connection);
 

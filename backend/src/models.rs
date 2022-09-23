@@ -18,6 +18,7 @@ pub struct Ticket {
     pub license: String,
     pub longitude: f32,
     pub latitude: f32,
+    pub started_at: String,
     pub owner_address: String,
     pub purchased_at: String,
     pub duration: i32,

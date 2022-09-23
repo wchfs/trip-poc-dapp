@@ -1,11 +1,10 @@
-// @generated automatically by Diesel CLI.
-
-diesel::table! {
+table! {
     tickets (id) {
         id -> Integer,
         license -> Text,
         longitude -> Float,
         latitude -> Float,
+        started_at -> Text,
         owner_address -> Text,
         purchased_at -> Text,
         duration -> Integer,
@@ -14,7 +13,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
+table! {
     zones (id) {
         id -> Integer,
         name -> Text,
@@ -26,7 +25,7 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
+allow_tables_to_appear_in_same_query!(
     tickets,
     zones,
 );
