@@ -29,10 +29,10 @@ extern crate diesel;
 use self::diesel::prelude::*;
 use chrono::prelude::*;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 struct Route {
     endpoint: String,
-    payload: RoutePayload
+    payload: Option<RoutePayload>
 }
 
 #[derive(Deserialize, Debug)]
@@ -73,17 +73,18 @@ fn router(route: Route, request: JsonValue) -> String
 {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
-        "check_point_in_zones" => if let RoutePayload::Point(value) = route.payload { return check_point_in_zone(value) } else { panic!("") }
-        "buy_ticket" => if let RoutePayload::Ticket(value) = route.payload {
+        "check_point_in_zones" => if let Some(RoutePayload::Point(value)) = route.payload { return check_point_in_zone(value) } else { panic!("") }
+        "buy_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
             if let TicketActions::Buy(value) = value {
                 return buy_ticket(value, request)
             } else { panic!("Validation failed! Buy Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
-        "get_ticket" => if let RoutePayload::Ticket(value) = route.payload {
+        "get_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
             if let TicketActions::Get(value) = value {
                 return get_ticket(value)
             } else { panic!("Validation failed! Get Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
+        "my_tickets" => my_tickets(request),
         &_ => todo!(),
     };
 }
@@ -358,6 +359,18 @@ fn get_ticket(data: GetTicket) -> String
         Ok(val) => serde_json::to_string(&val).unwrap(),
         Err(val) => val.to_string(),
     };
+}
+
+fn my_tickets(request: JsonValue) -> String {
+    use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::dsl::*;
+    let connection = establish_connection();
+
+    let results = tickets
+        .filter(owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()))
+        .load::<Ticket>(&connection)
+        .expect("Error loading tickets");
+
+    return serde_json::to_string(&results).unwrap();
 }
 
 async fn print_response<T: hyper::body::HttpBody>(
