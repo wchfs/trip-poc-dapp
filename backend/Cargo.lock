@@ -752,7 +752,7 @@ checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
 name = "point_in_polygon_dapp_paid_parking_assistant"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "diesel",
