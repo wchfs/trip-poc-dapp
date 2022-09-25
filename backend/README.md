@@ -1,6 +1,6 @@
 ## BACK-END
 
-## Running the back-end in host mode (step by step)
+### Running the back-end in host mode (step by step)
 
 Install Rust (based on):
 ```shell
@@ -88,8 +88,8 @@ Main payload structure:
 inner payload is defined by structs and depends on the endpoint</br>
 as for now, available functionalities are:
 
-<b>advance state (ABI encoded by Ether Portal)</b></br>
-Buy Ticket:</br>
+### advance state (ABI encoded by Ether Portal)
+#### Buy Ticket:
 Request:
 ```json
 {
@@ -124,8 +124,8 @@ Response (notice):
 }
 ```
 
-<b>inspect state (only hex encoding) - reports</b></br>
-Get (5) Zones:</br>
+### inspect state (only hex encoding) - reports
+#### Get (5) Zones:
 Request:
 ```json
 {
@@ -150,7 +150,7 @@ Response:
 ]
 ```
 
-Check point in (5) zones</br>
+#### Check point in (5) zones
 Request:
 ```json
 {
@@ -171,7 +171,7 @@ zone_id:
 "2" - -||- id = 2 etc.
 ```
 
-Get ticket by license plate</br>
+#### Get ticket by license plate
 Request:
 ```json
 {
@@ -201,7 +201,7 @@ Response:
 }
 ```
 
-My tickets by message sender address</br>
+#### My tickets by message sender address
 Request:
 ```json
 {
