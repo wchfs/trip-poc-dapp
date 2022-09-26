@@ -200,6 +200,11 @@ Response:
   "status": 0
 }
 ```
+If there is no valid ticket there will be a proper error.
+```
+There is no valid ticket available
+```
+
 
 #### My tickets by message sender address
 Request:
