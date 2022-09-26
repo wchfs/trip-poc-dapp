@@ -355,7 +355,16 @@ fn get_ticket(data: GetTicket) -> String
         .first::<Ticket>(&connection);
 
     return match ticket {
-        Ok(val) => serde_json::to_string(&val).unwrap(),
+        Ok(t) => {
+            let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
+            let diff = (Utc::now() - ticket_date).num_minutes();
+
+            if diff < t.duration.into() && diff > 0 {
+                return serde_json::to_string(&t).unwrap();
+            }
+
+            return "There is no valid ticket available".to_string();
+        },
         Err(val) => val.to_string(),
     };
 }
