@@ -1,7 +1,7 @@
-use crate::schema::tickets;
+use crate::schema::{tickets, zones};
 use serde::{Serialize};
 
-#[derive(Queryable, Serialize)]
+#[derive(Identifiable, Queryable, Serialize)]
 pub struct Zone {
     pub id: i32,
     pub name: String,
@@ -12,7 +12,8 @@ pub struct Zone {
     pub owner_address: String,
 }
 
-#[derive(Insertable, Queryable, Serialize)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Serialize)]
+#[belongs_to(Zone)]
 pub struct Ticket {
     pub id: i32,
     pub license: String,
