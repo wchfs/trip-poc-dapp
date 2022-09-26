@@ -42,8 +42,7 @@ enum RoutePayload {
 }
 
 #[derive(Deserialize, Debug)]
-enum TicketActions
-{
+enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
 }

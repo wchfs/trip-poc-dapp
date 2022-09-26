@@ -40,11 +40,6 @@ build the project
 cargo build
 ```
 
-run the project
-```shell
-cargo run
-```
-
 project is using SQLite Database, install Diesel CLI
 ```shell
 cargo install diesel_cli --no-default-features --features sqlite
@@ -53,6 +48,11 @@ cargo install diesel_cli --no-default-features --features sqlite
 all setup should be handled by
 ```shell
 diesel setup
+```
+
+run the project
+```shell
+cargo run
 ```
 
 but as project will grow with new migrations, run
