@@ -42,7 +42,7 @@ cargo build
 
 project is using SQLite Database, install Diesel CLI
 ```shell
-cargo install diesel_cli --no-default-features --features sqlite
+cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
 ```
 
 all setup should be handled by

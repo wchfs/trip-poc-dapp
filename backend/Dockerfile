@@ -10,7 +10,7 @@ COPY . .
 
 RUN cargo build -Z build-std=std,core,alloc,panic_abort,proc_macro --target riscv64ima-cartesi-linux-gnu.json --release
 
-RUN cargo install diesel_cli --no-default-features --features sqlite
+RUN cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
 #
 RUN echo DATABASE_URL=database.db > .env
 #
