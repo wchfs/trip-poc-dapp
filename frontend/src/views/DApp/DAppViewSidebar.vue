@@ -19,10 +19,10 @@
     buttonText="Get price"
     @buttonClick="check()"
   />
-  <Box>
-    <DAppViewSidebarBuyTicket
-      :checkPrice="checkPrice"
-    />
+  <Box
+    v-if="!checkPrice"
+  >
+    <DAppViewSidebarBuyTicket/>
   </Box>
   <InfoBox
     v-for="zone of zones"
@@ -43,10 +43,11 @@ import { useLocationStore } from '@/stores/location';
 import { storeToRefs } from 'pinia';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { ref, watch } from 'vue';
-import type { Error, InspectCheckPointInZonesReport } from '@/interfaces/inspect-api';
+import type { Error } from '@/interfaces/inspect-api';
 import { useRollupStore } from '@/stores/rollup';
 import Box from '@/components/Box/Box.vue';
 import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';
+import { RollupService } from '@/services/rollup-service';
 
 const locationStore = useLocationStore();
 const {
@@ -70,19 +71,21 @@ watch(markerPositionWithSpaceSeparator, function (value) {
 });
 
 function check() {
-  rollupStore.inspectState<InspectCheckPointInZonesReport>({
+  RollupService.inspect<number>({
     endpoint: "check_point_in_zones",
-    payload: [
-      markerPosition.value?.lng,
-      markerPosition.value?.lat,
-    ].join(','),
+    payload: {
+      Point: {
+        latitude: markerPosition.value?.lat as number,
+        longitude: markerPosition.value?.lng as number,
+      },
+    },
   }).then((reports) => {
     reports.forEach(report => {
       parkingZoneStore.setSelectedZoneId(report);
       checkPrice.value = false;
     });
   }).catch((error: Error) => {
-    console.log(error);
+    console.log(error); // TODO handle it
   });
 }
 </script>

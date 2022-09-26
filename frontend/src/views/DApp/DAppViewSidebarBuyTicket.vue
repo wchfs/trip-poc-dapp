@@ -13,8 +13,9 @@
         >
           <ElDatePicker
             v-model="addTicketForm.date"
-            type="date"
-            placeholder="Pick a day"
+            type="datetime"
+            placeholder="Start at"
+            format="YYYY-MM-DD HH:mm"
           />
         </ElFormItem>
         <ElFormItem
@@ -25,7 +26,7 @@
             start="00:15"
             end="23:45"
             step="00:15"
-            placeholder="Pick a duration"
+            placeholder="Duration"
           />
         </ElFormItem>
       </div>
@@ -35,7 +36,7 @@
         >
           <ElInput
             v-model="addTicketForm.plate_number"
-            placeholder="Your plate number"
+            placeholder="Plate number"
             :clearable="true"
             :formatter="(value) => formatPlateNumber(value)"
             :parser="(value) => formatPlateNumber(value)"
@@ -46,7 +47,7 @@
             type="danger"
             @click="submitForm(addTicketFormRef)"
           >
-            Buy ticket (0.5 ETH)
+            Buy ticket
           </ElButton>
         </ElFormItem>
       </div>
@@ -57,17 +58,20 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
+import { useLocationStore } from '@/stores/location';
+import { useParkingZoneStore } from '@/stores/parking-zone';
+import { RollupService } from '@/services/rollup-service';
+import { ElMessageBox } from 'element-plus';
+import type { ParkingTicket } from '@/interfaces/parking-ticket';
+import { DateTime } from 'luxon';
 
-const props = defineProps<{
-  checkPrice: boolean,
-}>();
-
-const formValid = ref(false);
+const locationStore = useLocationStore();
+const parkingZoneStore = useParkingZoneStore();
 
 const addTicketFormRef = ref<FormInstance>();
 const addTicketForm = reactive({
-  date: '',
-  duration: '',
+  date: DateTime.now().toJSDate(),
+  duration: '01:00',
   plate_number: '',
 });
 
@@ -103,15 +107,59 @@ const rules = reactive<FormRules>({
 });
 
 const submitForm = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
+  if (!formEl) return;
+
   await formEl.validate((valid, fields) => {
-    if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!', fields)
+    if (!valid) {
+      console.log('error submit!', fields);
+
+      return;
     }
+
+    sendToRollup();
   })
-}
+};
+
+const sendToRollup = async () => {
+  ElMessageBox.confirm(
+    `You should pay ${parkingZoneStore.selectedZone?.price} ETH. Continue?`,
+    'Info', {
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
+      type: 'info',
+    }
+  ).then(() => {
+    executeDepositConfirmed();
+  }).catch(() => {
+    executeDepositDeclined();
+  });
+};
+
+const executeDepositConfirmed = async () => {
+  const transactionResponse = await RollupService.addInput<ParkingTicket>({
+    endpoint: 'buy_ticket',
+    payload: {
+      Ticket: {
+        Buy: {
+          license: addTicketForm.plate_number,
+          latitude: locationStore.markerPosition?.lat,
+          longitude: locationStore.markerPosition?.lng,
+          started_at: "",
+          duration: 60,
+          zone_id: parkingZoneStore.selectedZone?.id,
+        }
+      }
+    },
+  }, parkingZoneStore.selectedZone?.price);
+
+  transactionResponse.response.then((r) => {
+    console.log(r);
+  });
+};
+
+const executeDepositDeclined = () => {
+
+};
 
 function formatPlateNumber(value: string) {
   return value.toUpperCase().replace(/[\W_]+/g, '');

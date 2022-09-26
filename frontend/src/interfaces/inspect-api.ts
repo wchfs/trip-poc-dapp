@@ -37,18 +37,6 @@ export type Error = string;
  */
 
 export type InspectRequest = {
-  endpoint: 'get_zones' | 'check_point_in_zones',
-  payload: string,
+  endpoint: string,
+  payload: object | null,
 };
-
-export type InspectGetZoneReport = {
-  id: number,
-  name: string,
-  price: number,
-  geo_json: string | GeoJSON,
-  owner_address: string,
-};
-
-export type InspectCheckPointInZonesReport = number;
-
-export type InspectGetZonesReport = InspectGetZoneReport[];

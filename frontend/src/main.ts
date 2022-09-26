@@ -12,6 +12,7 @@ import { ApolloClient } from 'apollo-client';
 import { createHttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import router from './router'
+import { ApolloService } from '@/services/apollo-service';
 
 library.add(fas, far, fab);
 dom.watch();
@@ -44,7 +45,7 @@ pinia.use(() => {
 /** -------- APP SETUP -------- */
 const app = createApp({
   setup() {
-    // ...
+    ApolloService.setClient(apolloClient);
   },
   render: () => h(App),
 });

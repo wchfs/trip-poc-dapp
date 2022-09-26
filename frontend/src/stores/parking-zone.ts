@@ -1,16 +1,16 @@
 import { defineStore } from 'pinia';
-import type { InspectGetZoneReport, InspectGetZonesReport } from '@/interfaces/inspect-api';
 import type { GeoJSON } from 'geojson';
+import type { ParkingZone } from '@/interfaces/parking-zone';
 
 export const useParkingZoneStore = defineStore('parking-zone', {
   state: () => ({
-    zones: [] as InspectGetZonesReport,
+    zones: [] as ParkingZone[],
     selectedZoneId: null as number|null,
     showOnlyZoneId: null as number|null,
   }),
   getters: {
     selectedZone: (state) => {
-      const zone = state.zones.find((zone: InspectGetZoneReport) => {
+      const zone = state.zones.find((zone: ParkingZone) => {
         return zone.id === state.selectedZoneId;
       });
 
@@ -21,7 +21,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
     clearZones() {
       this.zones = [];
     },
-    addZone(zone: InspectGetZoneReport) {
+    addZone(zone: ParkingZone) {
       zone.geo_json = JSON.parse(zone.geo_json.toString()) as GeoJSON;
 
       this.zones.push(zone);

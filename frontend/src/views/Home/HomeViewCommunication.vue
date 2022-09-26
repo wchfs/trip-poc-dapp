@@ -98,8 +98,6 @@ const inputs = ref<InputTableRow[]>([]);
 const input = ref('');
 const sendingInput = ref(false);
 
-rollupStore.setup(props.onboard);
-
 function chainAddInput() {
   sendingInput.value = true;
 
@@ -119,7 +117,12 @@ function chainAddInput() {
   });
 
   rollupStore
-    .addInput(inputToSend)
+    .addInput<any>({
+      endpoint: 'buy_ticket',
+      payload: {
+        value: inputToSend,
+      },
+    })
     .then((inputResult) => {
       ElNotification({
         title: 'Waiting for output',

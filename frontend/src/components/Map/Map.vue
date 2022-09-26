@@ -33,9 +33,10 @@ import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
 import LMarker from '@vue-leaflet/vue-leaflet/src/components/LMarker.vue';
 import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
 import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
-import { useRollupStore } from '@/stores/rollup';
-import type { Error, InspectGetZonesReport } from '@/interfaces/inspect-api';
+import type { Error } from '@/interfaces/inspect-api';
 import { useParkingZoneStore } from '@/stores/parking-zone';
+import { RollupService } from '@/services/rollup-service';
+import type { ParkingZone } from '@/interfaces/parking-zone';
 
 const zoom = ref(4);
 const center = ref({
@@ -48,7 +49,6 @@ const markerPosition = ref<{
   lng: number,
 }|null>(null);
 
-const rollupStore = useRollupStore();
 const parkingZoneStore = useParkingZoneStore();
 const {
   zones,
@@ -93,9 +93,9 @@ watch(markerPosition, (a) => {
 onMounted(() => {
   locationStore.setup();
 
-  rollupStore.inspectState<InspectGetZonesReport>({
+  RollupService.inspect<ParkingZone[]>({
     endpoint: "get_zones",
-    payload: "test",
+    payload: null,
   }).then((result) => {
     parkingZoneStore.clearZones();
 
@@ -105,7 +105,7 @@ onMounted(() => {
       });
     });
   }).catch((error: Error) => {
-    console.log(error);
+    console.log(error); // TODO handle it
   });
 });
 
