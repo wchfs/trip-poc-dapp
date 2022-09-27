@@ -45,6 +45,7 @@ enum RoutePayload {
 enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
+    Validate(ValidateTicket)
 }
 
 #[derive(Deserialize, Debug)]
@@ -65,6 +66,12 @@ struct BuyTicket {
 
 #[derive(Deserialize, Debug)]
 struct GetTicket {
+    license: Option<String>,
+    owner_address: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ValidateTicket {
     license: String,
 }
 
@@ -78,12 +85,16 @@ fn router(route: Route, request: JsonValue) -> String
                 return buy_ticket(value, request)
             } else { panic!("Validation failed! Buy Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
-        "get_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
+        "get_tickets" => if let Some(RoutePayload::Ticket(value)) = route.payload {
             if let TicketActions::Get(value) = value {
-                return get_ticket(value)
+                return get_tickets(value)
             } else { panic!("Validation failed! Get Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
-        "my_tickets" => my_tickets(request),
+        "validate_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
+            if let TicketActions::Validate(value) = value {
+                return validate_ticket(value)
+            } else { panic!("Validation failed! Validate Ticket does not meet requirements") }
+        } else { panic!("Validation failed! Ticket does not meet requirements") }
         &_ => todo!(),
     };
 }
@@ -344,7 +355,32 @@ fn buy_ticket(data: BuyTicket, request: JsonValue) -> String
     return "Ticket error!".to_string();
 }
 
-fn get_ticket(data: GetTicket) -> String
+fn get_tickets(data: GetTicket) -> String
+{
+    if data.license.is_none() && data.owner_address.is_none() {
+        return "Missing license and owner address!".to_string();
+    }
+
+    use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
+    let connection = establish_connection();
+
+    let mut tickets_query = tickets::table.order(id.desc()).into_boxed();
+
+    if !data.license.is_none() {
+        tickets_query = tickets_query.filter(license.eq(data.license.expect("No license provided").to_string()));
+    }
+
+    if !data.owner_address.is_none() {
+        tickets_query = tickets_query.filter(owner_address.eq(data.owner_address.expect("No Owner address provided").to_string()));
+    }
+
+    return match tickets_query.load::<Ticket>(&connection) {
+        Ok(t) => serde_json::to_string(&t).unwrap(),
+        Err(val) => val.to_string(),
+    };
+}
+
+fn validate_ticket(data: ValidateTicket) -> String
 {
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
@@ -367,18 +403,6 @@ fn get_ticket(data: GetTicket) -> String
         },
         Err(val) => val.to_string(),
     };
-}
-
-fn my_tickets(request: JsonValue) -> String {
-    use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::dsl::*;
-    let connection = establish_connection();
-
-    let results = tickets
-        .filter(owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()))
-        .load::<Ticket>(&connection)
-        .expect("Error loading tickets");
-
-    return serde_json::to_string(&results).unwrap();
 }
 
 async fn print_response<T: hyper::body::HttpBody>(
