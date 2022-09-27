@@ -65,6 +65,7 @@ import 'element-plus/es/components/message-box/style/css';
 import { DateTime } from 'luxon';
 import { useParkingTicketStore } from '@/stores/parking-ticket';
 import router from '@/router';
+import type { ParkingZone } from '@/interfaces/parking-zone';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
@@ -123,33 +124,50 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 };
 
 const sendToRollup = async () => {
+  const selectedZone = parkingZoneStore.selectedZone;
+
+  if (!selectedZone) {
+    return null;
+  }
+
+  const duration = getDurationFromTimeString(addTicketForm.duration);
+  const price = calculatePrice(selectedZone, duration);
+
+  if (!price) {
+    return; // TODO throw error
+  }
+
   ElMessageBox.confirm(
-    `You should pay ${parkingZoneStore.selectedZone?.price} ETH. Continue?`,
+    `You should pay ${ price } ETH. Continue?`,
     'Info', {
       confirmButtonText: 'OK',
       cancelButtonText: 'Cancel',
       type: 'info',
     }
   ).then(() => {
-    executeDepositConfirmed();
+    executeDepositConfirmed(duration, price);
   }).catch(() => {
     executeDepositDeclined();
   });
 };
 
-const executeDepositConfirmed = () => {
+const executeDepositConfirmed = (duration: number, price: string) => {
   const startDate = DateTime.fromJSDate(addTicketForm.date);
+
+  const selectedZone = parkingZoneStore.selectedZone;
+
+  if (!selectedZone) {
+    return;
+  }
 
   parkingTicketStore.buyTicket({
     license: addTicketForm.plate_number,
     latitude: locationStore.markerPosition?.lat as number,
     longitude: locationStore.markerPosition?.lng as number,
-    started_at: startDate.toISODate({
-      format: 'basic',
-    }),
-    duration: getDurationFromTimeString(addTicketForm.duration),
-    zone_id: parkingZoneStore.selectedZone?.id as number,
-  }, parkingZoneStore.selectedZone?.price as number);
+    started_at: startDate.toUTC().toISO(),
+    duration: duration,
+    zone_id: selectedZone.id as number,
+  }, price);
 
   router.push({
     name: 'dapp.tickets',
@@ -157,8 +175,12 @@ const executeDepositConfirmed = () => {
 };
 
 const executeDepositDeclined = () => {
-
+  // TODO
 };
+
+function calculatePrice(zone: ParkingZone, duration: number): string {
+  return ((zone.price / 60) * duration).toFixed(4);
+}
 
 function getDurationFromTimeString(time: string): number {
   const [

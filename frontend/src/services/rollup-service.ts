@@ -118,7 +118,7 @@ export abstract class RollupService {
     });
   }
 
-  public static async addInput<T>(payload: AdvanceRequest, deposit: number | null = null): Promise<ContractTransactionResponse<T>> {
+  public static async addInput<T>(payload: AdvanceRequest, deposit: string | null = null): Promise<ContractTransactionResponse<T>> {
     const payloadBytes = ethers.utils.isBytesLike(payload)
       ? payload
       : ethers.utils.toUtf8Bytes(JSON.stringify(payload));
@@ -127,7 +127,7 @@ export abstract class RollupService {
       ? await RollupService.getContracts().inputContract.addInput(payloadBytes)
       : await RollupService.getContracts().etherContract.etherDeposit(
         payloadBytes, {
-          value: ethers.utils.parseEther(deposit.toString())
+          value: ethers.utils.parseEther(deposit)
         }
       );
 

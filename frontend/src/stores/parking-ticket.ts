@@ -43,7 +43,7 @@ export const useParkingTicketStore = defineStore('parking-ticket', {
         throw error;
       });
     },
-    async buyTicket(payload: BuyTicketPayload, price: number) {
+    async buyTicket(payload: BuyTicketPayload, price: string) {
       this.waitingForNewTicket = true;
 
       const transactionResponse = await RollupService.addInput<ParkingTicket>({
