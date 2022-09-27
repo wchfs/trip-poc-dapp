@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import type { GeoJSON } from 'geojson';
 import type { ParkingZone } from '@/interfaces/parking-zone';
+import { RollupService } from '@/services/rollup-service';
+import type { Error } from '@/interfaces/rollup-api';
 
 export const useParkingZoneStore = defineStore('parking-zone', {
   state: () => ({
@@ -16,10 +18,39 @@ export const useParkingZoneStore = defineStore('parking-zone', {
 
       return zone ? zone : null;
     },
+    getZone: (state) => {
+      return (zoneId: number): ParkingZone|null => {
+        const zone = state.zones.find((zone: ParkingZone) => {
+          return zone.id === zoneId;
+        });
+
+        return zone ? zone : null;
+      };
+    },
   },
   actions: {
     clearZones() {
       this.zones = [];
+    },
+    fetchZones(force: boolean = false) {
+      if (!force && this.zones.length > 1) {
+        return;
+      }
+
+      this.clearZones();
+
+      RollupService.inspect<ParkingZone[]>({
+        endpoint: "get_zones",
+        payload: null,
+      }).then((result) => {
+        result.forEach(reports => {
+          reports.forEach(zoneReport => {
+            this.addZone(zoneReport);
+          });
+        });
+      }).catch((error: Error) => {
+        throw error;
+      });
     },
     addZone(zone: ParkingZone) {
       zone.geo_json = JSON.parse(zone.geo_json.toString()) as GeoJSON;

@@ -58,15 +58,17 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import { useLocationStore } from '@/stores/location';
 import { useParkingZoneStore } from '@/stores/parking-zone';
-import { RollupService } from '@/services/rollup-service';
-import { ElMessageBox } from 'element-plus';
-import type { ParkingTicket } from '@/interfaces/parking-ticket';
+import 'element-plus/es/components/message-box/style/css';
 import { DateTime } from 'luxon';
+import { useParkingTicketStore } from '@/stores/parking-ticket';
+import router from '@/router';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
+const parkingTicketStore = useParkingTicketStore();
 
 const addTicketFormRef = ref<FormInstance>();
 const addTicketForm = reactive({
@@ -135,31 +137,36 @@ const sendToRollup = async () => {
   });
 };
 
-const executeDepositConfirmed = async () => {
-  const transactionResponse = await RollupService.addInput<ParkingTicket>({
-    endpoint: 'buy_ticket',
-    payload: {
-      Ticket: {
-        Buy: {
-          license: addTicketForm.plate_number,
-          latitude: locationStore.markerPosition?.lat,
-          longitude: locationStore.markerPosition?.lng,
-          started_at: "",
-          duration: 60,
-          zone_id: parkingZoneStore.selectedZone?.id,
-        }
-      }
-    },
-  }, parkingZoneStore.selectedZone?.price);
+const executeDepositConfirmed = () => {
+  const startDate = DateTime.fromJSDate(addTicketForm.date);
 
-  transactionResponse.response.then((r) => {
-    console.log(r);
+  parkingTicketStore.buyTicket({
+    license: addTicketForm.plate_number,
+    latitude: locationStore.markerPosition?.lat as number,
+    longitude: locationStore.markerPosition?.lng as number,
+    started_at: startDate.toISODate({
+      format: 'basic',
+    }),
+    duration: getDurationFromTimeString(addTicketForm.duration),
+    zone_id: parkingZoneStore.selectedZone?.id as number,
+  }, parkingZoneStore.selectedZone?.price as number);
+
+  router.push({
+    name: 'dapp.tickets',
   });
 };
 
 const executeDepositDeclined = () => {
 
 };
+
+function getDurationFromTimeString(time: string): number {
+  const [
+    hours, minutes
+  ] = time.split(':').map((e) => parseInt(e));
+
+  return (hours * 60) + minutes;
+}
 
 function formatPlateNumber(value: string) {
   return value.toUpperCase().replace(/[\W_]+/g, '');

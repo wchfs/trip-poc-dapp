@@ -63,7 +63,7 @@
       </div>
     </div>
     <div
-      v-if="showButton"
+      v-if="props.showButton"
       class="
         absolute
         left-0
@@ -81,7 +81,6 @@
         v-if="props.buttonText"
         :type="props.buttonType"
         size="large"
-        round
         @click="buttonClick()"
       >
         {{ props.buttonText }}

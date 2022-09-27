@@ -33,7 +33,7 @@ import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
 import LMarker from '@vue-leaflet/vue-leaflet/src/components/LMarker.vue';
 import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
 import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
-import type { Error } from '@/interfaces/inspect-api';
+import type { Error } from '@/interfaces/rollup-api';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { RollupService } from '@/services/rollup-service';
 import type { ParkingZone } from '@/interfaces/parking-zone';
@@ -93,20 +93,11 @@ watch(markerPosition, (a) => {
 onMounted(() => {
   locationStore.setup();
 
-  RollupService.inspect<ParkingZone[]>({
-    endpoint: "get_zones",
-    payload: null,
-  }).then((result) => {
-    parkingZoneStore.clearZones();
-
-    result.forEach(reports => {
-      reports.forEach(zoneReport => {
-        parkingZoneStore.addZone(zoneReport);
-      });
-    });
-  }).catch((error: Error) => {
-    console.log(error); // TODO handle it
-  });
+  try {
+    parkingZoneStore.fetchZones();
+  } catch (e) {
+    console.log(e); // TODO handle it
+  }
 });
 
 </script>

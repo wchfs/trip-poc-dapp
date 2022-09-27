@@ -1,7 +1,6 @@
 /**
  * CARTESI MACHINE TYPES
  */
-import type { GeoJSON } from 'geojson';
 
 export type InspectResponse = {
   status: CompletionStatus,
@@ -40,3 +39,9 @@ export type InspectRequest = {
   endpoint: string,
   payload: object | null,
 };
+
+export type AdvanceRequest = {
+  endpoint: string,
+  payload: object,
+};
+

@@ -8,35 +8,36 @@ const router = createRouter({
     {
       path: '/',
       name: 'root',
-      redirect: {
-        name: 'dapp',
-      }
-    },
-    {
-      path: '/summary',
-      name: 'dapp_summary',
-      component: () => import('../views/Home/HomeView.vue')
+      component: () => import('../views/Auth/ConnectWallet.vue')
     },
     {
       path: '/dapp',
-      name: 'dapp',
-      beforeEnter: (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
+      beforeEnter: async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
         const walletStore = useWalletStore();
 
         if (walletStore.onboard?.connectedWallet?.value === null) {
-          console.log('before enter /dapp');
+          await router.push({
+            name: 'root',
+          });
         }
 
         return true;
       },
-      component: () => import('../views/DApp/DAppView.vue'),
       children: [
         {
-          path: '/tickets',
+          path: '',
+          name: 'dapp',
+          component: () => import('../views/DApp/DAppView.vue'),
+        },
+        {
+          path: 'summary',
+          name: 'dapp.summary',
+          component: () => import('../views/Summary/SummaryView.vue'),
+        },
+        {
+          path: 'tickets',
           name: 'dapp.tickets',
-          redirect: {
-            name: 'dapp',
-          }
+          component: () => import('../views/Tickets/TicketsView.vue'),
         },
       ],
     },

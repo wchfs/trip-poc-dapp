@@ -9,7 +9,7 @@
   />
   <InfoBox
     v-if="markerPositionWithSpaceSeparator !== ''"
-    topText="You should pay"
+    topText="Price per hour"
     :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ selectedZone?.price} ETH`"
     :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name}`"
     icon="fa-solid fa-hand-holding-dollar"
@@ -43,7 +43,7 @@ import { useLocationStore } from '@/stores/location';
 import { storeToRefs } from 'pinia';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { ref, watch } from 'vue';
-import type { Error } from '@/interfaces/inspect-api';
+import type { Error } from '@/interfaces/rollup-api';
 import { useRollupStore } from '@/stores/rollup';
 import Box from '@/components/Box/Box.vue';
 import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';

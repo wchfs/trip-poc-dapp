@@ -16,11 +16,11 @@ import type {
 } from '@/generated/graphql';
 import { NoticesByEpochAndInputDocument } from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
-import type { AdvanceRequest } from '@/interfaces/advance-api';
+import type { AdvanceRequest } from '@/interfaces/rollup-api';
 import { ApolloService } from '@/services/apollo-service';
 import { useWalletStore } from '@/stores/wallet';
 import fetch from 'cross-fetch';
-import type { Error as InspectError, InspectRequest, InspectResponse, Report } from '@/interfaces/inspect-api';
+import type { Error as InspectError, InspectRequest, InspectResponse, Report } from '@/interfaces/rollup-api';
 import { hex2str } from '@/helpers/helpers';
 
 export interface InputKeys {

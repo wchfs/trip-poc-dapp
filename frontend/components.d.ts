@@ -18,6 +18,7 @@ declare module '@vue/runtime-core' {
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElProgress: typeof import('element-plus/es')['ElProgress']
+    ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
     ElTimeSelect: typeof import('element-plus/es')['ElTimeSelect']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     InfoBox: typeof import('./src/components/Box/InfoBox.vue')['default']

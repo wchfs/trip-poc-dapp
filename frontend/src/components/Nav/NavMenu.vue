@@ -24,7 +24,7 @@
       <ul class="flex items-center gap-6">
         <li>
           <span class="text-sm font-sans text-gray-800 font-semibold tracking-wider">
-            Cartesi DApp Vue
+            Parking DApp
           </span>
         </li>
       </ul>
@@ -45,16 +45,16 @@ interface MenuItem {
 
 const menuItems = ref<MenuItem[]>([
   {
-    displayName: 'DApp Summary',
-    routeName: 'dapp_summary',
-  },
-  {
     displayName: 'Parking DApp',
     routeName: 'dapp',
   },
   {
     displayName: 'My Tickets',
     routeName: 'dapp.tickets',
+  },
+  {
+    displayName: 'DApp Summary',
+    routeName: 'dapp.summary',
   },
 ]);
 
