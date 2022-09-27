@@ -40,19 +40,19 @@ build the project
 cargo build
 ```
 
-run the project
-```shell
-cargo run
-```
-
 project is using SQLite Database, install Diesel CLI
 ```shell
-cargo install diesel_cli --no-default-features --features sqlite
+cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
 ```
 
 all setup should be handled by
 ```shell
 diesel setup
+```
+
+run the project
+```shell
+cargo run
 ```
 
 but as project will grow with new migrations, run
@@ -200,6 +200,11 @@ Response:
   "status": 0
 }
 ```
+If there is no valid ticket there will be a proper error.
+```
+There is no valid ticket available
+```
+
 
 #### My tickets by message sender address
 Request:
