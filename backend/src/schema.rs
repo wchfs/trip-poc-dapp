@@ -18,8 +18,6 @@ table! {
         id -> Integer,
         name -> Text,
         price -> Float,
-        start_hour -> Text,
-        end_hour -> Text,
         geo_json -> Text,
         owner_address -> Text,
     }
