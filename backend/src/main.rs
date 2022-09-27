@@ -334,7 +334,7 @@ fn buy_ticket(data: BuyTicket) -> String
             longitude.eq(data.longitude),
             latitude.eq(data.latitude),
             owner_address.eq(&data.owner_address),
-            purchased_at.eq(Utc::now().to_string()),
+            purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
             started_at.eq(data.started_at),
             duration.eq(data.duration),
             zone_id.eq(data.zone_id),
