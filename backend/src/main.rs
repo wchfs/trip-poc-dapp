@@ -338,7 +338,6 @@ fn buy_ticket(data: BuyTicket) -> String
             started_at.eq(data.started_at),
             duration.eq(data.duration),
             zone_id.eq(data.zone_id),
-            status.eq(0)
         ))
         .execute(&connection)
         .unwrap();
