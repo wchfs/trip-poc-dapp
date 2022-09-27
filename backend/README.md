@@ -120,8 +120,7 @@ Response (notice):
   "owner_address": "0xString",
   "purchased_at": "2022-09-24T14:04:20Z",
   "duration": 60,
-  "zone_id": 1,
-  "status": 0
+  "zone_id": 1
 }
 ```
 
@@ -202,8 +201,7 @@ Response:
     "owner_address": "0xString",
     "purchased_at": "2022-09-24T14:04:20Z",
     "duration": 60,
-    "zone_id": 1,
-    "status": 0
+    "zone_id": 1
   },
   {},
   {}
@@ -235,8 +233,7 @@ Response:
     "owner_address": "0xString",
     "purchased_at": "2022-09-24T14:04:20Z",
     "duration": 60,
-    "zone_id": 1,
-    "status": 0
+    "zone_id": 1
 }
 ```
 If there is no valid ticket there will be a proper error.

@@ -9,7 +9,6 @@ table! {
         purchased_at -> Text,
         duration -> Integer,
         zone_id -> Integer,
-        status -> Integer,
     }
 }
 

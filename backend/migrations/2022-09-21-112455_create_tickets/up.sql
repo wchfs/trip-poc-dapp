@@ -10,7 +10,6 @@ CREATE TABLE tickets (
     purchased_at TEXT NOT NULL,
     duration INTEGER NOT NULL,
     zone_id INTEGER NOT NULL,
-    status INTEGER NOT NULL,
 
     FOREIGN KEY (zone_id) REFERENCES zones (id)
 );
