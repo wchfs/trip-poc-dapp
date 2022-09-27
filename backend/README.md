@@ -211,7 +211,7 @@ Response:
 ]
 ```
 
-#### My tickets by message sender address
+#### For ticket validation
 Request:
 ```json
 {
@@ -219,7 +219,7 @@ Request:
   "payload": {
     "Ticket": {
       "validate": {
-        "license": "example_license_plate",
+        "license": "example_license_plate"
       }
     }
   }
