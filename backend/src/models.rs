@@ -6,8 +6,6 @@ pub struct Zone {
     pub id: i32,
     pub name: String,
     pub price: f32,
-    pub start_hour: String,
-    pub end_hour: String,
     pub geo_json: String,
     pub owner_address: String,
 }

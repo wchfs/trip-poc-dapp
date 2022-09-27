@@ -141,8 +141,6 @@ Response:
     "id": 1,
     "name": "String",
     "price": 0.001,
-    "start_hour": "10:00",
-    "end_hour": "20:00",
     "geo_json": "Stringify GeoJSON",
     "owner_address": "0xString"
   },
