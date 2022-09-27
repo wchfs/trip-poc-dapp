@@ -28,6 +28,15 @@ export const useWalletStore = () => {
           return null;
         }
       },
+      walletAddress(): string|null {
+        const accounts = this.onboard?.connectedWallet?.value?.accounts;
+
+        if (!accounts) {
+          return null;
+        }
+
+        return accounts[0].address;
+      },
     },
     actions: {
       init(forceFresh: boolean = false): void {

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import type { ParkingTicket } from '@/interfaces/parking-ticket';
 import { RollupService } from '@/services/rollup-service';
 import type { Error } from '@/interfaces/rollup-api';
+import { useWalletStore } from '@/stores/wallet';
 
 export type BuyTicketPayload = {
   license: string,
@@ -10,6 +11,7 @@ export type BuyTicketPayload = {
   started_at: string,
   duration: number,
   zone_id: number,
+  owner_address: string,
 };
 
 export const useParkingTicketStore = defineStore('parking-ticket', {
@@ -27,13 +29,24 @@ export const useParkingTicketStore = defineStore('parking-ticket', {
         return;
       }
 
+      const walletAddress = useWalletStore().walletAddress;
+
+      if (walletAddress === null) {
+        return; // TODO throw error
+      }
+
       this.clearTickets();
 
       RollupService.inspect<ParkingTicket[]>({
-        endpoint: "my_tickets",
-        payload: null,
+        endpoint: "get_tickets",
+        payload: {
+          Ticket: {
+            Get: {
+              owner_address: walletAddress,
+            },
+          },
+        },
       }).then((result) => {
-        console.log(result);
         result.forEach(tickets => {
           tickets.forEach(ticket => {
             this.addTicket(ticket);

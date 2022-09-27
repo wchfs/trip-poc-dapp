@@ -16,6 +16,7 @@
           If you do not see your just-purchased ticket, wait a moment and then hit
           <ElButton
             type="success"
+            @click="parkingTicketStore.fetchTickets(true)"
           >
             reload tickets
           </ElButton>

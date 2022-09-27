@@ -66,6 +66,7 @@ import { DateTime } from 'luxon';
 import { useParkingTicketStore } from '@/stores/parking-ticket';
 import router from '@/router';
 import type { ParkingZone } from '@/interfaces/parking-zone';
+import { useWalletStore } from '@/stores/wallet';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
@@ -155,8 +156,9 @@ const executeDepositConfirmed = (duration: number, price: string) => {
   const startDate = DateTime.fromJSDate(addTicketForm.date);
 
   const selectedZone = parkingZoneStore.selectedZone;
+  const walletAddress = useWalletStore().walletAddress;
 
-  if (!selectedZone) {
+  if (!selectedZone || walletAddress === null) {
     return;
   }
 
@@ -167,6 +169,7 @@ const executeDepositConfirmed = (duration: number, price: string) => {
     started_at: startDate.toUTC().toISO(),
     duration: duration,
     zone_id: selectedZone.id as number,
+    owner_address: walletAddress,
   }, price);
 
   router.push({
