@@ -98,6 +98,7 @@ Request:
     "Ticket": {
       "Buy": {
         "license": "String",
+        "owner_address": "0xString",
         "longitude": 19.943540573120117,
         "latitude": 50.0565299987793,
         "started_at": "2022-09-24T14:25:00Z",
