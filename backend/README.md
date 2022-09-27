@@ -98,6 +98,7 @@ Request:
     "Ticket": {
       "Buy": {
         "license": "String",
+        "owner_address": "0xString",
         "longitude": 19.943540573120117,
         "latitude": 50.0565299987793,
         "started_at": "2022-09-24T14:25:00Z",
@@ -211,7 +212,7 @@ Response:
 ]
 ```
 
-#### My tickets by message sender address
+#### For ticket validation
 Request:
 ```json
 {
@@ -219,7 +220,7 @@ Request:
   "payload": {
     "Ticket": {
       "validate": {
-        "license": "example_license_plate",
+        "license": "example_license_plate"
       }
     }
   }

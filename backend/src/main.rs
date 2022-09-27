@@ -57,6 +57,7 @@ struct GeoPoint {
 #[derive(Deserialize, Debug)]
 struct BuyTicket {
     license: String,
+    owner_address: String,
     longitude: f32,
     latitude: f32,
     started_at: String,
@@ -75,14 +76,14 @@ struct ValidateTicket {
     license: String,
 }
 
-fn router(route: Route, request: JsonValue) -> String
+fn router(route: Route) -> String
 {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
         "check_point_in_zones" => if let Some(RoutePayload::Point(value)) = route.payload { return check_point_in_zone(value) } else { panic!("") }
         "buy_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
             if let TicketActions::Buy(value) = value {
-                return buy_ticket(value, request)
+                return buy_ticket(value)
             } else { panic!("Validation failed! Buy Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
         "get_tickets" => if let Some(RoutePayload::Ticket(value)) = route.payload {
@@ -159,11 +160,11 @@ pub async fn handle_advance(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
-    let input = handle_input(request.clone());
+    let input = handle_input(request);
 
     let input_abi_payload = abi_decoder(input);
 
-    let output = handle_output(input_abi_payload, request);
+    let output = handle_output(input_abi_payload);
 
     return Ok(add_response("notice", client, server_addr, output).await?);
 }
@@ -175,9 +176,9 @@ pub async fn handle_inspect(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
 
-    let input = handle_input(request.clone());
+    let input = handle_input(request);
 
-    let output = handle_output(input, request);
+    let output = handle_output(input);
 
     return Ok(add_response("report", client, server_addr, output).await?);
 }
@@ -211,11 +212,11 @@ fn handle_input(request: JsonValue) -> Vec<u8>
     return hex_decoder(request);
 }
 
-fn handle_output(data: Vec<u8>, request: JsonValue) -> String
+fn handle_output(data: Vec<u8>) -> String
 {
     let route: Route = payload_parser(data);
 
-    let output_payload: String = router(route, request);
+    let output_payload: String = router(route);
 
     return format!("0x{}", hex::encode(output_payload));
 }
@@ -322,7 +323,7 @@ fn get_polygon(geo_json_string: String) -> GeometryCollection
     return collection;
 }
 
-fn buy_ticket(data: BuyTicket, request: JsonValue) -> String
+fn buy_ticket(data: BuyTicket) -> String
 {
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
@@ -332,7 +333,7 @@ fn buy_ticket(data: BuyTicket, request: JsonValue) -> String
             license.eq(data.license),
             longitude.eq(data.longitude),
             latitude.eq(data.latitude),
-            owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()),
+            owner_address.eq(&data.owner_address),
             purchased_at.eq(Utc::now().to_string()),
             started_at.eq(data.started_at),
             duration.eq(data.duration),
@@ -344,7 +345,7 @@ fn buy_ticket(data: BuyTicket, request: JsonValue) -> String
 
     if is_inserted > 0 {
         let ticket = tickets::table
-            .filter(owner_address.eq(&request["data"]["metadata"]["msg_sender"].to_string()))
+            .filter(owner_address.eq(data.owner_address))
             .order(id.desc())
             .first::<Ticket>(&connection)
             .expect("No ticket found");
