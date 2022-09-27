@@ -171,55 +171,32 @@ zone_id:
 "2" - -||- id = 2 etc.
 ```
 
-#### Get ticket by license plate
+#### Get tickets by license plate or owner address
 Request:
 ```json
 {
-  "endpoint": "get_ticket",
+  "endpoint": "get_tickets",
   "payload": {
     "Ticket": {
       "Get": {
-        "license": "example_license_plate"
+        "license": "example_license_plate",
+        "owner_address": "0xString"
       }
     }
   }
 }
 ```
-Response:
-```json
-{
-  "id": 1,
-  "license": "example_license_plate",
-  "longitude": 19.943540573120117,
-  "latitude": 50.0565299987793,
-  "started_at": "2022-09-24T14:25:00Z",
-  "owner_address": "0xString",
-  "purchased_at": "2022-09-24T14:04:20Z",
-  "duration": 60,
-  "zone_id": 1,
-  "status": 0
-}
+both fields are optional -> with both fields missing there will be an error
 ```
-If there is no valid ticket there will be a proper error.
-```
-There is no valid ticket available
+Missing license and owner address!
 ```
 
-
-#### My tickets by message sender address
-Request:
-```json
-{
-  "endpoint": "my_tickets",
-  "payload": null
-}
-```
 Response:
 ```json
 [
   {
     "id": 1,
-    "license": "String",
+    "license": "example_license_plate",
     "longitude": 19.943540573120117,
     "latitude": 50.0565299987793,
     "started_at": "2022-09-24T14:25:00Z",
@@ -232,4 +209,38 @@ Response:
   {},
   {}
 ]
+```
+
+#### My tickets by message sender address
+Request:
+```json
+{
+  "endpoint": "validate_ticket",
+  "payload": {
+    "Ticket": {
+      "validate": {
+        "license": "example_license_plate",
+      }
+    }
+  }
+}
+```
+Response:
+```json
+{
+    "id": 1,
+    "license": "example_license_plate",
+    "longitude": 19.943540573120117,
+    "latitude": 50.0565299987793,
+    "started_at": "2022-09-24T14:25:00Z",
+    "owner_address": "0xString",
+    "purchased_at": "2022-09-24T14:04:20Z",
+    "duration": 60,
+    "zone_id": 1,
+    "status": 0
+}
+```
+If there is no valid ticket there will be a proper error.
+```
+There is no valid ticket available
 ```
