@@ -13,4 +13,5 @@
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
 import Map from '@/components/Map/Map.vue';
-import DAppViewSidebar from '@/views/DApp/DAppViewSidebar.vue';</script>
+import DAppViewSidebar from '@/views/DApp/DAppViewSidebar.vue';
+</script>

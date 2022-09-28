@@ -6,12 +6,12 @@ import { useWalletStore } from '@/stores/wallet';
 
 export type BuyTicketPayload = {
   license: string,
-  latitude: number,
+  owner_address: string,
   longitude: number,
+  latitude: number,
   started_at: string,
   duration: number,
   zone_id: number,
-  owner_address: string,
 };
 
 export const useParkingTicketStore = defineStore('parking-ticket', {
@@ -76,6 +76,9 @@ export const useParkingTicketStore = defineStore('parking-ticket', {
     addTicket(ticket: ParkingTicket) {
       this.tickets = this.tickets.filter((t) => t.id !== ticket.id);
       this.tickets.push(ticket);
+      this.tickets = this.tickets.sort((a: ParkingTicket, b: ParkingTicket) => {
+        return a.id > b.id ? -1 : 1;
+      });
     },
   },
 });

@@ -5,7 +5,7 @@
     <InfoBox
       topText="Connected wallet"
       :featuredText="walletStore.onboard?.connectedWallet?.value?.label"
-      bottomText="Your wallet provider name"
+      :bottomText="`Address: ${ walletStore.walletAddress }`"
       icon="fa-solid fa-wallet"
       textColor="text-blue-500"
       bgColor="bg-blue-500"

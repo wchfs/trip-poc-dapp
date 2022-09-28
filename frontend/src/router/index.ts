@@ -36,8 +36,18 @@ const router = createRouter({
         },
         {
           path: 'tickets',
-          name: 'dapp.tickets',
-          component: () => import('../views/Tickets/TicketsView.vue'),
+          children: [
+            {
+              path: 'my',
+              name: 'dapp.tickets.my',
+              component: () => import('../views/Tickets/My/MyTicketsView.vue'),
+            },
+            {
+              path: 'validate',
+              name: 'dapp.tickets.validate',
+              component: () => import('../views/Tickets/Validate/ValidateTicketsView.vue'),
+            },
+          ],
         },
       ],
     },

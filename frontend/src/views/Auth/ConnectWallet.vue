@@ -1,6 +1,8 @@
 <template>
   <BaseContainer>
-    <Box>
+    <Box
+      additionalClass="col-span-1 md:col-start-2"
+    >
       <div class="space-y-4 md:space-y-6 sm:p-5">
         <div class="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
           Connect your wallet

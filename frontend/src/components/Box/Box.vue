@@ -8,6 +8,7 @@
       rounded-xl
       border
       border-gray-50
+      drop-shadow-md
       ${props.additionalClass}
      `"
   >

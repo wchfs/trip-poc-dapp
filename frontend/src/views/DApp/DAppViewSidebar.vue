@@ -8,25 +8,23 @@
     bgColor="bg-red-500"
   />
   <InfoBox
-    v-if="markerPositionWithSpaceSeparator !== ''"
+    v-if="markerPositionWithSpaceSeparator !== '' && selectedZoneId !== null"
     topText="Price per hour"
-    :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ selectedZone?.price} ETH`"
-    :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name}`"
+    :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ selectedZone?.price } ETH`"
+    :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name }`"
     icon="fa-solid fa-hand-holding-dollar"
     textColor="text-green-500"
     bgColor="bg-green-500"
-    :showButton="checkPrice"
-    buttonText="Get price"
-    @buttonClick="check()"
   />
   <Box
-    v-if="!checkPrice"
+    v-if="!!selectedZoneId"
   >
     <DAppViewSidebarBuyTicket/>
   </Box>
   <InfoBox
     v-for="zone of zones"
-    :topText="zone.name"
+    additionalClass="col-span-1 hover:bg-gray-100 hover:cursor-pointer"
+    :topText="`Hourly rate for ${ zone.name }`"
     :featuredText="`${ zone.price.toString() } ETH`"
     :bottomText="`Identifier: ${ zone.id }`"
     icon="fa-solid fa-square-parking"
@@ -35,6 +33,7 @@
     @mouseenter="parkingZoneStore.setShowOnlyZoneId(zone.id)"
     @mouseleave="parkingZoneStore.setShowOnlyZoneId(null)"
   />
+
 </template>
 
 <script setup lang="ts">
@@ -42,9 +41,8 @@ import InfoBox from '@/components/Box/InfoBox.vue';
 import { useLocationStore } from '@/stores/location';
 import { storeToRefs } from 'pinia';
 import { useParkingZoneStore } from '@/stores/parking-zone';
-import { ref, watch } from 'vue';
+import { watch } from 'vue';
 import type { Error } from '@/interfaces/rollup-api';
-import { useRollupStore } from '@/stores/rollup';
 import Box from '@/components/Box/Box.vue';
 import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';
 import { RollupService } from '@/services/rollup-service';
@@ -62,15 +60,17 @@ const {
   selectedZoneId,
 } = storeToRefs(parkingZoneStore);
 
-const rollupStore = useRollupStore();
-
-const checkPrice = ref<boolean>(true);
-
 watch(markerPositionWithSpaceSeparator, function (value) {
-  checkPrice.value = true;
+  if (!value) {
+    return;
+  }
+
+  check();
 });
 
 function check() {
+  parkingZoneStore.setSelectedZoneId(null)
+
   RollupService.inspect<number>({
     endpoint: "check_point_in_zones",
     payload: {
@@ -82,7 +82,6 @@ function check() {
   }).then((reports) => {
     reports.forEach(report => {
       parkingZoneStore.setSelectedZoneId(report);
-      checkPrice.value = false;
     });
   }).catch((error: Error) => {
     console.log(error); // TODO handle it

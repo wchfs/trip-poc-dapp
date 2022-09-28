@@ -1,7 +1,7 @@
 <template>
   <BaseContainer>
     <Box
-      additionalClass="col-span-3 border border-indigo-600"
+      additionalClass="col-span-3 border border-indigo-600 mb-5"
     >
       <div
         class="
@@ -28,9 +28,9 @@
     <InfoBox
       v-for="ticket of tickets"
       additionalClass="col-span-3"
-      :topText="`For ${ ticket.license } in ${ getZone(ticket.zone_id)?.name }`"
+      :topText="`#${ ticket.id } For ${ ticket.license } in ${ getZone(ticket.zone_id)?.name }`"
       :featuredText="`Expires: ${ getExpireAtString(ticket) }`"
-      :bottomText="`Start: ${ getStartAtString(ticket) } Duration: ${ ticket.duration } min Id: ${ ticket.id }`"
+      :bottomText="`Starts ${ getStartAtString(ticket) } and is valid for ${ getDurationString(ticket.duration) }`"
       icon="fa-solid fa-receipt"
       textColor="text-blue-500"
       bgColor="bg-blue-500"
@@ -72,6 +72,27 @@ const getExpireAtString = (ticket: ParkingTicket): string => {
 }
 
 const getStartAtString = (ticket: ParkingTicket): string => {
-  return DateTime.fromISO(ticket.started_at).toFormat(`yyyy LLL dd HH:mm`);
+  return DateTime.fromISO(ticket.started_at).toFormat(`yyyy LLL dd 'at' HH:mm`);
+}
+
+function getDurationString(duration: number): string {
+  const hoursPart = Math.floor(duration / 60);
+  const minutesPart = duration % 60;
+
+  let display = '';
+
+  if (hoursPart > 0) {
+    display = `${ hoursPart }h`;
+  }
+
+  if (minutesPart > 0) {
+    if (display !== '') {
+      display = display.concat(' ');
+    }
+
+    display = display.concat(`${ minutesPart }m`);
+  }
+
+  return display;
 }
 </script>

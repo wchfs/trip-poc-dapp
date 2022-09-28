@@ -1,5 +1,7 @@
 <template>
-  <Box>
+  <Box
+    :additionalClass="props.additionalClass"
+  >
     <div
       class="
         flex
@@ -115,6 +117,10 @@ const props = defineProps({
     default: 'success',
   },
   buttonText: String,
+  additionalClass: {
+    type: String,
+    default: "col-span-1",
+  },
 });
 
 function buttonClick() {

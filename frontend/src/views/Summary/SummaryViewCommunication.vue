@@ -1,5 +1,6 @@
 <template>
   <BaseContainer
+    v-if="false"
     caption="Raw Rollup Communication"
   >
     <Box

@@ -57,7 +57,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
 
       this.zones.push(zone);
     },
-    setSelectedZoneId(zoneId: number) {
+    setSelectedZoneId(zoneId: number|null) {
       this.selectedZoneId = zoneId;
     },
     setShowOnlyZoneId(zoneId: number|null) {

@@ -173,7 +173,7 @@ const executeDepositConfirmed = (duration: number, price: string) => {
   }, price);
 
   router.push({
-    name: 'dapp.tickets',
+    name: 'dapp.tickets.my',
   });
 };
 
