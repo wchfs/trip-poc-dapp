@@ -25,15 +25,10 @@
     </Box>
   </BaseContainer>
   <BaseContainer>
-    <InfoBox
+    <ParkingTicketBox
       v-for="ticket of tickets"
-      additionalClass="col-span-3"
-      :topText="`#${ ticket.id } For ${ ticket.license } in ${ getZone(ticket.zone_id)?.name }`"
-      :featuredText="`Expires: ${ getExpireAtString(ticket) }`"
-      :bottomText="`Starts ${ getStartAtString(ticket) } and is valid for ${ getDurationString(ticket.duration) }`"
-      icon="fa-solid fa-receipt"
-      textColor="text-blue-500"
-      bgColor="bg-blue-500"
+      :ticket="ticket"
+      :zone="getZone(ticket.zone_id)"
     />
   </BaseContainer>
 </template>
@@ -41,14 +36,12 @@
 <script setup lang="ts">
 import 'element-plus/es/components/alert/style/css';
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
-import InfoBox from '@/components/Box/InfoBox.vue';
 import Box from '@/components/Box/Box.vue';
-import { DateTime } from 'luxon';
 import { useParkingTicketStore } from '@/stores/parking-ticket';
 import { storeToRefs } from 'pinia';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { onMounted } from 'vue';
-import type { ParkingTicket } from '@/interfaces/parking-ticket';
+import ParkingTicketBox from '@/components/ParkingTicket/ParkingTicketBox.vue';
 
 const parkingTicketStore = useParkingTicketStore();
 const parkingZoneStore = useParkingZoneStore();
@@ -64,35 +57,4 @@ onMounted(() => {
 });
 
 const getZone = parkingZoneStore.getZone;
-
-const getExpireAtString = (ticket: ParkingTicket): string => {
-  return DateTime.fromISO(ticket.started_at).plus({
-    minutes: ticket.duration,
-  }).toFormat(`yyyy LLL dd 'at' HH:mm`);
-}
-
-const getStartAtString = (ticket: ParkingTicket): string => {
-  return DateTime.fromISO(ticket.started_at).toFormat(`yyyy LLL dd 'at' HH:mm`);
-}
-
-function getDurationString(duration: number): string {
-  const hoursPart = Math.floor(duration / 60);
-  const minutesPart = duration % 60;
-
-  let display = '';
-
-  if (hoursPart > 0) {
-    display = `${ hoursPart }h`;
-  }
-
-  if (minutesPart > 0) {
-    if (display !== '') {
-      display = display.concat(' ');
-    }
-
-    display = display.concat(`${ minutesPart }m`);
-  }
-
-  return display;
-}
 </script>

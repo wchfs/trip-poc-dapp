@@ -24,6 +24,7 @@ declare module '@vue/runtime-core' {
     InfoBox: typeof import('./src/components/Box/InfoBox.vue')['default']
     Map: typeof import('./src/components/Map/Map.vue')['default']
     NavMenu: typeof import('./src/components/Nav/NavMenu.vue')['default']
+    ParkingTicketBox: typeof import('./src/components/ParkingTicket/ParkingTicketBox.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

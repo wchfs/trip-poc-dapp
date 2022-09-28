@@ -42,7 +42,7 @@ import Box from '@/components/Box/Box.vue';
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { RollupService } from '@/services/rollup-service';
-import type { Error } from '@/interfaces/rollup-api';
+import type { Error, InspectError } from '@/interfaces/rollup-api';
 import type { ParkingTicket } from '@/interfaces/parking-ticket';
 
 
@@ -86,11 +86,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 };
 
 function sendInspect() {
-  RollupService.inspect<ParkingTicket|string>({
-    endpoint: "check_point_in_zones",
+  RollupService.inspect<ParkingTicket|InspectError>({
+    endpoint: "validate_ticket",
     payload: {
       Ticket: {
-        validate: {
+        Validate: {
           license: validateTicketForm.plate_number,
         },
       },

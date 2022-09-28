@@ -45,3 +45,6 @@ export type AdvanceRequest = {
   payload: object,
 };
 
+export type InspectError = {
+  error: string,
+};
