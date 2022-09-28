@@ -358,7 +358,7 @@ fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
             license.eq(data.license),
             longitude.eq(data.longitude),
             latitude.eq(data.latitude),
-            owner_address.eq(&wallet),
+            owner_address.eq(format!("0x{}", wallet)),
             purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
             started_at.eq(data.started_at),
             duration.eq(data.duration),
