@@ -218,7 +218,7 @@ Request:
   "endpoint": "validate_ticket",
   "payload": {
     "Ticket": {
-      "validate": {
+      "Validate": {
         "license": "example_license_plate"
       }
     }
