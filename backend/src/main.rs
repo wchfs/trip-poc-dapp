@@ -406,22 +406,25 @@ fn validate_ticket(data: ValidateTicket) -> String
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
-    let ticket = tickets::table
+    return match tickets::table
         .filter(license.eq(&data.license.to_string()))
         .order(id.desc())
-        .first::<Ticket>(&connection);
+        .load::<Ticket>(&connection) {
+        Ok(filtered_tickets) => {
+            let mut validate_msg = "There is no valid ticket available".to_string();
 
-    return match ticket {
-        Ok(t) => {
-            let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
-            let diff = (Utc::now() - ticket_date).num_minutes();
+            for t in &filtered_tickets {
+                let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
+                let diff = (Utc::now() - ticket_date).num_minutes();
 
-            if diff < t.duration.into() && diff > 0 {
-                return serde_json::to_string(&t).unwrap();
-            }
+                if diff < t.duration.into() && diff > 0 {
+                    validate_msg = serde_json::to_string(&t).unwrap();
+                    break;
+                }
+            };
 
-            return "There is no valid ticket available".to_string();
-        },
+            return validate_msg;
+        }
         Err(val) => val.to_string(),
     };
 }
