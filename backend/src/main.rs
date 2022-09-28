@@ -371,7 +371,7 @@ fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
 
     if is_inserted > 0 {
         let ticket = tickets::table
-            .filter(owner_address.eq(wallet))
+            .filter(owner_address.eq(format!("0x{}", wallet)))
             .order(id.desc())
             .first::<Ticket>(&connection)
             .expect("No ticket found");
