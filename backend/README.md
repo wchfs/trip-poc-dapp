@@ -98,7 +98,6 @@ Request:
     "Ticket": {
       "Buy": {
         "license": "String",
-        "owner_address": "0xString",
         "longitude": 19.943540573120117,
         "latitude": 50.0565299987793,
         "started_at": "2022-09-24T14:25:00Z",
@@ -120,7 +119,9 @@ Response (notice):
   "owner_address": "0xString",
   "purchased_at": "2022-09-24T14:04:20Z",
   "duration": 60,
-  "zone_id": 1
+  "zone_id": 1,
+  "paid": "1000000000000000",
+  "to_pay": "1000000000000000"
 }
 ```
 
@@ -201,7 +202,9 @@ Response:
     "owner_address": "0xString",
     "purchased_at": "2022-09-24T14:04:20Z",
     "duration": 60,
-    "zone_id": 1
+    "zone_id": 1,
+    "paid": "1000000000000000",
+    "to_pay": "1000000000000000"
   },
   {},
   {}
@@ -233,7 +236,9 @@ Response:
     "owner_address": "0xString",
     "purchased_at": "2022-09-24T14:04:20Z",
     "duration": 60,
-    "zone_id": 1
+    "zone_id": 1,
+    "paid": "1000000000000000",
+    "to_pay": "1000000000000000"
 }
 ```
 If there is no valid ticket there will be a proper error.

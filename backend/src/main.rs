@@ -57,7 +57,6 @@ struct GeoPoint {
 #[derive(Deserialize, Debug)]
 struct BuyTicket {
     license: String,
-    owner_address: String,
     longitude: f32,
     latitude: f32,
     started_at: String,
@@ -76,14 +75,22 @@ struct ValidateTicket {
     license: String,
 }
 
-fn router(route: Route) -> String
+#[derive(Deserialize, Debug)]
+struct StandardInput {
+    //bytes32: Option<ethabi::Token>,
+    address: Option<ethabi::Token>,
+    uint256: Option<ethabi::Token>,
+    bytes: Vec<u8>,
+}
+
+fn router(route: Route, data: StandardInput) -> String
 {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
         "check_point_in_zones" => if let Some(RoutePayload::Point(value)) = route.payload { return check_point_in_zone(value) } else { panic!("") }
         "buy_ticket" => if let Some(RoutePayload::Ticket(value)) = route.payload {
             if let TicketActions::Buy(value) = value {
-                return buy_ticket(value)
+                return buy_ticket(value, data)
             } else { panic!("Validation failed! Buy Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
         "get_tickets" => if let Some(RoutePayload::Ticket(value)) = route.payload {
@@ -162,9 +169,10 @@ pub async fn handle_advance(
 
     let input = handle_input(request);
 
-    let input_abi_payload = abi_decoder(input);
-
-    let output = handle_output(input_abi_payload);
+    let output = handle_output(match abi_decoder(&input) {
+        Ok(deposit) => deposit,
+        Err(_) => input
+    });
 
     return Ok(add_response("notice", client, server_addr, output).await?);
 }
@@ -207,30 +215,38 @@ pub async fn add_response(
     Ok("accept")
 }
 
-fn handle_input(request: JsonValue) -> Vec<u8>
+fn handle_input(request: JsonValue) -> StandardInput
 {
-    return hex_decoder(request);
+    return StandardInput { /*bytes32: None,*/ address: None, uint256: None, bytes: hex_decoder(request) };
 }
 
-fn handle_output(data: Vec<u8>) -> String
+fn handle_output(data: StandardInput) -> String
 {
-    let route: Route = payload_parser(data);
+    let route: Route = payload_parser(&data.bytes);
 
-    let output_payload: String = router(route);
+    let output_payload: String = router(route, data);
 
     return format!("0x{}", hex::encode(output_payload));
 }
 
-fn abi_decoder(data: Vec<u8>) -> Vec<u8>
+fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String>
 {
     let abi_parameters = get_abi_ether_parameters();
 
-    let tokens = decode(&abi_parameters, &data).unwrap();
-
-    return tokens[3].clone().into_bytes().unwrap();
+    return match decode(&abi_parameters, &data.bytes) {
+        Ok(data) => {
+            Ok(StandardInput {
+                //bytes32: Some(data[0].clone()),
+                address: Some(data[1].clone()),
+                uint256: Some(data[2].clone()),
+                bytes: data[3].clone().into_bytes().unwrap()
+            })
+        },
+        Err(msg) => Err(msg.to_string())
+    };
 }
 
-fn payload_parser(data: Vec<u8>) -> Route
+fn payload_parser(data: &Vec<u8>) -> Route
 {
     return serde_json::from_slice(&data).unwrap();
 }
@@ -323,28 +339,33 @@ fn get_polygon(geo_json_string: String) -> GeometryCollection
     return collection;
 }
 
-fn buy_ticket(data: BuyTicket) -> String
+fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
 {
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
+
+    let amount = additional_data.uint256.clone().expect("Empty amount field").into_uint().expect("Failed parsing amount").to_string();
+    let wallet = additional_data.address.clone().expect("Empty address field").to_string();
 
     let is_inserted = insert_into(tickets::table)
         .values((
             license.eq(data.license),
             longitude.eq(data.longitude),
             latitude.eq(data.latitude),
-            owner_address.eq(&data.owner_address),
+            owner_address.eq(&wallet),
             purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
             started_at.eq(data.started_at),
             duration.eq(data.duration),
             zone_id.eq(data.zone_id),
+            paid.eq(&amount),
+            to_pay.eq(&amount)
         ))
         .execute(&connection)
         .unwrap();
 
     if is_inserted > 0 {
         let ticket = tickets::table
-            .filter(owner_address.eq(data.owner_address))
+            .filter(owner_address.eq(wallet))
             .order(id.desc())
             .first::<Ticket>(&connection)
             .expect("No ticket found");
@@ -385,22 +406,25 @@ fn validate_ticket(data: ValidateTicket) -> String
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
-    let ticket = tickets::table
+    return match tickets::table
         .filter(license.eq(&data.license.to_string()))
         .order(id.desc())
-        .first::<Ticket>(&connection);
+        .load::<Ticket>(&connection) {
+        Ok(filtered_tickets) => {
+            let mut validate_msg = "There is no valid ticket available".to_string();
 
-    return match ticket {
-        Ok(t) => {
-            let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
-            let diff = (Utc::now() - ticket_date).num_minutes();
+            for t in &filtered_tickets {
+                let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
+                let diff = (Utc::now() - ticket_date).num_minutes();
 
-            if diff < t.duration.into() && diff > 0 {
-                return serde_json::to_string(&t).unwrap();
-            }
+                if diff < t.duration.into() && diff > 0 {
+                    validate_msg = serde_json::to_string(&t).unwrap();
+                    break;
+                }
+            };
 
-            return "There is no valid ticket available".to_string();
-        },
+            return validate_msg;
+        }
         Err(val) => val.to_string(),
     };
 }
