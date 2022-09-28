@@ -186,8 +186,10 @@ Request:
 }
 ```
 both fields are optional -> with both fields missing there will be an error
-```
-Missing license and owner address!
+```json
+{
+  "error": "Missing license and owner address!"
+}
 ```
 
 Response:
@@ -242,6 +244,8 @@ Response:
 }
 ```
 If there is no valid ticket there will be a proper error.
-```
-There is no valid ticket available
+```json
+{
+  "error": "There is no valid ticket available"
+}
 ```
