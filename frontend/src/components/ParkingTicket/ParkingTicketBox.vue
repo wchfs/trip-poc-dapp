@@ -1,9 +1,9 @@
 <template>
   <InfoBox
     additionalClass="col-span-3"
-    :topText="`#${ ticket.id } For ${ ticket.license } in ${ zone?.name }`"
-    :featuredText="`Expires: ${ getExpireAtString(ticket) }`"
-    :bottomText="`Starts ${ getStartAtString(ticket) } and is valid for ${ getDurationString(ticket.duration) }`"
+    :topText="`#${ props.ticket.id } For ${ props.ticket.license } in ${ props.zone?.name }`"
+    :featuredText="`Expires: ${ getExpireAtString(props.ticket) }`"
+    :bottomText="`Starts ${ getStartAtString(props.ticket) } and is valid for ${ getDurationString(props.ticket.duration) }`"
     icon="fa-solid fa-receipt"
     textColor="text-blue-500"
     bgColor="bg-blue-500"

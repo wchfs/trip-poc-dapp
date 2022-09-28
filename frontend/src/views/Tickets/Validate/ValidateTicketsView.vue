@@ -1,6 +1,8 @@
 <template>
   <BaseContainer>
-    <Box>
+    <Box
+      additionalClass="col-span-1 md:col-start-2 mb-5"
+    >
       <ElForm
         @submit.prevent
         ref="validateTicketFormRef"
@@ -26,7 +28,7 @@
                 type="danger"
                 @click="submitForm(validateTicketFormRef)"
               >
-                Buy ticket
+                Get ticket
               </ElButton>
             </ElFormItem>
           </div>
@@ -34,17 +36,30 @@
       </ElForm>
     </Box>
   </BaseContainer>
+  <BaseContainer v-if="result !== null">
+    <Box
+      v-if="result.hasOwnProperty('error')"
+      additionalClass="col-span-3"
+    >
+      {{ result.error }}
+    </Box>
+    <ParkingTicketBox
+      v-else
+      :ticket="result"
+    />
+  </BaseContainer>
 </template>
 
 <script setup lang="ts">
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
+import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { RollupService } from '@/services/rollup-service';
 import type { Error, InspectError } from '@/interfaces/rollup-api';
 import type { ParkingTicket } from '@/interfaces/parking-ticket';
-
+import ParkingTicketBox from '@/components/ParkingTicket/ParkingTicketBox.vue';
 
 const validateTicketFormRef = ref<FormInstance>();
 const validateTicketForm = reactive({
@@ -85,6 +100,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   })
 };
 
+const result: Ref<ParkingTicket|InspectError|null> = ref(null);
+
 function sendInspect() {
   RollupService.inspect<ParkingTicket|InspectError>({
     endpoint: "validate_ticket",
@@ -97,7 +114,7 @@ function sendInspect() {
     },
   }).then((reports) => {
     reports.forEach(report => {
-      console.log(report);
+      result.value = report;
     });
   }).catch((error: Error) => {
     console.log(error); // TODO handle it
