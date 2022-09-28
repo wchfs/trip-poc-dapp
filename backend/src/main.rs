@@ -344,8 +344,8 @@ fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
-    let amount = additional_data.uint256.clone().expect("Empty amount field").into_uint().expect("Failed parsing").to_string();
-    let wallet = additional_data.address.clone().expect("Empty address field").into_string().expect("Failed parsing");
+    let amount = additional_data.uint256.clone().expect("Empty amount field").into_uint().expect("Failed parsing amount").to_string();
+    let wallet = additional_data.address.clone().expect("Empty address field").to_string();
 
     let is_inserted = insert_into(tickets::table)
         .values((
