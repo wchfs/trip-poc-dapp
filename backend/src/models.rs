@@ -22,4 +22,6 @@ pub struct Ticket {
     pub purchased_at: String,
     pub duration: i32,
     pub zone_id: i32,
+    pub paid: String,
+    pub to_pay: String,
 }

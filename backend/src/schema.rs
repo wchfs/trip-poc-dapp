@@ -9,6 +9,8 @@ table! {
         purchased_at -> Text,
         duration -> Integer,
         zone_id -> Integer,
+        paid -> Text,
+        to_pay -> Text,
     }
 }
 
