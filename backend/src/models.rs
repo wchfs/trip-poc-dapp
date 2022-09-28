@@ -10,7 +10,7 @@ pub struct Zone {
     pub owner_address: String,
 }
 
-#[derive(Identifiable, Associations, Queryable, Insertable, Serialize)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
 #[belongs_to(Zone)]
 pub struct Ticket {
     pub id: i32,

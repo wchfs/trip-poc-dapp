@@ -16,7 +16,7 @@ use dotenv::dotenv;
 use geo::{Coordinate, Point, Contains};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use ethabi::{ParamType, decode};
 use diesel::insert_into;
 
@@ -82,6 +82,12 @@ struct StandardInput {
     uint256: Option<ethabi::Token>,
     bytes: Vec<u8>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ErrorOutput {
+    error: String,
+}
+
 
 fn router(route: Route, data: StandardInput) -> String
 {
@@ -373,13 +379,13 @@ fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
         return serde_json::to_string(&ticket).unwrap();
     }
 
-    return "Ticket error!".to_string();
+    return error_json_string("Ticket error!".to_string());
 }
 
 fn get_tickets(data: GetTicket) -> String
 {
     if data.license.is_none() && data.owner_address.is_none() {
-        return "Missing license and owner address!".to_string();
+        return error_json_string("Missing license and owner address!".to_string());
     }
 
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
@@ -397,7 +403,7 @@ fn get_tickets(data: GetTicket) -> String
 
     return match tickets_query.load::<Ticket>(&connection) {
         Ok(t) => serde_json::to_string(&t).unwrap(),
-        Err(val) => val.to_string(),
+        Err(val) => error_json_string(val.to_string()),
     };
 }
 
@@ -411,7 +417,7 @@ fn validate_ticket(data: ValidateTicket) -> String
         .order(id.desc())
         .load::<Ticket>(&connection) {
         Ok(filtered_tickets) => {
-            let mut validate_msg = "There is no valid ticket available".to_string();
+            let mut validate_msg = error_json_string("There is no valid ticket available".to_string());
 
             for t in &filtered_tickets {
                 let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
@@ -425,8 +431,13 @@ fn validate_ticket(data: ValidateTicket) -> String
 
             return validate_msg;
         }
-        Err(val) => val.to_string(),
+        Err(val) => error_json_string(val.to_string())
     };
+}
+
+fn error_json_string(data: String) -> String
+{
+    return serde_json::to_string(&ErrorOutput{ error: data }).unwrap();
 }
 
 async fn print_response<T: hyper::body::HttpBody>(
