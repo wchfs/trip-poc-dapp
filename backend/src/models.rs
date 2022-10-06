@@ -1,11 +1,11 @@
 use crate::schema::{tickets, zones};
 use serde::{Serialize};
 
-#[derive(Identifiable, Queryable, Serialize)]
+#[derive(Identifiable, Queryable, Serialize, Debug)]
 pub struct Zone {
     pub id: i32,
     pub name: String,
-    pub price: f32,
+    pub price: String,
     pub geo_json: String,
     pub owner_address: String,
 }

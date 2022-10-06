@@ -18,7 +18,7 @@ table! {
     zones (id) {
         id -> Integer,
         name -> Text,
-        price -> Float,
+        price -> Text,
         geo_json -> Text,
         owner_address -> Text,
     }

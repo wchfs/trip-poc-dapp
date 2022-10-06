@@ -19,15 +19,15 @@ use geojson::{quick_collection, GeoJson};
 use serde::{Serialize, Deserialize};
 use ethabi::{ParamType, decode};
 use diesel::insert_into;
-
 use point_in_polygon_dapp_paid_parking_assistant::establish_connection;
 use point_in_polygon_dapp_paid_parking_assistant::models::{Zone, Ticket};
+use self::diesel::prelude::*;
+use chrono::prelude::*;
 
 extern crate point_in_polygon_dapp_paid_parking_assistant;
 extern crate diesel;
 
-use self::diesel::prelude::*;
-use chrono::prelude::*;
+const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
 
 #[derive(Deserialize, Debug, Default)]
 struct Route {
@@ -350,36 +350,60 @@ fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
     use point_in_polygon_dapp_paid_parking_assistant::schema::tickets::{self, *};
     let connection = establish_connection();
 
-    let amount = additional_data.uint256.clone().expect("Empty amount field").into_uint().expect("Failed parsing amount").to_string();
-    let wallet = additional_data.address.clone().expect("Empty address field").to_string();
+    let amount = (additional_data.uint256.clone().expect("Empty amount field").into_uint().expect("Failed parsing amount") / WEI_TO_GWEI_FACTOR).to_string();
+    let calculated_amount = calculate_amount(data.zone_id, data.duration).to_string();
 
-    let is_inserted = insert_into(tickets::table)
-        .values((
-            license.eq(data.license),
-            longitude.eq(data.longitude),
-            latitude.eq(data.latitude),
-            owner_address.eq(format!("0x{}", wallet)),
-            purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
-            started_at.eq(data.started_at),
-            duration.eq(data.duration),
-            zone_id.eq(data.zone_id),
-            paid.eq(&amount),
-            to_pay.eq(&amount)
-        ))
-        .execute(&connection)
-        .unwrap();
+    if amount == calculated_amount
+    {
+        let wallet = additional_data.address.clone().expect("Empty address field").to_string();
 
-    if is_inserted > 0 {
-        let ticket = tickets::table
-            .filter(owner_address.eq(format!("0x{}", wallet)))
-            .order(id.desc())
-            .first::<Ticket>(&connection)
-            .expect("No ticket found");
+        let is_inserted = insert_into(tickets::table)
+            .values((
+                license.eq(data.license),
+                longitude.eq(data.longitude),
+                latitude.eq(data.latitude),
+                owner_address.eq(format!("0x{}", wallet)),
+                purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
+                started_at.eq(data.started_at),
+                duration.eq(data.duration),
+                zone_id.eq(data.zone_id),
+                paid.eq(&amount),
+                to_pay.eq(&calculated_amount)
+            ))
+            .execute(&connection)
+            .unwrap();
 
-        return serde_json::to_string(&ticket).unwrap();
+        if is_inserted > 0 {
+            let ticket = tickets::table
+                .filter(owner_address.eq(format!("0x{}", wallet)))
+                .order(id.desc())
+                .first::<Ticket>(&connection)
+                .expect("No ticket found");
+
+            return serde_json::to_string(&ticket).unwrap();
+        }
     }
 
-    return error_json_string("Ticket error!".to_string());
+    return error_json_string("Ticket validation error!".to_string());
+}
+
+fn calculate_amount(zone_id: i32, duration: i32) -> f64
+{
+    use point_in_polygon_dapp_paid_parking_assistant::schema::zones::{self, *};
+
+    let connection = establish_connection();
+
+    let zone_price_per_hour = zones::table
+        .filter(id.eq(zone_id))
+        .select(price)
+        .first::<String>(&connection)
+        .expect("Zone not found");
+
+    let pricing: f64 = zone_price_per_hour.parse::<f64>().expect("Pricing parse failed");
+
+    let hours: f64 = (duration / 60) as f64;
+
+    return pricing * hours;
 }
 
 fn get_tickets(data: GetTicket) -> String
