@@ -1,5 +1,5 @@
 [package]
-name = "point_in_polygon_dapp_paid_parking_assistant"
+name = "parking_dapp" #point_in_polygon_dapp_paid_parking_assistant
 version = "0.3.0"
 edition = "2021"
 authors = [

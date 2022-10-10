@@ -12,4 +12,4 @@
 # specific language governing permissions and limitations under the License.
 
 set -e
-rollup-init ./target/riscv64ima-cartesi-linux-gnu/release/point_in_polygon_dapp_paid_parking_assistant
+rollup-init ./target/riscv64ima-cartesi-linux-gnu/release/parking_dapp

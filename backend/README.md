@@ -124,6 +124,12 @@ Response (notice):
   "to_pay": "1000000000000000"
 }
 ```
+If the calculated price is different from the paid amount.
+```json
+{
+  "error": "Ticket validation error!"
+}
+```
 
 ### inspect state (only hex encoding) - reports
 #### Get (5) Zones:
