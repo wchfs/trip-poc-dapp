@@ -146,7 +146,7 @@ Response:
   {
     "id": 1,
     "name": "String",
-    "price": 0.001,
+    "price": "1000000",
     "geo_json": "Stringify GeoJSON",
     "owner_address": "0xString"
   },
