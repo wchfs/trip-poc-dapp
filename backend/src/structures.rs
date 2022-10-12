@@ -2,11 +2,29 @@ use serde::{Deserialize, Serialize};
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
 
+#[derive(Debug)]
 pub enum TicketStatus {
     Paid = 0,
     Completed = 1,
     Refunded = 2,
     PaidOut = 3,
+}
+
+#[derive(Debug)]
+pub enum ResponseType {
+    Notice,
+    Report,
+    Voucher,
+}
+
+impl ResponseType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ResponseType::Notice => "notice",
+            ResponseType::Report => "report",
+            ResponseType::Voucher => "voucher",
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Default)]

@@ -1,4 +1,4 @@
-use crate::schema::{tickets, zones};
+use crate::schema::{tickets, zones, balances};
 use serde::{Serialize};
 
 #[derive(Identifiable, Queryable, Serialize, Debug)]
@@ -24,4 +24,11 @@ pub struct Ticket {
     pub zone_id: i32,
     pub paid: String,
     pub to_pay: String,
+    pub status: i32,
+}
+
+#[derive(Identifiable, Queryable, Serialize, Debug)]
+pub struct Balance {
+    pub id: i32,
+    pub amount: String,
 }

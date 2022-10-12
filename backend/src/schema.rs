@@ -1,4 +1,11 @@
 table! {
+    balances (id) {
+        id -> Integer,
+        amount -> Text,
+    }
+}
+
+table! {
     tickets (id) {
         id -> Integer,
         license -> Text,
@@ -11,6 +18,7 @@ table! {
         zone_id -> Integer,
         paid -> Text,
         to_pay -> Text,
+        status -> Integer,
     }
 }
 
@@ -27,6 +35,7 @@ table! {
 joinable!(tickets -> zones (zone_id));
 
 allow_tables_to_appear_in_same_query!(
+    balances,
     tickets,
     zones,
 );

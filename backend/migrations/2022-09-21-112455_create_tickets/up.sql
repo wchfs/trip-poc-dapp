@@ -12,6 +12,7 @@ CREATE TABLE tickets (
     zone_id INTEGER NOT NULL,
     paid TEXT NOT NULL,
     to_pay TEXT NOT NULL,
+    status INTEGER NOT NULL,
 
     FOREIGN KEY (zone_id) REFERENCES zones (id)
 );
