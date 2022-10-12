@@ -255,3 +255,16 @@ If there is no valid ticket there will be a proper error.
   "error": "There is no valid ticket available"
 }
 ```
+
+#### Get app balance
+Request:
+```json
+{
+  "endpoint": "get_app_balance",
+  "payload": null
+}
+```
+Response:
+```
+3000000
+```
