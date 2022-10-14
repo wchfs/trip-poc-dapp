@@ -92,7 +92,7 @@ pub async fn handle_advance(
     let response_type = response_type_handler(&route);
 
     let output = handle_output(route, input);
-
+    println!("{:?}", output);
     return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
@@ -123,8 +123,12 @@ pub async fn add_response(
 {
     println!("Adding {}", response_type);
 
-    let add = object! {"payload" => output};
-
+    // let add = object! {"payload" => output};
+    let add = object! {
+        address: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71".to_string(),
+        payload: "0x31",
+    };
+    println!("{}", add);
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
@@ -147,7 +151,8 @@ fn handle_output(route: Route, data: StandardInput) -> String
 {
     let output_payload: String = router(route, data);
 
-    return format!("0x{}", hex::encode(output_payload));
+    return output_payload;
+    // return format!("0x{}", hex::encode(output_payload));
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String>

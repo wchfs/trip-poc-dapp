@@ -217,17 +217,27 @@ pub fn get_app_balance() -> String
         .expect("Balance not found");
 }
 
-pub fn withdraw_funds(amount: String) -> String
+pub fn withdraw_funds(withdraw_struct: WithdrawFunds) -> String
 {
     let app_balance = get_app_balance().parse::<i128>().expect("Paid amount parse failed");
-    let parsed_amount = amount.parse::<i128>().expect("Paid amount parse failed");
+    let parsed_amount = withdraw_struct.amount.parse::<i128>().expect("Paid amount parse failed");
 
     if parsed_amount > app_balance
     {
         return error_json_string("Insufficient funds to withdraw".to_string());
     }
 
-    return parsed_amount.to_string();
+    // return serde_json::to_string(&VoucherResponse {
+    //     address: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71".to_string(),
+    //     payload: hex::encode(parsed_amount.to_string()),
+    // }).unwrap();
+    let test = VoucherResponse {
+        address: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71".to_string(),
+        payload: hex::encode(parsed_amount.to_string()),
+    };
+
+    println!("{}", serde_json::json!(test));
+    return "".to_string();
 }
 
 pub fn error_json_string(data: String) -> String

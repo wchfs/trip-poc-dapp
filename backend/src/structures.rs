@@ -49,7 +49,8 @@ pub struct ErrorOutput {
 #[derive(Deserialize, Debug)]
 pub enum RoutePayload {
     Ticket(TicketActions),
-    Point(GeoPoint)
+    Point(GeoPoint),
+    Balance(BalanceActions),
 }
 
 #[derive(Deserialize, Debug)]
@@ -57,6 +58,11 @@ pub enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
     Validate(ValidateTicket)
+}
+
+#[derive(Deserialize, Debug)]
+pub enum BalanceActions {
+    Withdraw(WithdrawFunds),
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,4 +90,17 @@ pub struct GetTicket {
 #[derive(Deserialize, Debug)]
 pub struct ValidateTicket {
     pub license: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WithdrawFunds {
+    pub amount: String,
+}
+
+pub const TRANSFER_FUNCTION_SELECTOR: &str = "b'\\xa9\\x05\\x9c\\xbb'";
+
+#[derive(Serialize, Debug)]
+pub struct VoucherResponse {
+    pub address: String,
+    pub payload: String,
 }

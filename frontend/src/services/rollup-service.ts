@@ -127,7 +127,7 @@ export abstract class RollupService {
       ? await RollupService.getContracts().inputContract.addInput(payloadBytes)
       : await RollupService.getContracts().etherContract.etherDeposit(
         payloadBytes, {
-          value: ethers.utils.parseEther(deposit)
+          value: ethers.utils.parseUnits("1000000", "gwei")
         }
       );
 
