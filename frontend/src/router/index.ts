@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteLocationNormalized } from 'vue-router'
+import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useWalletStore } from '@/stores/wallet';
 
 const router = createRouter({
@@ -12,21 +12,14 @@ const router = createRouter({
     },
     {
       path: '/dapp',
-      beforeEnter: async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
-        const walletStore = useWalletStore();
-
-        if (walletStore.onboard?.connectedWallet?.value === null) {
-          await router.push({
-            name: 'root',
-          });
-        }
-
-        return true;
+      name: 'dapp',
+      redirect: {
+        name: 'dapp.home',
       },
       children: [
         {
           path: '',
-          name: 'dapp',
+          name: 'dapp.home',
           component: () => import('../views/DApp/DAppView.vue'),
         },
         {
@@ -49,9 +42,73 @@ const router = createRouter({
             },
           ],
         },
+        {
+          path: 'proposals',
+          name: 'dapp.proposals',
+          redirect: {
+            name: 'dapp.proposals.list',
+          },
+          children: [
+            {
+              path: 'list',
+              name: 'dapp.proposals.list',
+              component: () => import('../views/Proposals/List/ProposalListView.vue'),
+            },
+            {
+              path: 'details/:id',
+              name: 'dapp.proposals.details',
+              component: () => import('../views/Proposals/Details/ProposalDetailsView.vue'),
+              props: true,
+            },
+          ],
+        },
       ],
     },
   ]
-})
+});
 
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  const toName = to.name;
+
+  if (!toName) {
+    next(false);
+  } else {
+    const toNameString = toName.toString();
+
+    switch (true) {
+      case toNameString.startsWith('root'):
+        await beforeRoot(to, from, next);
+        break;
+      case toNameString.startsWith('dapp'):
+        await beforeDApp(to, from, next);
+        break;
+      default:
+        next();
+    }
+  }
+});
+
+async function beforeRoot(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
+  const walletStore = useWalletStore();
+
+  if (walletStore.connectedWallet !== null || await walletStore.tryConnectUsingPrevConnectedWallet()) {
+    next({
+      name: 'dapp.home',
+    });
+  } else {
+    next();
+  }
+}
+
+async function beforeDApp(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
+  const walletStore = useWalletStore();
+
+  if (walletStore.connectedWallet === null && !await walletStore.tryConnectUsingPrevConnectedWallet()) {
+    next({
+      name: 'root',
+    });
+  } else {
+    next();
+  }
+}
 export default router

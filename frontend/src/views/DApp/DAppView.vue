@@ -16,7 +16,7 @@
       v-for="zone of zones"
       additionalClass="col-span-1 hover:bg-gray-100 hover:cursor-pointer"
       :topText="`Hourly rate for ${ zone.name }`"
-      :featuredText="`${ zone.price.toString() } ETH`"
+      :featuredText="`${ gwei2eth(zone.price.toString()) } ETH`"
       :bottomText="`Identifier: ${ zone.id }`"
       icon="fa-solid fa-square-parking"
       textColor="text-blue-500"
@@ -35,6 +35,7 @@ import Map from '@/components/Map/Map.vue';
 import DAppViewSidebar from '@/views/DApp/DAppViewSidebar.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { storeToRefs } from 'pinia';
+import { gwei2eth } from '@/helpers/helpers';
 
 const parkingZoneStore = useParkingZoneStore();
 const {

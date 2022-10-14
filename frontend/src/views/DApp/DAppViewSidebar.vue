@@ -10,7 +10,7 @@
   <InfoBox
     v-if="markerPositionWithSpaceSeparator !== '' && selectedZoneId !== null"
     topText="Price per hour"
-    :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ selectedZone?.price } ETH`"
+    :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ gwei2eth(selectedZone?.price.toString()) } ETH`"
     :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name }`"
     icon="fa-solid fa-hand-holding-dollar"
     textColor="text-green-500"
@@ -34,6 +34,7 @@ import type { Error } from '@/interfaces/rollup-api';
 import Box from '@/components/Box/Box.vue';
 import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';
 import { RollupService } from '@/services/rollup-service';
+import { gwei2eth } from '@/helpers/helpers';
 
 const locationStore = useLocationStore();
 const {

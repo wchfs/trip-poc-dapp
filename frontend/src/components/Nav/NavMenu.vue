@@ -33,7 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import type { RouteRecordName } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { ref, watch } from 'vue';
 
@@ -46,7 +45,7 @@ interface MenuItem {
 const menuItems = ref<MenuItem[]>([
   {
     displayName: 'Parking DApp',
-    routeName: 'dapp',
+    routeName: 'dapp.home',
   },
   {
     displayName: 'My Tickets',
@@ -57,18 +56,20 @@ const menuItems = ref<MenuItem[]>([
     routeName: 'dapp.tickets.validate',
   },
   {
+    displayName: 'Proposals',
+    routeName: 'dapp.proposals',
+  },
+  {
     displayName: 'DApp Summary',
     routeName: 'dapp.summary',
   },
 ]);
 
-const currentRouteName = ref<RouteRecordName|null|undefined>('');
-
 watch(useRouter().currentRoute, async (currentRoute) => {
-  currentRouteName.value = currentRoute.name;
+  const currentRouteName = currentRoute.name;
 
   menuItems.value = menuItems.value.map((menuItem: MenuItem) => {
-    menuItem.active = currentRouteName.value === menuItem.routeName;
+    menuItem.active = !!currentRouteName && currentRouteName.toString().startsWith(menuItem.routeName);
 
     return menuItem;
   });

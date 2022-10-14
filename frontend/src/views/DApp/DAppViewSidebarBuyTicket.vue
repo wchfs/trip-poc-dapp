@@ -67,6 +67,7 @@ import { useParkingTicketStore } from '@/stores/parking-ticket';
 import router from '@/router';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { useWalletStore } from '@/stores/wallet';
+import { gwei2eth } from '@/helpers/helpers';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
@@ -182,7 +183,9 @@ const executeDepositDeclined = () => {
 };
 
 function calculatePrice(zone: ParkingZone, duration: number): string {
-  return ((zone.price / 60) * duration).toFixed(4);
+  const price = (zone.price / 60) * duration;
+
+  return gwei2eth(price.toString());
 }
 
 function getDurationFromTimeString(time: string): number {

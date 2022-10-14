@@ -2,18 +2,27 @@ import { defineStore } from 'pinia';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { init, useOnboard } from '@web3-onboard/vue';
 import type { OnboardComposable } from '@web3-onboard/vue/dist/types';
-import type { OnboardAPI } from '@web3-onboard/core';
-
-export interface WalletStoreState {
-  onboardAPI: OnboardAPI | null,
-}
+import type { OnboardAPI, WalletState } from '@web3-onboard/core';
+import { useLocalStorage } from '@vueuse/core';
+import type { ConnectOptions } from '@web3-onboard/core';
 
 export const useWalletStore = () => {
   const innerStore = defineStore({
     id: 'wallet',
-    state: (): WalletStoreState => {
+    state: () => {
       return {
-        onboardAPI: null,
+        lastConnectedWallet: useLocalStorage<string | null>('lastConnectedWallet', null, {
+          serializer: {
+            read(raw: string): string | null {
+              return JSON.parse(raw);
+            },
+            write(value: string | null): string {
+              return JSON.stringify(value);
+            }
+          },
+        }),
+        onboardAPI: null as OnboardAPI | null,
+        connectingWallet: false,
       }
     },
     getters: {
@@ -28,8 +37,13 @@ export const useWalletStore = () => {
           return null;
         }
       },
+      connectedWallet(): WalletState | null {
+        const connectedWallet = this.onboard?.connectedWallet;
+
+        return connectedWallet ? connectedWallet.value : null;
+      },
       walletAddress(): string|null {
-        const accounts = this.onboard?.connectedWallet?.value?.accounts;
+        const accounts = this.connectedWallet?.accounts;
 
         if (!accounts) {
           return null;
@@ -89,10 +103,52 @@ export const useWalletStore = () => {
       },
       async connectWallet(): Promise<void> {
         if (this.onboard === null) {
-          throw new Error('Run setup() first');
+          throw new Error('Init onboard first');
         }
 
-        return this.onboard.connectWallet();
+        if (this.connectingWallet) {
+          console.log('Already connecting wallet');
+
+          return;
+        }
+
+        this.connectingWallet = true;
+
+        let options = undefined as ConnectOptions | undefined;
+
+        if (this.lastConnectedWallet !== null) {
+          options = {
+            autoSelect: {
+              label: this.lastConnectedWallet,
+              disableModals: true,
+            },
+          };
+        }
+
+        const connectedWallet = await this.onboard.connectWallet(options);
+
+        this.connectingWallet = false;
+
+        return connectedWallet;
+      },
+      async tryConnectUsingPrevConnectedWallet(): Promise<boolean> {
+        if (this.lastConnectedWallet === null) {
+          return false;
+        }
+
+        await this.connectWallet();
+
+        return this.connectedWallet !== null;
+      },
+      setLastConnectedWallet(wallet: WalletState | null): void {
+        if (wallet === null) {
+          return;
+        }
+
+        this.lastConnectedWallet = wallet.label;
+      },
+      clearLastConnectedWallet(): void {
+        this.lastConnectedWallet = null;
       },
     },
   });
