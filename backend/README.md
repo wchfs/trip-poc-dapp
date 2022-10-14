@@ -146,7 +146,7 @@ Response:
   {
     "id": 1,
     "name": "String",
-    "price": 0.001,
+    "price": "1000000",
     "geo_json": "Stringify GeoJSON",
     "owner_address": "0xString"
   },
@@ -254,4 +254,17 @@ If there is no valid ticket there will be a proper error.
 {
   "error": "There is no valid ticket available"
 }
+```
+
+#### Get app balance
+Request:
+```json
+{
+  "endpoint": "get_app_balance",
+  "payload": null
+}
+```
+Response:
+```
+3000000
 ```

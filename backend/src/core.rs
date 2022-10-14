@@ -90,7 +90,8 @@ pub fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
                 duration.eq(data.duration),
                 zone_id.eq(data.zone_id),
                 paid.eq(&amount),
-                to_pay.eq(&calculated_amount) // In the future, we want to add the possibility to pay extra later.
+                to_pay.eq(&calculated_amount), // In the future, we want to add the possibility to pay extra later.
+                status.eq(TicketStatus::Paid as i32)
             ))
             .execute(&connection)
             .unwrap();
@@ -101,6 +102,8 @@ pub fn buy_ticket(data: BuyTicket, additional_data: StandardInput) -> String
                 .order(id.desc())
                 .first::<Ticket>(&connection)
                 .expect("No ticket found");
+
+            add_funds_to_balance(amount);
 
             return serde_json::to_string(&ticket).unwrap();
         }
@@ -179,6 +182,52 @@ pub fn validate_ticket(data: ValidateTicket) -> String
         }
         Err(val) => error_json_string(val.to_string())
     };
+}
+
+pub fn add_funds_to_balance(value: String)
+{
+    use crate::schema::balances::{self, *};
+    let connection = establish_connection();
+
+    let current_amount = balances::table
+        .select(amount)
+        .first::<String>(&connection)
+        .expect("Balance not found")
+        .parse::<i128>()
+        .expect("Balance parse failed");
+
+    let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
+
+    let new_amount = (current_amount + parsed_value).to_string();
+
+    diesel::update(balances::table)
+        .set(amount.eq(new_amount))
+        .execute(&connection)
+        .expect("Failed to update balance");
+}
+
+pub fn get_app_balance() -> String
+{
+    use crate::schema::balances::{self, *};
+    let connection = establish_connection();
+
+    return balances::table
+        .select(amount)
+        .first::<String>(&connection)
+        .expect("Balance not found");
+}
+
+pub fn withdraw_funds(amount: String) -> String
+{
+    let app_balance = get_app_balance().parse::<i128>().expect("Paid amount parse failed");
+    let parsed_amount = amount.parse::<i128>().expect("Paid amount parse failed");
+
+    if parsed_amount > app_balance
+    {
+        return error_json_string("Insufficient funds to withdraw".to_string());
+    }
+
+    return parsed_amount.to_string();
 }
 
 pub fn error_json_string(data: String) -> String

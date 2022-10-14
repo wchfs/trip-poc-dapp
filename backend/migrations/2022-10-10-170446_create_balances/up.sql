@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS `balances` (
+    id INTEGER NOT NULL PRIMARY KEY,
+    amount TEXT NOT NULL
+);

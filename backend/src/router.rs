@@ -21,6 +21,20 @@ pub fn router(route: Route, data: StandardInput) -> String
                 return validate_ticket(value)
             } else { panic!("Validation failed! Validate Ticket does not meet requirements") }
         } else { panic!("Validation failed! Ticket does not meet requirements") }
+        "get_app_balance" => get_app_balance(),
         &_ => todo!(),
     };
+}
+
+pub fn response_type_handler(route: &Route) -> &'static str
+{
+    return match route.endpoint.as_str() {
+        "get_zones" => ResponseType::Report.as_str(),
+        "check_point_in_zones" => ResponseType::Report.as_str(),
+        "buy_ticket" => ResponseType::Notice.as_str(),
+        "get_tickets" => ResponseType::Report.as_str(),
+        "validate_ticket" => ResponseType::Report.as_str(),
+        "get_app_balance" => ResponseType::Report.as_str(),
+        &_ => todo!(),
+    }
 }

@@ -15,7 +15,7 @@ use std::env;
 use dotenv::dotenv;
 use ethabi::{ParamType, decode};
 use parking_dapp::structures::{*};
-use parking_dapp::router::router;
+use parking_dapp::router::{router, response_type_handler};
 
 extern crate parking_dapp;
 extern crate diesel;
@@ -80,14 +80,20 @@ pub async fn handle_advance(
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
-    let input = handle_input(request);
+    let request_input = handle_input(request);
 
-    let output = handle_output(match abi_decoder(&input) {
+    let input = match abi_decoder(&request_input) {
         Ok(deposit) => deposit,
-        Err(_) => input
-    });
+        Err(_) => request_input
+    };
 
-    return Ok(add_response("notice", client, server_addr, output).await?);
+    let route: Route = payload_parser(&input.bytes);
+
+    let response_type = response_type_handler(&route);
+
+    let output = handle_output(route, input);
+
+    return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
 pub async fn handle_inspect(
@@ -99,9 +105,13 @@ pub async fn handle_inspect(
 
     let input = handle_input(request);
 
-    let output = handle_output(input);
+    let route: Route = payload_parser(&input.bytes);
 
-    return Ok(add_response("report", client, server_addr, output).await?);
+    let response_type = response_type_handler(&route);
+
+    let output = handle_output(route, input);
+
+    return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
 pub async fn add_response(
@@ -133,10 +143,8 @@ fn handle_input(request: JsonValue) -> StandardInput
     return StandardInput { /*bytes32: None,*/ address: None, uint256: None, bytes: hex_decoder(request) };
 }
 
-fn handle_output(data: StandardInput) -> String
+fn handle_output(route: Route, data: StandardInput) -> String
 {
-    let route: Route = payload_parser(&data.bytes);
-
     let output_payload: String = router(route, data);
 
     return format!("0x{}", hex::encode(output_payload));
