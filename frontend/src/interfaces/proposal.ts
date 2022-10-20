@@ -7,3 +7,10 @@ export interface Proposal {
   votes_down: number;
   created_at: string;
 }
+
+export interface ProposalVote {
+  wallet_address: string,
+  type: 'up' | 'down',
+  transaction_address: string,
+  created_at: string,
+}

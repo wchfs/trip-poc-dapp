@@ -9,16 +9,12 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BaseContainer: typeof import('./src/components/Containers/BaseContainer.vue')['default']
     Box: typeof import('./src/components/Box/Box.vue')['default']
-    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
-    ElDateTimePicker: typeof import('element-plus/es')['ElDateTimePicker']
-    ElDivider: typeof import('element-plus/es')['ElDivider']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElProgress: typeof import('element-plus/es')['ElProgress']
-    ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
     ElTimeSelect: typeof import('element-plus/es')['ElTimeSelect']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     InfoBox: typeof import('./src/components/Box/InfoBox.vue')['default']
@@ -27,5 +23,8 @@ declare module '@vue/runtime-core' {
     ParkingTicketBox: typeof import('./src/components/ParkingTicket/ParkingTicketBox.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TBadge: typeof import('./src/components/Common/TBadge/TBadge.vue')['default']
+    TButton: typeof import('./src/components/Controls/Button/TButton.vue')['default']
+    TInput: typeof import('./src/components/Controls/Input/TInput.vue')['default']
   }
 }

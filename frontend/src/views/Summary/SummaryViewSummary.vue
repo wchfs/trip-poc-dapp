@@ -8,7 +8,6 @@
       :bottomText="`Address: ${ walletStore.walletAddress }`"
       icon="fa-solid fa-wallet"
       textColor="text-blue-500"
-      bgColor="bg-blue-500"
       :showButton="!walletStore.onboard?.connectedWallet?.value"
       buttonText="CONNECT"
       @buttonClick="connectWallet()"
@@ -19,7 +18,6 @@
       bottomText="Hex id of connected chain"
       icon="fa-solid fa-link"
       textColor="text-green-500"
-      bgColor="bg-green-500"
       :showButton="!walletStore.onboard?.connectedChain?.value"
     />
     <InfoBox
@@ -28,7 +26,6 @@
       bottomText="Your DApp backend address"
       icon="fa-solid fa-location-crosshairs"
       textColor="text-yellow-500"
-      bgColor="bg-yellow-500"
     />
   </BaseContainer>
 </template>

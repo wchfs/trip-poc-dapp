@@ -1,6 +1,6 @@
 <template>
   <LMap
-    style="height:70vh"
+    style="height:60vh"
     v-model:zoom="zoom"
     :center="center"
     :no-blocking-animations="true"

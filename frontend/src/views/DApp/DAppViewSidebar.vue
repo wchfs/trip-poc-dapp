@@ -5,7 +5,6 @@
     bottomText="Drag marker on map to change"
     icon="fa-solid fa-location-dot"
     textColor="text-red-500"
-    bgColor="bg-red-500"
   />
   <InfoBox
     v-if="markerPositionWithSpaceSeparator !== '' && selectedZoneId !== null"
@@ -14,7 +13,6 @@
     :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name }`"
     icon="fa-solid fa-hand-holding-dollar"
     textColor="text-green-500"
-    bgColor="bg-green-500"
   />
   <Box
     v-if="!!selectedZoneId"
