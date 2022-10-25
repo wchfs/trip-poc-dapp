@@ -47,19 +47,28 @@
           {{ props.bottomText }}
         </span>
       </div>
-      <div :class="`${props.bgColor} p-3 md:p-2 xl:p-3 rounded-md`" v-if="icon">
+      <div :class="`
+        bg-opacity-100
+        border-2
+        border-dashed
+        border-gray-200
+        p-1
+        md:p-2
+        xl:p-3
+        rounded-md
+      `" v-if="icon">
         <i
           :class="`
             ${ icon }
             w-auto
             h-7
             w-7
-            md:h-4
-            md:w-4
-            xl:h-7
-            xl:w-7
+            md:h-6
+            md:w-6
+            xl:h-8
+            xl:w-8
             object-cover
-            text-white
+            ${props.textColor}
           `"
         />
       </div>
@@ -106,10 +115,6 @@ const props = defineProps({
   textColor: {
     type: String,
     default: 'text-blue-500',
-  },
-  bgColor: {
-    type: String,
-    default: 'bg-blue-500',
   },
   showButton: Boolean,
   buttonType: {

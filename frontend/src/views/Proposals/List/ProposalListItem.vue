@@ -8,20 +8,12 @@
           <h3 class="truncate text-sm font-medium text-gray-900">
             {{ props.proposal.title }}
           </h3>
-          <span
-            :class="`
-                inline-block
-                flex-shrink-0
-                rounded-full
-                px-2
-                py-0.5
-                text-xs
-                font-medium
-                ${ props.proposal.status === 'approved' ? 'bg-green-100 text-green-800' : '' }
-                ${ props.proposal.status === 'pending' ? 'bg-indigo-100 text-indigo-800 animate-pulse' : '' }
-                ${ props.proposal.status === 'rejected' ? 'bg-red-100 text-red-800' : '' }
-              `"
-          >{{ props.proposal.status }}</span>
+          <TBadge
+            :animation="props.proposal.status === 'pending' ? 'pulse' : 'none'"
+            :color="getBadgeColor(props.proposal)"
+          >
+            {{ props.proposal.status }}
+          </TBadge>
         </div>
         <p class="mt-1 truncate text-sm text-gray-500">
           {{ props.proposal.description }}
@@ -34,7 +26,7 @@
           <div
             class="relative inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700">
             <HashtagIcon
-              class="h-5 w-5 text-gray-400"
+              class="w-4 w-4 text-gray-400"
               aria-hidden="true"
             />
             <span class="ml-3">{{ props.proposal.id }}</span>
@@ -44,7 +36,7 @@
           <div
             class="relative inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700">
             <ArrowUpIcon
-              class="h-5 w-5 text-gray-400"
+              class="h-5 w-5 text-green-600"
               aria-hidden="true"
             />
             <span class="ml-3">{{ props.proposal.votes_up }}</span>
@@ -54,7 +46,7 @@
           <div
             class="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-700">
             <ArrowDownIcon
-              class="h-5 w-5 text-gray-400"
+              class="h-5 w-5 text-red-600"
               aria-hidden="true"
             />
             <span class="ml-3">{{ props.proposal.votes_down }}</span>
@@ -87,9 +79,21 @@
 import Box from '@/components/Box/Box.vue';
 import { ArrowDownIcon, ArrowUpIcon, Bars3BottomLeftIcon, HashtagIcon } from '@heroicons/vue/20/solid'
 import type { Proposal } from '@/interfaces/proposal';
+import TBadge from '@/components/Common/TBadge/TBadge.vue';
 
 const props = defineProps<{
   proposal: Proposal;
 }>();
 
+function getBadgeColor(proposal: Proposal) {
+  switch (proposal.status) {
+    case 'approved':
+      return 'green';
+    case 'rejected':
+      return 'red';
+    case 'pending':
+    default:
+      return 'indigo';
+  }
+}
 </script>

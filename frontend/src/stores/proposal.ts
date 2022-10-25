@@ -1,22 +1,41 @@
 import { defineStore } from 'pinia';
 import type { Proposal } from '@/interfaces/proposal';
 import { eth2gwei } from '@/helpers/helpers';
+import { BigNumber } from 'ethers';
 
 export const useProposalStore = defineStore('proposal', {
   state: () => ({
     proposals: [] as Proposal[],
     proposal: null as Proposal | null,
-    costOfProposal: 0,
+    costOfProposal: BigNumber.from(0),
   }),
   getters: {},
   actions: {
     calculateCostOfNewProposal(
-      oldPrice: string,
-      newPrice: string,
+      currentPrice: string,
+      newPrice: BigNumber,
     ) {
-      console.log('oldPrice', oldPrice);
-      console.log('newPrice', newPrice);
-      //this.costOfProposal = (parseInt(oldPrice) - eth2gwei(newPrice.toString())) * 1000000000;
+      let currentPriceBigNumber: BigNumber;
+
+      try {
+        currentPriceBigNumber = BigNumber.from(currentPrice);
+      } catch (error) {
+        this.costOfProposal = BigNumber.from(0);
+
+        return;
+      }
+
+      if (currentPriceBigNumber.lte(0) || newPrice.lte(0)) {
+        this.costOfProposal = BigNumber.from(0);
+
+        return;
+      }
+
+      this.costOfProposal = BigNumber
+        .from(currentPrice)
+        .sub(newPrice)
+        .abs()
+        .mul(1000);
     },
     fetchProposalById(id: number) { // TODO: implement
       this.fetchProposals();

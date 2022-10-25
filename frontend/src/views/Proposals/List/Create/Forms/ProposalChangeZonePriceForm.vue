@@ -24,23 +24,26 @@
     v-if="selectedZone !== null"
   >
     <div class="sm:col-span-3">
-      <label for="price" class="block text-sm font-medium text-gray-700">New price</label>
+      <label for="price" class="block text-sm font-medium text-gray-700">Propose change</label>
       <div class="mt-1 flex rounded-md shadow-sm">
       <span
         class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm"
       >
-        ETH
+        {{ gwei2eth(selectedZone.price.toString()) }} ETH to
       </span>
         <input
           v-model="formData.price"
           type="number"
-          max="1"
-          min="0.0001"
           name="price"
           id="price"
           autocomplete="price"
-          class="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+          class="block w-full min-w-0 flex-1 rounded-none border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
         />
+        <span
+          class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm"
+        >
+        ETH
+      </span>
       </div>
     </div>
 
@@ -69,8 +72,9 @@ import { useParkingZoneStore } from '@/stores/parking-zone';
 import { storeToRefs } from 'pinia';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { ref, watch } from 'vue';
-import { gwei2eth } from '@/helpers/helpers';
+import { eth2gwei, gwei2eth } from '@/helpers/helpers';
 import { useProposalStore } from '@/stores/proposal';
+import { BigNumber } from 'ethers';
 
 const proposalStore = useProposalStore();
 
@@ -89,9 +93,9 @@ const formData = ref({
 
 const selectedZone = ref<ParkingZone | null>(null);
 
-watch(formData, (formData) => {
-  setSelectedZone(formData.parking_zone_id);
-  calculateCost(formData.price);
+watch(formData, (fd) => {
+  setSelectedZone(fd.parking_zone_id);
+  calculateCost(fd.price);
 }, {
   deep: true,
 });
@@ -113,17 +117,30 @@ function setSelectedZone(parking_zone_id: string) {
 }
 
 function calculateCost(newPrice: string) {
-  const selectedZoneValue = selectedZone.value;
+  if (newPrice === '' || parseInt(newPrice) < 0) {
+    newPrice = '0';
+  }
 
-  if (selectedZoneValue === null || !!newPrice) {
-    proposalStore.calculateCostOfNewProposal('0','0');
+  const selectedZoneValue = selectedZone.value;
+  let newPriceBigNumber = BigNumber.from(0);
+
+  try {
+    newPriceBigNumber = newPriceBigNumber.add(BigNumber.from(eth2gwei(newPrice.toString())));
+  } catch (e) {
+    proposalStore.calculateCostOfNewProposal('0', BigNumber.from(0));
+
+    return;
+  }
+
+  if (selectedZoneValue === null || newPriceBigNumber.isZero()) {
+    proposalStore.calculateCostOfNewProposal('0', BigNumber.from(0));
 
     return;
   }
 
   proposalStore.calculateCostOfNewProposal(
     selectedZoneValue.price.toString(),
-    newPrice,
+    newPriceBigNumber,
   );
 }
 </script>

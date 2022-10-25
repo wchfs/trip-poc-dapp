@@ -20,13 +20,14 @@
             </p>
           </div>
           <div class="ml-4 mt-4 flex-shrink-0">
-            <button
+            <TButton
+              v-if="!showForm"
               type="button"
-              class="relative inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              color="indigo"
               @click="showForm = !showForm"
             >
               Create new proposal
-            </button>
+            </TButton>
           </div>
         </div>
       </div>
@@ -45,6 +46,7 @@ import Box from '@/components/Box/Box.vue';
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import { ref } from 'vue';
 import ProposalCreateCard from '@/views/Proposals/List/Create/ProposalCreateCard.vue';
+import TButton from '@/components/Controls/Button/TButton.vue';
 
 const showForm = ref(false);
 </script>

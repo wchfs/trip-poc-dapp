@@ -22,10 +22,31 @@ import { RouterView } from 'vue-router';
 import NavMenu from '@/components/Nav/NavMenu.vue';
 import { useWalletStore } from '@/stores/wallet';
 import { watch } from 'vue';
+import { useOnboard } from '@web3-onboard/vue';
+import router from '@/router';
+
 
 const walletStore = useWalletStore();
 
-watch(walletStore, async (state) => {
-  walletStore.setLastConnectedWallet(state.connectedWallet);
+const onboard = useOnboard();
+
+let startWatchingDisconnect = false;
+
+watch(onboard.alreadyConnectedWallets, (newState, oldState) => {
+  if (startWatchingDisconnect && newState.length === 0) {
+    walletStore.clearLastConnectedWallet();
+
+    router.push({
+      name: 'root',
+    });
+
+    return;
+  }
+
+  if (newState.length > 0 && oldState.length > 0) {
+    startWatchingDisconnect = true;
+  }
+
+  walletStore.setLastConnectedWallet(newState[0]);
 });
 </script>

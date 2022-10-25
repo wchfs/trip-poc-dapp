@@ -6,7 +6,6 @@
     :bottomText="`Starts ${ getStartAtString(props.ticket) } and is valid for ${ getDurationString(props.ticket.duration) }`"
     icon="fa-solid fa-receipt"
     textColor="text-blue-500"
-    bgColor="bg-blue-500"
   />
 </template>
 

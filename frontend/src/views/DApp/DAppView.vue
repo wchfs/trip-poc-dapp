@@ -20,7 +20,6 @@
       :bottomText="`Identifier: ${ zone.id }`"
       icon="fa-solid fa-square-parking"
       textColor="text-blue-500"
-      bgColor="bg-blue-500"
       @mouseenter="parkingZoneStore.setShowOnlyZoneId(zone.id)"
       @mouseleave="parkingZoneStore.setShowOnlyZoneId(null)"
     />

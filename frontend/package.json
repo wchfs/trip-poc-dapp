@@ -17,6 +17,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.1.2",
     "@fortawesome/free-solid-svg-icons": "^6.1.2",
     "@fortawesome/vue-fontawesome": "^3.0.1",
+    "@headlessui/vue": "^1.7.3",
     "@heroicons/vue": "^2.0.12",
     "@types/geojson": "^7946.0.10",
     "@types/luxon": "^3.0.1",

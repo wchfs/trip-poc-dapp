@@ -41,37 +41,21 @@
 
     <div class="pt-5">
       <div class="flex justify-end">
-        <button
+        <TButton
           @click="this.emit('cancel')"
           type="button"
-          class="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          color="white"
         >
           Cancel
-        </button>
-        <button
+        </TButton>
+        <TButton
+          class="ml-3"
           :disabled="costOfProposal <= 0"
           type="submit"
-          class="`
-            ml-3
-            inline-flex
-            justify-center
-            rounded-md
-            border
-            border-transparent
-            bg-indigo-600
-            py-2
-            px-4
-            text-sm
-            font-medium
-            text-white
-            shadow-sm
-            hover:bg-indigo-700
-            disabled:opacity-50
-            disabled:cursor-not-allowed
-          `"
+          color="green"
         >
-          Create {{ costOfProposal ? `for ${ gwei2eth(costOfProposal.toString()) } ETH` : '' }}
-        </button>
+          Create {{ costOfProposal ? `for ${gwei2eth(costOfProposal.toString())} ETH` : '' }}
+        </TButton>
       </div>
     </div>
   </div>
@@ -84,6 +68,7 @@ import ProposalAddNewZoneForm from '@/views/Proposals/List/Create/Forms/Proposal
 import { useProposalStore } from '@/stores/proposal';
 import { storeToRefs } from 'pinia';
 import { gwei2eth } from '@/helpers/helpers';
+import TButton from '@/components/Controls/Button/TButton.vue';
 
 const emit = defineEmits<{
   (e: 'cancel'): void;

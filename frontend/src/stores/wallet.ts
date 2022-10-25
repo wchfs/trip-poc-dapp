@@ -140,12 +140,12 @@ export const useWalletStore = () => {
 
         return this.connectedWallet !== null;
       },
-      setLastConnectedWallet(wallet: WalletState | null): void {
-        if (wallet === null) {
+      setLastConnectedWallet(label: string | null): void {
+        if (label === null) {
           return;
         }
 
-        this.lastConnectedWallet = wallet.label;
+        this.lastConnectedWallet = label;
       },
       clearLastConnectedWallet(): void {
         this.lastConnectedWallet = null;
