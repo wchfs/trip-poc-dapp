@@ -148,7 +148,8 @@ Request:
 Response:
 ```json
 {
-    "voucher": "?"
+  "address": "0xrollup_address",
+  "voucher": "encoded_ABI"
 }
 ```
 

@@ -140,7 +140,7 @@ const sendToRollup = async () => {
   }
 
   ElMessageBox.confirm(
-    `You should pay ${ price } GWEI. Continue?`,
+    `You should pay ${ price } ETH. Continue?`,
     'Info', {
       confirmButtonText: 'OK',
       cancelButtonText: 'Cancel',

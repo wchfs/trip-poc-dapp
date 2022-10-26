@@ -92,7 +92,7 @@ pub async fn handle_advance(
     let response_type = response_type_handler(&route);
 
     let output = handle_output(route, input);
-    println!("{:?}", output);
+
     return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
