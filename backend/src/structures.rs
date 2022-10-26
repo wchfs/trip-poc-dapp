@@ -30,13 +30,13 @@ impl ResponseType {
 #[derive(Deserialize, Debug, Default)]
 pub struct Route {
     pub endpoint: String,
-    pub payload: Option<RoutePayload>
+    pub payload: Option<RoutePayload>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct StandardInput {
     //bytes32: Option<ethabi::Token>,
-    pub address: Option<ethabi::Token>,
+    pub address: Option<String>,
     pub uint256: Option<ethabi::Token>,
     pub bytes: Vec<u8>,
 }
@@ -57,7 +57,7 @@ pub enum RoutePayload {
 pub enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
-    Validate(ValidateTicket)
+    Validate(ValidateTicket),
 }
 
 #[derive(Deserialize, Debug)]
@@ -68,7 +68,7 @@ pub enum BalanceActions {
 #[derive(Deserialize, Debug)]
 pub struct GeoPoint {
     pub longitude: f64,
-    pub latitude: f64
+    pub latitude: f64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -97,7 +97,8 @@ pub struct WithdrawFunds {
     pub amount: String,
 }
 
-pub const TRANSFER_FUNCTION_SELECTOR: &str = "b'\\xa9\\x05\\x9c\\xbb'";
+//What are those numbers? Let's explain with code: keccak_hash::keccak("etherWithdrawal(bytes)".as_bytes()).as_bytes().get(0..4).unwrap();
+pub const ETHER_WITHDRAWAL_HEADER: [u8; 4] = [116, 149, 107, 148];
 
 #[derive(Serialize, Debug)]
 pub struct VoucherResponse {
