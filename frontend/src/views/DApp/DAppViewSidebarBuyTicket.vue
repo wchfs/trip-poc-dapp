@@ -68,6 +68,7 @@ import router from '@/router';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { useWalletStore } from '@/stores/wallet';
 import { gwei2eth } from '@/helpers/helpers';
+import { BigNumber } from 'ethers';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
@@ -183,7 +184,7 @@ const executeDepositDeclined = () => {
 };
 
 function calculatePrice(zone: ParkingZone, duration: number): string {
-  const price = (zone.price / 60) * duration;
+  const price = BigNumber.from(zone.price).div(60).mul(duration);
 
   return gwei2eth(price.toString());
 }
