@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use json::{object, JsonValue};
-use std::env;
 use dotenv::dotenv;
-use ethabi::{ParamType, decode};
-use parking_dapp::structures::{*};
-use parking_dapp::router::{router, response_type_handler};
+use ethabi::{decode, ParamType};
+use json::{object, JsonValue};
+use parking_dapp::router::{response_type_handler, router};
+use parking_dapp::structures::*;
+use std::env;
 
-extern crate parking_dapp;
 extern crate diesel;
+extern crate parking_dapp;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -84,7 +84,7 @@ pub async fn handle_advance(
 
     let input = match abi_decoder(&request_input) {
         Ok(deposit) => deposit,
-        Err(_) => request_input
+        Err(_) => request_input,
     };
 
     let route: Route = payload_parser(&input.bytes);
@@ -110,7 +110,7 @@ pub async fn handle_inspect(
     let response_type = response_type_handler(&route);
 
     let output = handle_output(route, input);
-
+    
     return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
@@ -118,18 +118,15 @@ pub async fn add_response(
     response_type: &str,
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
-    output: String,
-) -> Result<&'static str, Box<dyn std::error::Error>>
-{
+    output: JsonValue,
+) -> Result<&'static str, Box<dyn std::error::Error>> {
     println!("Adding {}", response_type);
-
-    let add = object! {"payload" => output};
 
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .uri(format!("{}/{}", server_addr, response_type))
-        .body(hyper::Body::from(add.dump()))?;
+        .body(hyper::Body::from(output.dump()))?;
 
     let response = client.request(req).await?;
 
@@ -138,51 +135,53 @@ pub async fn add_response(
     Ok("accept")
 }
 
-fn handle_input(request: JsonValue) -> StandardInput
-{
-    return StandardInput { /*bytes32: None,*/ address: None, uint256: None, bytes: hex_decoder(request) };
+fn handle_input(request: JsonValue) -> StandardInput {
+    return StandardInput {
+        /*bytes32: None,*/
+        address: Some(request["data"]["metadata"]["msg_sender"].to_string()),
+        uint256: None,
+        bytes: hex_decoder(request),
+    };
 }
 
-fn handle_output(route: Route, data: StandardInput) -> String
-{
-    let output_payload: String = router(route, data);
+fn handle_output(route: Route, data: StandardInput) -> JsonValue {
+    let address = env::var("ROLLUP_ADDRESS").unwrap();
 
-    return format!("0x{}", hex::encode(output_payload));
+    let output_payload: String = router(route, &data);
+
+    let formatted_output = format!("0x{}", hex::encode(output_payload));
+
+    return object! {"address" => address, "payload" => formatted_output};
 }
 
-fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String>
-{
+fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
     let abi_parameters = get_abi_ether_parameters();
 
     return match decode(&abi_parameters, &data.bytes) {
         Ok(data) => {
             Ok(StandardInput {
                 //bytes32: Some(data[0].clone()),
-                address: Some(data[1].clone()),
+                address: Some(data[1].clone().to_string()),
                 uint256: Some(data[2].clone()),
-                bytes: data[3].clone().into_bytes().unwrap()
+                bytes: data[3].clone().into_bytes().unwrap(),
             })
-        },
-        Err(msg) => Err(msg.to_string())
+        }
+        Err(msg) => Err(msg.to_string()),
     };
 }
 
-fn payload_parser(data: &Vec<u8>) -> Route
-{
+fn payload_parser(data: &Vec<u8>) -> Route {
     return serde_json::from_slice(&data).unwrap();
 }
 
-fn hex_decoder(request: JsonValue) -> Vec<u8>
-{
+fn hex_decoder(request: JsonValue) -> Vec<u8> {
     let payload = prepare_payload(request);
 
     return hex::decode(&payload.as_str()).unwrap();
 }
 
-fn prepare_payload(request: JsonValue) -> String
-{
-    let mut payload = request["data"]["payload"]
-        .to_string();
+fn prepare_payload(request: JsonValue) -> String {
+    let mut payload = request["data"]["payload"].to_string();
 
     //We don't need "0x" for conversion.
     payload.remove(0);
@@ -191,8 +190,7 @@ fn prepare_payload(request: JsonValue) -> String
     return payload;
 }
 
-fn get_abi_ether_parameters() -> [ParamType; 4]
-{
+fn get_abi_ether_parameters() -> [ParamType; 4] {
     return [
         ParamType::FixedBytes(32),
         ParamType::Address,
@@ -204,9 +202,9 @@ fn get_abi_ether_parameters() -> [ParamType; 4]
 async fn print_response<T: hyper::body::HttpBody>(
     response: hyper::Response<T>,
 ) -> Result<(), Box<dyn std::error::Error>>
-    where
-        <T as hyper::body::HttpBody>::Error: 'static,
-        <T as hyper::body::HttpBody>::Error: std::error::Error,
+where
+    <T as hyper::body::HttpBody>::Error: 'static,
+    <T as hyper::body::HttpBody>::Error: std::error::Error,
 {
     let response_status = response.status().as_u16();
     let response_body = hyper::body::to_bytes(response).await?;

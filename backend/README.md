@@ -131,6 +131,28 @@ If the calculated price is different from the paid amount.
 }
 ```
 
+#### For withdraw funds from the app
+Request:
+```json
+{
+  "endpoint": "withdraw_funds",
+  "payload": {
+    "Balance": {
+      "Withdraw": {
+        "amount": "1000000"
+      }
+    }
+  }
+}
+```
+Response:
+```json
+{
+  "address": "0xrollup_address",
+  "voucher": "encoded_ABI"
+}
+```
+
 ### inspect state (only hex encoding) - reports
 #### Get (5) Zones:
 Request:

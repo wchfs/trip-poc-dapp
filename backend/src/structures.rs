@@ -30,13 +30,13 @@ impl ResponseType {
 #[derive(Deserialize, Debug, Default)]
 pub struct Route {
     pub endpoint: String,
-    pub payload: Option<RoutePayload>
+    pub payload: Option<RoutePayload>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct StandardInput {
     //bytes32: Option<ethabi::Token>,
-    pub address: Option<ethabi::Token>,
+    pub address: Option<String>,
     pub uint256: Option<ethabi::Token>,
     pub bytes: Vec<u8>,
 }
@@ -49,20 +49,26 @@ pub struct ErrorOutput {
 #[derive(Deserialize, Debug)]
 pub enum RoutePayload {
     Ticket(TicketActions),
-    Point(GeoPoint)
+    Point(GeoPoint),
+    Balance(BalanceActions),
 }
 
 #[derive(Deserialize, Debug)]
 pub enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
-    Validate(ValidateTicket)
+    Validate(ValidateTicket),
+}
+
+#[derive(Deserialize, Debug)]
+pub enum BalanceActions {
+    Withdraw(WithdrawFunds),
 }
 
 #[derive(Deserialize, Debug)]
 pub struct GeoPoint {
     pub longitude: f64,
-    pub latitude: f64
+    pub latitude: f64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,4 +90,18 @@ pub struct GetTicket {
 #[derive(Deserialize, Debug)]
 pub struct ValidateTicket {
     pub license: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WithdrawFunds {
+    pub amount: String,
+}
+
+//What are those numbers? Let's explain with code: keccak_hash::keccak("etherWithdrawal(bytes)".as_bytes()).as_bytes().get(0..4).unwrap();
+pub const ETHER_WITHDRAWAL_HEADER: [u8; 4] = [116, 149, 107, 148];
+
+#[derive(Serialize, Debug)]
+pub struct VoucherResponse {
+    pub address: String,
+    pub payload: String,
 }
