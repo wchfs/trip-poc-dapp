@@ -90,7 +90,7 @@ pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> String {
                 longitude.eq(data.longitude),
                 latitude.eq(data.latitude),
                 owner_address.eq(format!("0x{}", wallet)),
-                purchased_at.eq(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
+                purchased_at.eq(request_timestamp(&additional_data)),
                 started_at.eq(data.started_at),
                 duration.eq(data.duration),
                 zone_id.eq(data.zone_id),
@@ -182,7 +182,8 @@ pub fn validate_ticket(data: ValidateTicket) -> String {
 
             for t in &filtered_tickets {
                 let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
-                let diff = (Utc::now() - ticket_date).num_minutes();
+                let date_to_check = data.date.parse::<DateTime<Utc>>().unwrap();
+                let diff = (date_to_check - ticket_date).num_minutes();
 
                 if diff < t.duration.into() && diff > 0 {
                     validate_msg = serde_json::to_string(&t).unwrap();
@@ -265,6 +266,15 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
     let encoded_payload = hex::encode(payload);
     
     return encoded_payload;
+}
+
+fn request_timestamp(data: &StandardInput) -> String {
+    return parse_request_timestamp(data).to_rfc3339_opts(SecondsFormat::Millis, true);
+}
+
+fn parse_request_timestamp(data: &StandardInput) -> DateTime<Utc> {
+    let timestamp = data.request["data"]["metadata"]["timestamp"].clone().as_i64().unwrap();
+    return Utc.timestamp(timestamp, 0);
 }
 
 pub fn error_json_string(data: String) -> String {

@@ -90,6 +90,7 @@ pub struct GetTicket {
 #[derive(Deserialize, Debug)]
 pub struct ValidateTicket {
     pub license: String,
+    pub date: String,
 }
 
 #[derive(Deserialize, Debug)]

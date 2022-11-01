@@ -249,7 +249,8 @@ Request:
   "payload": {
     "Ticket": {
       "Validate": {
-        "license": "example_license_plate"
+        "license": "example_license_plate",
+        "date": "2022-11-01T16:33:00Z"
       }
     }
   }
