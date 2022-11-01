@@ -153,6 +153,61 @@ Response:
 }
 ```
 
+#### For seed the zone in the app
+Request:
+```json
+{
+  "endpoint": "seed_zone",
+  "payload": {
+    "Seed": {
+      "Zone": {
+        "name": "Zone A",
+        "price": "1000000",
+        "geo_json": "Stringify GeoJSON"
+      }
+    }
+  }
+}
+```
+Response:
+```json
+[
+  {
+    "id": 1,
+    "name": "String",
+    "price": "1000000",
+    "geo_json": "Stringify GeoJSON",
+    "owner_address": "0xString"
+  },
+  {},
+  {}
+]
+```
+
+#### To remove the zone in the app
+Request:
+```json
+{
+  "endpoint": "remove_zone",
+  "payload": {
+    "Remove": {
+      "id": 1
+    }
+  }
+}
+```
+Response:
+```json
+[
+  {
+    "success": 1
+  },
+  {
+    "error": 0
+  }
+]
+```
+
 ### inspect state (only hex encoding) - reports
 #### Get (5) Zones:
 Request:
