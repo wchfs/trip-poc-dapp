@@ -198,19 +198,34 @@ pub fn validate_ticket(data: ValidateTicket) -> String {
 }
 
 pub fn add_funds_to_balance(value: String) {
-    use crate::schema::balances::{self, *};
-    let connection = establish_connection();
-
-    let current_amount = balances::table
-        .select(amount)
-        .first::<String>(&connection)
-        .expect("Balance not found")
-        .parse::<i128>()
-        .expect("Balance parse failed");
+    let current_amount = get_current_amount();
 
     let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
 
     let new_amount = (current_amount + parsed_value).to_string();
+
+    update_balance(new_amount);
+}
+
+pub fn remove_funds_to_balance(value: String) {
+    let current_amount = get_current_amount();
+
+    let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
+
+    let new_amount = (current_amount - parsed_value).to_string();
+
+    update_balance(new_amount);
+}
+
+pub fn get_current_amount() -> i128 {
+    return get_app_balance()
+        .parse::<i128>()
+        .expect("Paid amount parse failed");
+}
+
+pub fn update_balance(new_amount: String) {
+    use crate::schema::balances::{self, *};
+    let connection = establish_connection();
 
     diesel::update(balances::table)
         .set(amount.eq(new_amount))
@@ -229,10 +244,8 @@ pub fn get_app_balance() -> String {
 }
 
 pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> String {
-    let app_balance = get_app_balance()
-        .parse::<i128>()
-        .expect("Paid amount parse failed");
-    let parsed_amount = withdraw_struct
+    let app_balance = &get_current_amount();
+    let parsed_amount = &withdraw_struct
         .amount
         .parse::<i128>()
         .expect("Paid amount parse failed");
@@ -241,30 +254,30 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
         return error_json_string("Insufficient funds to withdraw".to_string());
     }
 
-    let parsed_address = ethabi::ethereum_types::H160::from_slice(additional_data.address.as_ref().unwrap().as_bytes());
-    
+    remove_funds_to_balance(withdraw_struct.amount.clone());
+
+    let parsed_address = ethabi::ethereum_types::H160::from_slice(
+        additional_data.address.as_ref().unwrap().as_bytes(),
+    );
+
     let address_token = ethabi::Token::Address(parsed_address);
 
-    let uint_parsed_token = ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount).unwrap();
+    let uint_parsed_token =
+        ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount).unwrap();
 
     let amount_token = ethabi::Token::Uint(uint_parsed_token);
 
-    let withdrawal_data = ethabi::encode(&[
-        address_token,
-        amount_token
-    ]);
+    let withdrawal_data = ethabi::encode(&[address_token, amount_token]);
 
     let abi_bytes = ethabi::Token::Bytes(withdrawal_data);
 
-    let mut data = ethabi::encode(&[
-        abi_bytes
-    ]);
+    let mut data = ethabi::encode(&[abi_bytes]);
 
     let mut payload = ETHER_WITHDRAWAL_HEADER.as_slice().to_vec();
     payload.append(&mut data);
-    
+
     let encoded_payload = hex::encode(payload);
-    
+
     return encoded_payload;
 }
 
