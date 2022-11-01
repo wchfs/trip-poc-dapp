@@ -140,7 +140,8 @@ fn handle_input(request: JsonValue) -> StandardInput {
         /*bytes32: None,*/
         address: Some(request["data"]["metadata"]["msg_sender"].to_string()),
         uint256: None,
-        bytes: hex_decoder(request),
+        bytes: hex_decoder(&request),
+        request: request,
     };
 }
 
@@ -149,21 +150,24 @@ fn handle_output(route: Route, data: StandardInput) -> JsonValue {
 
     let output_payload: String = router(route, &data);
 
+    let is_error = is_error(&output_payload);
+    
     let formatted_output = format!("0x{}", hex::encode(output_payload));
 
-    return object! {"address" => address, "payload" => formatted_output};
+    return object! {"address" => address, "payload" => formatted_output, "error" => is_error};
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
     let abi_parameters = get_abi_ether_parameters();
 
     return match decode(&abi_parameters, &data.bytes) {
-        Ok(data) => {
+        Ok(tokens) => {
             Ok(StandardInput {
-                //bytes32: Some(data[0].clone()),
-                address: Some(data[1].clone().to_string()),
-                uint256: Some(data[2].clone()),
-                bytes: data[3].clone().into_bytes().unwrap(),
+                //bytes32: Some(tokens[0].clone()),
+                address: Some(tokens[1].clone().to_string()),
+                uint256: Some(tokens[2].clone()),
+                bytes: tokens[3].clone().into_bytes().unwrap(),
+                request: data.request.clone(),
             })
         }
         Err(msg) => Err(msg.to_string()),
@@ -174,13 +178,13 @@ fn payload_parser(data: &Vec<u8>) -> Route {
     return serde_json::from_slice(&data).unwrap();
 }
 
-fn hex_decoder(request: JsonValue) -> Vec<u8> {
+fn hex_decoder(request: &JsonValue) -> Vec<u8> {
     let payload = prepare_payload(request);
 
     return hex::decode(&payload.as_str()).unwrap();
 }
 
-fn prepare_payload(request: JsonValue) -> String {
+fn prepare_payload(request: &JsonValue) -> String {
     let mut payload = request["data"]["payload"].to_string();
 
     //We don't need "0x" for conversion.
@@ -197,6 +201,13 @@ fn get_abi_ether_parameters() -> [ParamType; 4] {
         ParamType::Uint(256),
         ParamType::Bytes,
     ];
+}
+
+fn is_error(response_string: &String) -> bool {
+    if let Ok(ErrorOutput {..}) = serde_json::from_str(response_string) {
+        return true;
+    }
+    return false;
 }
 
 async fn print_response<T: hyper::body::HttpBody>(

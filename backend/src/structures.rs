@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use json::JsonValue;
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
 
@@ -33,12 +34,13 @@ pub struct Route {
     pub payload: Option<RoutePayload>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug)]
 pub struct StandardInput {
     //bytes32: Option<ethabi::Token>,
     pub address: Option<String>,
     pub uint256: Option<ethabi::Token>,
     pub bytes: Vec<u8>,
+    pub request: JsonValue,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
