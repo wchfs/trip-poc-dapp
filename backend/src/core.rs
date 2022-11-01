@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::diesel::prelude::*;
 use crate::establish_connection;
 use crate::models::{Ticket, Zone};
@@ -9,6 +7,7 @@ use diesel::insert_into;
 use geo::{Contains, Coordinate, Point};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
+use std::str::FromStr;
 
 pub fn get_zones() -> String {
     let zones = get_all_zones();
@@ -286,10 +285,80 @@ fn request_timestamp(data: &StandardInput) -> String {
 }
 
 fn parse_request_timestamp(data: &StandardInput) -> DateTime<Utc> {
-    let timestamp = data.request["data"]["metadata"]["timestamp"].clone().as_i64().unwrap();
+    let timestamp = data.request["data"]["metadata"]["timestamp"]
+        .clone()
+        .as_i64()
+        .unwrap();
     return Utc.timestamp(timestamp, 0);
+}
+
+pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> String {
+    use crate::schema::zones::{self, *};
+    let connection = establish_connection();
+
+    let wallet = parse_request_addres(additional_data);
+
+    let is_inserted = insert_into(zones::table)
+        .values((
+            name.eq(data.name),
+            price.eq(data.price),
+            geo_json.eq(data.geo_json),
+            owner_address.eq(&wallet),
+        ))
+        .execute(&connection)
+        .unwrap();
+
+    if is_inserted > 0 {
+        let zone = zones::table
+            .filter(owner_address.eq(wallet))
+            .order(id.desc())
+            .first::<Zone>(&connection)
+            .expect("No zone found");
+
+        return serde_json::to_string(&zone).unwrap();
+    }
+
+    return error_json_string("Seed zone error!".to_string());
+}
+
+pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> String {
+    use crate::schema::zones::{self, *};
+    let connection = establish_connection();
+
+    let wallet = parse_request_addres(additional_data);
+    println!("{:?}", &data.id);
+    println!("{:?}", &wallet);
+    let result = diesel::delete(
+        zones::table
+        .filter(id.eq(data.id))
+        .filter(owner_address.eq(wallet))
+    ).execute(&connection);
+
+    match result {
+        Ok(value) => {
+            if value.eq(&0) {
+                return error_json_string(value.to_string())
+            }
+            return success_json_string(value.to_string())
+        },
+        Err(value) => return error_json_string(value.to_string())
+    }
+}
+
+fn parse_request_addres(data: &StandardInput) -> String {
+    let wallet = data
+        .address
+        .clone()
+        .expect("Empty address field")
+        .to_string();
+
+    return format!("0x{}", wallet);
 }
 
 pub fn error_json_string(data: String) -> String {
     return serde_json::to_string(&ErrorOutput { error: data }).unwrap();
+}
+
+pub fn success_json_string(data: String) -> String {
+    return serde_json::to_string(&SuccessOutput { success: data }).unwrap();
 }

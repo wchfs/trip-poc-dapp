@@ -53,6 +53,21 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 panic!("Validation failed! Withdraw funds does not meet requirements")
             }
         }
+        "seed_zone" => {
+            if let Some(RoutePayload::Seed(value)) = route.payload {
+                let SeederActions::Zone(value) = value;
+                return seed_zone(value, data);
+            } else {
+                panic!("Validation failed! Seed Zone does not meet requirements")
+            }
+        }
+        "remove_zone" => {
+            if let Some(RoutePayload::Remove(value)) = route.payload {
+                return remove_zone(value, data);
+            } else {
+                panic!("Validation failed! Remove Zone does not meet requirements")
+            }
+        }
         _ => todo!(),
     };
 }
@@ -66,6 +81,8 @@ pub fn response_type_handler(route: &Route) -> &'static str {
         "validate_ticket" => ResponseType::Report.as_str(),
         "get_app_balance" => ResponseType::Report.as_str(),
         "withdraw_funds" => ResponseType::Voucher.as_str(),
+        "seed_zone" => ResponseType::Notice.as_str(),
+        "remove_zone" => ResponseType::Notice.as_str(),
         &_ => todo!(),
     };
 }

@@ -48,11 +48,18 @@ pub struct ErrorOutput {
     pub error: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SuccessOutput {
+    pub success: String,
+}
+
 #[derive(Deserialize, Debug)]
 pub enum RoutePayload {
     Ticket(TicketActions),
     Point(GeoPoint),
     Balance(BalanceActions),
+    Seed(SeederActions),
+    Remove(Remover),
 }
 
 #[derive(Deserialize, Debug)]
@@ -65,6 +72,16 @@ pub enum TicketActions {
 #[derive(Deserialize, Debug)]
 pub enum BalanceActions {
     Withdraw(WithdrawFunds),
+}
+
+#[derive(Deserialize, Debug)]
+pub enum SeederActions {
+    Zone(ZoneSeeder),
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Remover {
+    pub id: i32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -98,6 +115,13 @@ pub struct ValidateTicket {
 #[derive(Deserialize, Debug)]
 pub struct WithdrawFunds {
     pub amount: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ZoneSeeder {
+    pub name: String,
+    pub price: String,
+    pub geo_json: String,
 }
 
 //What are those numbers? Let's explain with code: keccak_hash::keccak("etherWithdrawal(bytes)".as_bytes()).as_bytes().get(0..4).unwrap();
