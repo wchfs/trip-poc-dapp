@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use crate::diesel::prelude::*;
-use crate::{establish_connection};
+use crate::establish_connection;
 use crate::models::{Ticket, Zone};
 use crate::structures::*;
 use chrono::prelude::*;
