@@ -326,8 +326,7 @@ pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> String {
     let connection = establish_connection();
 
     let wallet = parse_request_addres(additional_data);
-    println!("{:?}", &data.id);
-    println!("{:?}", &wallet);
+    
     let result = diesel::delete(
         zones::table
         .filter(id.eq(data.id))
