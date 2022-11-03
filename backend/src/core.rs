@@ -20,7 +20,8 @@ pub fn get_all_zones() -> Vec<Zone> {
 
     let connection = establish_connection();
     let results = zones
-        .limit(5)
+        .order(id.desc())
+        .limit(100)
         .load::<Zone>(&connection)
         .expect("Error loading zones");
 
@@ -107,7 +108,7 @@ pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> String {
                 .first::<Ticket>(&connection)
                 .expect("No ticket found");
 
-            add_funds_to_balance(amount);
+            add_funds_to_balance(amount, &data.zone_id);
 
             return serde_json::to_string(&ticket).unwrap();
         }
@@ -196,54 +197,56 @@ pub fn validate_ticket(data: ValidateTicket) -> String {
     };
 }
 
-pub fn add_funds_to_balance(value: String) {
-    let current_amount = get_current_amount();
+pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) {
+    let current_amount = get_current_amount(requested_zone_id);
 
     let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
 
     let new_amount = (current_amount + parsed_value).to_string();
 
-    update_balance(new_amount);
+    update_balance(new_amount, requested_zone_id);
 }
 
-pub fn remove_funds_to_balance(value: String) {
-    let current_amount = get_current_amount();
+pub fn remove_funds_from_balance(value: String, requested_zone_id: &i32) {
+    let current_amount = get_current_amount(requested_zone_id);
 
     let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
 
     let new_amount = (current_amount - parsed_value).to_string();
 
-    update_balance(new_amount);
+    update_balance(new_amount, requested_zone_id);
 }
 
-pub fn get_current_amount() -> i128 {
-    return get_app_balance()
+pub fn get_current_amount(zone_id: &i32) -> i128 {
+    return get_app_balance(&GetBalance { zone_id: (*zone_id) })
         .parse::<i128>()
         .expect("Paid amount parse failed");
 }
 
-pub fn update_balance(new_amount: String) {
+pub fn update_balance(new_amount: String, requested_zone_id: &i32) {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
 
     diesel::update(balances::table)
+        .filter(zone_id.eq(requested_zone_id))
         .set(amount.eq(new_amount))
         .execute(&connection)
         .expect("Failed to update balance");
 }
 
-pub fn get_app_balance() -> String {
+pub fn get_app_balance(data: &GetBalance) -> String {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
-
+    
     return balances::table
         .select(amount)
+        .filter(zone_id.eq(data.zone_id))
         .first::<String>(&connection)
         .expect("Balance not found");
 }
 
 pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> String {
-    let app_balance = &get_current_amount();
+    let app_balance = &get_current_amount(&withdraw_struct.zone_id);
     let parsed_amount = &withdraw_struct
         .amount
         .parse::<i128>()
@@ -253,10 +256,16 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
         return error_json_string("Insufficient funds to withdraw".to_string());
     }
 
-    remove_funds_to_balance(withdraw_struct.amount.clone());
+    let owner_address = additional_data.address.as_ref().unwrap();
+    
+    if check_zone_owner(&withdraw_struct.zone_id, owner_address) {
+        return error_json_string("Only owner can withdraw funds".to_string());
+    }
+
+    remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id);
 
     let parsed_address = ethabi::ethereum_types::H160::from_slice(
-        additional_data.address.as_ref().unwrap().as_bytes(),
+        owner_address.as_bytes(),
     );
 
     let address_token = ethabi::Token::Address(parsed_address);
@@ -278,6 +287,22 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
     let encoded_payload = hex::encode(payload);
 
     return encoded_payload;
+}
+
+fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
+    use crate::schema::zones::dsl::*;
+    let connection = establish_connection();
+
+    let result = zones
+        .filter(owner_address.eq(requested_by))
+        .filter(id.eq(requested_zone_id))
+        .count()
+        .execute(&connection);
+
+    return match result {
+        Ok(_) => true,
+        Err(_) => false,
+    }
 }
 
 fn request_timestamp(data: &StandardInput) -> String {
@@ -315,10 +340,25 @@ pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> String {
             .first::<Zone>(&connection)
             .expect("No zone found");
 
+        create_zone_balance(&zone);
+
         return serde_json::to_string(&zone).unwrap();
     }
 
     return error_json_string("Seed zone error!".to_string());
+}
+
+fn create_zone_balance(zone: &Zone) -> bool {
+    use crate::schema::balances::{self, *};
+    let connection = establish_connection();
+
+    return insert_into(balances::table)
+        .values((
+            zone_id.eq(zone.id),
+            amount.eq("0"),
+        ))
+        .execute(&connection)
+        .unwrap() > 0;
 }
 
 pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> String {

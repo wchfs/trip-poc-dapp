@@ -72,6 +72,7 @@ pub enum TicketActions {
 #[derive(Deserialize, Debug)]
 pub enum BalanceActions {
     Withdraw(WithdrawFunds),
+    Get(GetBalance),
 }
 
 #[derive(Deserialize, Debug)]
@@ -115,6 +116,12 @@ pub struct ValidateTicket {
 #[derive(Deserialize, Debug)]
 pub struct WithdrawFunds {
     pub amount: String,
+    pub zone_id: i32,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GetBalance {
+    pub zone_id: i32,
 }
 
 #[derive(Deserialize, Debug)]
