@@ -27,8 +27,10 @@ pub struct Ticket {
     pub status: i32,
 }
 
-#[derive(Identifiable, Queryable, Serialize, Debug)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
+#[belongs_to(Zone)]
 pub struct Balance {
     pub id: i32,
+    pub zone_id: i32,
     pub amount: String,
 }

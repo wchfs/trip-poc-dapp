@@ -339,7 +339,13 @@ Request:
 ```json
 {
   "endpoint": "get_app_balance",
-  "payload": null
+  "payload": {
+    "Balance": {
+      "Get": {
+        "zone_id": 1
+      }
+    }
+  }
 }
 ```
 Response:

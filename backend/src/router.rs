@@ -44,11 +44,24 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 panic!("Validation failed! Ticket does not meet requirements")
             }
         }
-        "get_app_balance" => get_app_balance(),
+        "get_app_balance" => {
+            if let Some(RoutePayload::Balance(value)) = route.payload {
+                if let BalanceActions::Get(value) = value {
+                    return get_app_balance(&value);
+                } else {
+                    panic!("Validation failed! Get Balance does not meet requirements")    
+                }
+            } else {
+                panic!("Validation failed! Balance does not meet requirements")
+            }
+        }
         "withdraw_funds" => {
             if let Some(RoutePayload::Balance(value)) = route.payload {
-                let BalanceActions::Withdraw(value) = value;
-                return withdraw_funds(value, data);
+                if let BalanceActions::Withdraw(value) = value {
+                    return withdraw_funds(value, data);
+                } else {
+                    panic!("Validation failed! Withdraw funds does not meet requirements")    
+                }
             } else {
                 panic!("Validation failed! Withdraw funds does not meet requirements")
             }
