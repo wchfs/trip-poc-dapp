@@ -26,5 +26,7 @@ declare module '@vue/runtime-core' {
     TBadge: typeof import('./src/components/Common/TBadge/TBadge.vue')['default']
     TButton: typeof import('./src/components/Controls/Button/TButton.vue')['default']
     TInput: typeof import('./src/components/Controls/Input/TInput.vue')['default']
+    TInputLeftSide: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue')['default']
+    TInputLeftSideText: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSideText.vue')['default']
   }
 }

@@ -4,7 +4,7 @@
     :topText="`#${ props.ticket.id } For ${ props.ticket.license } in ${ props.zone?.name }`"
     :featuredText="`Expires: ${ getExpireAtString(props.ticket) }`"
     :bottomText="`Starts ${ getStartAtString(props.ticket) } and is valid for ${ getDurationString(props.ticket.duration) }`"
-    icon="fa-solid fa-receipt"
+    :icon="TicketIcon"
     textColor="text-blue-500"
   />
 </template>
@@ -14,6 +14,7 @@ import InfoBox from '@/components/Box/InfoBox.vue';
 import type { ParkingTicket } from '@/interfaces/parking-ticket';
 import { DateTime } from 'luxon';
 import type { ParkingZone } from '@/interfaces/parking-zone';
+import { TicketIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps<{
   ticket: ParkingTicket,

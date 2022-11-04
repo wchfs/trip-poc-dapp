@@ -6,7 +6,7 @@
       topText="Connected wallet"
       :featuredText="walletStore.onboard?.connectedWallet?.value?.label"
       :bottomText="`Address: ${ walletStore.walletAddress }`"
-      icon="fa-solid fa-wallet"
+      :icon="WalletIcon"
       textColor="text-blue-500"
       :showButton="!walletStore.onboard?.connectedWallet?.value"
       buttonText="CONNECT"
@@ -16,7 +16,7 @@
       topText="Connected chain"
       :featuredText="walletStore.onboard?.connectedChain?.value?.id"
       bottomText="Hex id of connected chain"
-      icon="fa-solid fa-link"
+      :icon="BoltIcon"
       textColor="text-green-500"
       :showButton="!walletStore.onboard?.connectedChain?.value"
     />
@@ -24,7 +24,7 @@
       topText="DApp address"
       :featuredText="dappAddress"
       bottomText="Your DApp backend address"
-      icon="fa-solid fa-location-crosshairs"
+      :icon="GlobeEuropeAfricaIcon"
       textColor="text-yellow-500"
     />
   </BaseContainer>
@@ -34,6 +34,7 @@
 import InfoBox from '@/components/Box/InfoBox.vue';
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import { useWalletStore } from '@/stores/wallet';
+import { WalletIcon, BoltIcon, GlobeEuropeAfricaIcon } from '@heroicons/vue/24/outline';
 
 const walletStore = useWalletStore();
 

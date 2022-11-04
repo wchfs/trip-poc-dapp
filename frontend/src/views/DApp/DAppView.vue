@@ -18,7 +18,7 @@
       :topText="`Hourly rate for ${ zone.name }`"
       :featuredText="`${ gwei2eth(zone.price.toString()) } ETH`"
       :bottomText="`Identifier: ${ zone.id }`"
-      icon="fa-solid fa-square-parking"
+      :icon="GlobeAltIcon"
       textColor="text-blue-500"
       @mouseenter="parkingZoneStore.setShowOnlyZoneId(zone.id)"
       @mouseleave="parkingZoneStore.setShowOnlyZoneId(null)"
@@ -35,6 +35,7 @@ import DAppViewSidebar from '@/views/DApp/DAppViewSidebar.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { storeToRefs } from 'pinia';
 import { gwei2eth } from '@/helpers/helpers';
+import { GlobeAltIcon } from '@heroicons/vue/24/outline';
 
 const parkingZoneStore = useParkingZoneStore();
 const {

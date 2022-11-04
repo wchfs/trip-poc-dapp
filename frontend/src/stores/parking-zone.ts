@@ -57,6 +57,29 @@ export const useParkingZoneStore = defineStore('parking-zone', {
 
       this.zones.push(zone);
     },
+    createZone(
+      name: string,
+      price: number,
+      geoJson: GeoJSON,
+    ) {
+      RollupService.addInput<ParkingZone>({
+        endpoint: "seed_zone",
+        payload: {
+          Seed: {
+            Zone: {
+              name,
+              price,
+              geo_json: JSON.stringify(geoJson),
+            },
+          },
+        },
+      }).then((result) => {
+        console.log(result);
+        //this.addZone(result);
+      }).catch((error: Error) => {
+        throw error;
+      });
+    },
     setSelectedZoneId(zoneId: number|null) {
       this.selectedZoneId = zoneId;
     },

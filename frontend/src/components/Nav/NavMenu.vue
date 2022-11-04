@@ -52,6 +52,10 @@ const menuItems = ref<MenuItem[]>([
     routeName: 'dapp.tickets.my',
   },
   {
+    displayName: 'My Zones',
+    routeName: 'dapp.zones.my',
+  },
+  {
     displayName: 'Tickets Validator',
     routeName: 'dapp.tickets.validate',
   },

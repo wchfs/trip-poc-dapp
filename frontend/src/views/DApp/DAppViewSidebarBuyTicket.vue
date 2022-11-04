@@ -7,7 +7,7 @@
     size="large"
   >
     <div class="flex flex-col">
-      <div class="flex flex-row">
+      <div class="flex flex-row md:flex-col lg:flex-row">
         <ElFormItem
           prop="date"
         >
@@ -30,8 +30,9 @@
           />
         </ElFormItem>
       </div>
-      <div class="flex flex-col lg:flex-row justify-between">
+      <div class="flex flex-row items-stretch justify-between gap-3">
         <ElFormItem
+          class="grow"
           prop="plate_number"
         >
           <ElInput
@@ -43,12 +44,14 @@
           />
         </ElFormItem>
         <ElFormItem>
-          <ElButton
-            type="danger"
+          <TButton
+            class="grow"
+            color="indigo"
+            type="button"
             @click="submitForm(addTicketFormRef)"
           >
             Buy ticket
-          </ElButton>
+          </TButton>
         </ElFormItem>
       </div>
     </div>
@@ -69,6 +72,7 @@ import type { ParkingZone } from '@/interfaces/parking-zone';
 import { useWalletStore } from '@/stores/wallet';
 import { gwei2eth } from '@/helpers/helpers';
 import { BigNumber } from 'ethers';
+import TButton from '@/components/Controls/Button/TButton.vue';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();

@@ -3,7 +3,7 @@
     topText="Marker localization"
     :featuredText="markerPositionWithSpaceSeparator ? markerPositionWithSpaceSeparator : `Loading...`"
     bottomText="Drag marker on map to change"
-    icon="fa-solid fa-location-dot"
+    :icon="MapPinIcon"
     textColor="text-red-500"
   />
   <InfoBox
@@ -11,12 +11,12 @@
     topText="Price per hour"
     :featuredText="selectedZoneId === 0 ? `Outside of any parking zone` : `${ gwei2eth(selectedZone?.price.toString()) } ETH`"
     :bottomText="selectedZoneId === 0 ? `Move marker somewhere else to check again` : `For zone: ${ selectedZone?.name }`"
-    icon="fa-solid fa-hand-holding-dollar"
+    :icon="BanknotesIcon"
     textColor="text-green-500"
   />
   <Box
     v-if="!!selectedZoneId"
-    class="pb-1"
+    additionalClass="col-span-1 md:col-span-2 lg:col-span-1"
   >
     <DAppViewSidebarBuyTicket/>
   </Box>
@@ -33,6 +33,7 @@ import Box from '@/components/Box/Box.vue';
 import DAppViewSidebarBuyTicket from '@/views/DApp/DAppViewSidebarBuyTicket.vue';
 import { RollupService } from '@/services/rollup-service';
 import { gwei2eth } from '@/helpers/helpers';
+import { MapPinIcon, BanknotesIcon } from '@heroicons/vue/24/outline';
 
 const locationStore = useLocationStore();
 const {

@@ -15,16 +15,23 @@
       v-else
     />
   </main>
+  <footer class="bg-gray-800">
+    <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+      <div class="mt-8 md:order-1 md:mt-0">
+        <p class="text-center text-base text-gray-400">&copy; {{ DateTime.now().year }} Webchefs with Cartesi using the blockchain OS</p>
+      </div>
+    </div>
+  </footer>
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import NavMenu from '@/components/Nav/NavMenu.vue';
-import { useWalletStore } from '@/stores/wallet';
 import { watch } from 'vue';
+import { useWalletStore } from '@/stores/wallet';
 import { useOnboard } from '@web3-onboard/vue';
 import router from '@/router';
-
+import NavMenu from '@/components/Nav/NavMenu.vue';
+import { DateTime } from 'luxon';
 
 const walletStore = useWalletStore();
 

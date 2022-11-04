@@ -18,7 +18,6 @@
             mt-1
             text-lg
             ${props.textColor}
-            font-bold
             text-ellipsis
             overflow-hidden
             whitespace-nowrap
@@ -47,17 +46,21 @@
           {{ props.bottomText }}
         </span>
       </div>
-      <div :class="`
-        bg-opacity-100
-        border-2
-        border-dashed
-        border-gray-200
-        p-1
-        md:p-2
-        xl:p-3
-        rounded-md
-      `" v-if="icon">
+      <div
+        v-if="icon"
+        :class="`
+          bg-opacity-100
+          border
+          border-solid
+          border-gray-200
+          p-1
+          md:p-2
+          xl:p-3
+          rounded-md
+        `"
+      >
         <i
+          v-if="typeof icon === 'string' || icon instanceof String"
           :class="`
             ${ icon }
             w-auto
@@ -71,6 +74,21 @@
             ${props.textColor}
           `"
         />
+        <component
+          v-else
+          :is="icon"
+          :class="`
+            w-auto
+            h-7
+            w-7
+            md:h-6
+            md:w-6
+            xl:h-8
+            xl:w-8
+            object-cover
+            ${props.textColor}
+          `"
+        ></component>
       </div>
     </div>
     <div
@@ -102,30 +120,27 @@
 
 <script setup lang="ts">
 import Box from '@/components/Box/Box.vue';
+import type { HeroIcon } from '@/interfaces/common';
 
 const emits = defineEmits([
   'buttonClick',
 ]);
 
-const props = defineProps({
-  topText: String,
-  featuredText: String,
-  bottomText: String,
-  icon: String,
-  textColor: {
-    type: String,
-    default: 'text-blue-500',
-  },
-  showButton: Boolean,
-  buttonType: {
-    type: String,
-    default: 'success',
-  },
-  buttonText: String,
-  additionalClass: {
-    type: String,
-    default: "col-span-1",
-  },
+const props = withDefaults(defineProps<{
+  topText: string;
+  featuredText: string;
+  bottomText: string;
+  icon: string | HeroIcon;
+  textColor?: string;
+  showButton?: boolean;
+  buttonType?: string;
+  buttonText?: string;
+  additionalClass?: string;
+}>(), {
+  textColor: 'text-blue-500',
+  showButton: false,
+  buttonType: 'success',
+  additionalClass: 'col-span-1',
 });
 
 function buttonClick() {

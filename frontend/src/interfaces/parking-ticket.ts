@@ -8,5 +8,7 @@ export type ParkingTicket = {
   purchased_at: string,
   duration: number,
   zone_id: number,
+  paid: number,
+  to_pay: number,
   status: number,
 };

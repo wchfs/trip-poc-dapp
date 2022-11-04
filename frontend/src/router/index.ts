@@ -43,6 +43,16 @@ const router = createRouter({
           ],
         },
         {
+          path: 'zones',
+          children: [
+            {
+              path: 'my',
+              name: 'dapp.zones.my',
+              component: () => import('../views/Zones/My/MyZonesView.vue'),
+            },
+          ],
+        },
+        {
           path: 'proposals',
           name: 'dapp.proposals',
           redirect: {
