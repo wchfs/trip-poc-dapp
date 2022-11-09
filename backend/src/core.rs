@@ -7,31 +7,31 @@ use diesel::insert_into;
 use geo::{Contains, Coordinate, Point};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
+use std::error::Error;
 use std::str::FromStr;
 
-pub fn get_zones() -> String {
-    let zones = get_all_zones();
+pub fn get_zones() -> Result<String, Box<dyn Error>> {
+    let zones = get_all_zones()?;
 
-    return serde_json::to_string(&zones).unwrap();
+    return Ok(serde_json::to_string(&zones)?);
 }
 
-pub fn get_all_zones() -> Vec<Zone> {
+pub fn get_all_zones() -> Result<Vec<Zone>, Box<dyn Error>> {
     use crate::schema::zones::dsl::*;
-
     let connection = establish_connection();
+
     let results = zones
         .order(id.desc())
         .limit(100)
-        .load::<Zone>(&connection)
-        .expect("Error loading zones");
+        .load::<Zone>(&connection)?;
 
-    return results;
+    return Ok(results);
 }
 
-pub fn check_point_in_zone(point: GeoPoint) -> String {
+pub fn check_point_in_zone(point: GeoPoint) -> Result<String, Box<dyn Error>> {
     let point: Point = point_mapper(point);
 
-    return is_in_the_toll_zone(point).to_string();
+    return Ok(is_in_the_toll_zone(point)?.to_string());
 }
 
 pub fn point_mapper(point: GeoPoint) -> Point {
@@ -41,48 +41,60 @@ pub fn point_mapper(point: GeoPoint) -> Point {
     });
 }
 
-pub fn is_in_the_toll_zone(gps_data: Point) -> i32 {
-    let zones: Vec<Zone> = get_all_zones();
+pub fn is_in_the_toll_zone(gps_data: Point) -> Result<i32, Box<dyn Error>> {
+    let zones: Vec<Zone> = get_all_zones()?;
+
     for zone in zones {
-        let polygon = get_polygon(zone.geo_json);
+        let polygon = get_polygon(zone.geo_json)?;
 
         if polygon.contains(&gps_data) {
-            return zone.id;
+            return Ok(zone.id);
         }
     }
 
-    return 0;
+    return Ok(0);
 }
 
-pub fn get_polygon(geo_json_string: String) -> GeometryCollection {
+pub fn get_polygon(geo_json_string: String) -> Result<GeometryCollection, Box<dyn Error>> {
     //Example point in the zone: 19.943540573120117,50.0565299987793
-    let geo_json: GeoJson = geo_json_string.parse::<GeoJson>().unwrap();
+    let geo_json: GeoJson = geo_json_string.parse::<GeoJson>()?;
 
-    let collection: GeometryCollection<f64> = quick_collection(&geo_json).unwrap();
+    let collection: GeometryCollection<f64> = quick_collection(&geo_json)?;
 
-    return collection;
+    return Ok(collection);
 }
 
-pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> String {
+pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
     let connection = establish_connection();
 
-    let amount = (additional_data
-        .uint256
-        .clone()
-        .expect("Empty amount field")
-        .into_uint()
-        .expect("Failed parsing amount")
-        / WEI_TO_GWEI_FACTOR)
-        .to_string();
-    let calculated_amount = calculate_amount(data.zone_id, data.duration).to_string();
+    let received_uint256_token = match additional_data.uint256.clone() {
+        Some(value) => value,
+        None => return Err(Box::new(ErrorOutput {
+            error: "Empty amount field".into(),
+        })),
+    };
+
+    let received_uint = match received_uint256_token.into_uint() {
+        Some(value) => value,
+        None => return Err(Box::new(ErrorOutput {
+            error: "Failed parsing amount".into(),
+        })),
+    };
+
+    let amount = (received_uint / WEI_TO_GWEI_FACTOR).to_string();
+    
+    let calculated_amount = calculate_amount(data.zone_id, data.duration)?.to_string();
 
     if amount == calculated_amount {
-        let wallet = additional_data
-            .address
-            .clone()
-            .expect("Empty address field")
-            .to_string();
+        let received_address = match additional_data.address.clone() {
+            Some(value) => value,
+            None => return Err(Box::new(ErrorOutput {
+                error: "Empty address field".into(),
+            })),
+        };
+
+        let wallet = received_address.to_string();
 
         let is_inserted = insert_into(tickets::table)
             .values((
@@ -90,7 +102,7 @@ pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> String {
                 longitude.eq(data.longitude),
                 latitude.eq(data.latitude),
                 owner_address.eq(format!("0x{}", wallet)),
-                purchased_at.eq(request_timestamp(&additional_data)),
+                purchased_at.eq(request_timestamp(&additional_data)?),
                 started_at.eq(data.started_at),
                 duration.eq(data.duration),
                 zone_id.eq(data.zone_id),
@@ -98,48 +110,46 @@ pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> String {
                 to_pay.eq(&calculated_amount), // In the future, we want to add the possibility to pay extra later.
                 status.eq(TicketStatus::Paid as i32),
             ))
-            .execute(&connection)
-            .unwrap();
+            .execute(&connection)?;
 
         if is_inserted > 0 {
             let ticket = tickets::table
                 .filter(owner_address.eq(format!("0x{}", wallet)))
                 .order(id.desc())
-                .first::<Ticket>(&connection)
-                .expect("No ticket found");
+                .first::<Ticket>(&connection)?;
 
             add_funds_to_balance(amount, &data.zone_id);
 
-            return serde_json::to_string(&ticket).unwrap();
+            return Ok(serde_json::to_string(&ticket)?);
         }
     }
 
-    return error_json_string("Ticket validation error!".to_string());
+    return Err(Box::new(ErrorOutput {
+        error: "Ticket validation error!".into(),
+    }));
 }
 
-pub fn calculate_amount(zone_id: i32, duration: i32) -> f64 {
+pub fn calculate_amount(zone_id: i32, duration: i32) -> Result<f64, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
-
     let connection = establish_connection();
 
     let zone_price_per_hour = zones::table
         .filter(id.eq(zone_id))
         .select(price)
-        .first::<String>(&connection)
-        .expect("Zone not found");
+        .first::<String>(&connection)?;
 
-    let pricing: f64 = zone_price_per_hour
-        .parse::<f64>()
-        .expect("Pricing parse failed");
+    let pricing: f64 = zone_price_per_hour.parse::<f64>()?;
 
     let hours: f64 = (duration / 60) as f64;
 
-    return pricing * hours;
+    return Ok(pricing * hours);
 }
 
-pub fn get_tickets(data: GetTicket) -> String {
+pub fn get_tickets(data: GetTicket) -> Result<String, Box<dyn Error>> {
     if data.license.is_none() && data.owner_address.is_none() {
-        return error_json_string("Missing license and owner address!".to_string());
+        return Err(Box::new(ErrorOutput {
+            error: "Missing license and owner address!".into(),
+        }));
     }
 
     use crate::schema::tickets::{self, *};
@@ -148,26 +158,33 @@ pub fn get_tickets(data: GetTicket) -> String {
     let mut tickets_query = tickets::table.order(id.desc()).into_boxed();
 
     if !data.license.is_none() {
-        tickets_query = tickets_query
-            .filter(license.eq(data.license.expect("No license provided").to_string()));
+        let received_license = match data.license {
+            Some(value) => value.to_string(),
+            None => return Err(Box::new(ErrorOutput {
+                error: "No license provided".into(),
+            }))
+        };
+        
+        tickets_query = tickets_query.filter(license.eq(received_license));
     }
 
     if !data.owner_address.is_none() {
-        tickets_query = tickets_query.filter(
-            owner_address.eq(data
-                .owner_address
-                .expect("No Owner address provided")
-                .to_string()),
-        );
+        let received_owner_address = match data.owner_address {
+            Some(value) => value.to_string(),
+            None => return Err(Box::new(ErrorOutput {
+                error: "No Owner address provided".into(),
+            }))
+        };
+
+        tickets_query = tickets_query.filter(owner_address.eq(received_owner_address));
     }
 
-    return match tickets_query.load::<Ticket>(&connection) {
-        Ok(t) => serde_json::to_string(&t).unwrap(),
-        Err(val) => error_json_string(val.to_string()),
-    };
+    let results = tickets_query.load::<Ticket>(&connection)?;
+    
+    return Ok(serde_json::to_string(&results)?);
 }
 
-pub fn validate_ticket(data: ValidateTicket) -> String {
+pub fn validate_ticket(data: ValidateTicket) -> Result<String, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
     let connection = establish_connection();
 
@@ -177,89 +194,99 @@ pub fn validate_ticket(data: ValidateTicket) -> String {
         .load::<Ticket>(&connection)
     {
         Ok(filtered_tickets) => {
-            let mut validate_msg =
-                error_json_string("There is no valid ticket available".to_string());
-
             for t in &filtered_tickets {
-                let ticket_date = t.started_at.parse::<DateTime<Utc>>().unwrap();
-                let date_to_check = data.date.parse::<DateTime<Utc>>().unwrap();
+                let ticket_date = t.started_at.parse::<DateTime<Utc>>()?;
+                let date_to_check = data.date.parse::<DateTime<Utc>>()?;
                 let diff = (date_to_check - ticket_date).num_minutes();
 
                 if diff < t.duration.into() && diff > 0 {
-                    validate_msg = serde_json::to_string(&t).unwrap();
-                    break;
+                    return Ok(serde_json::to_string(&t)?);
                 }
             }
 
-            return validate_msg;
+            return Err(Box::new(ErrorOutput {
+                error: "There is no valid ticket available".into(),
+            }));
         }
-        Err(val) => error_json_string(val.to_string()),
+        Err(val) => Err(Box::new(val)),
     };
 }
 
-pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) {
-    let current_amount = get_current_amount(requested_zone_id);
+pub fn get_app_balance(data: &GetBalance) -> Result<String, Box<dyn Error>> {
+    use crate::schema::balances::{self, *};
+    let connection = establish_connection();
+    
+    return Ok(balances::table
+        .select(amount)
+        .filter(zone_id.eq(data.zone_id))
+        .first::<String>(&connection)?);
+}
 
-    let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
+pub fn get_current_amount(zone_id: &i32) -> Result<i128, Box<dyn Error>> {
+
+    return Ok(get_app_balance(&GetBalance { zone_id: (*zone_id) })?.parse::<i128>()?)
+}
+
+pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
+    let current_amount = get_current_amount(requested_zone_id)?;
+
+    let parsed_value = value.parse::<i128>()?;
 
     let new_amount = (current_amount + parsed_value).to_string();
 
     update_balance(new_amount, requested_zone_id);
+
+    return Ok(());
 }
 
-pub fn remove_funds_from_balance(value: String, requested_zone_id: &i32) {
-    let current_amount = get_current_amount(requested_zone_id);
+pub fn remove_funds_from_balance(value: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
+    let current_amount = get_current_amount(requested_zone_id)?;
 
-    let parsed_value = value.parse::<i128>().expect("Paid amount parse failed");
+    let parsed_value = value.parse::<i128>()?;
 
     let new_amount = (current_amount - parsed_value).to_string();
 
     update_balance(new_amount, requested_zone_id);
+
+    return Ok(());
 }
 
-pub fn get_current_amount(zone_id: &i32) -> i128 {
-    return get_app_balance(&GetBalance { zone_id: (*zone_id) })
-        .parse::<i128>()
-        .expect("Paid amount parse failed");
-}
-
-pub fn update_balance(new_amount: String, requested_zone_id: &i32) {
+pub fn update_balance(new_amount: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
 
     diesel::update(balances::table)
         .filter(zone_id.eq(requested_zone_id))
         .set(amount.eq(new_amount))
-        .execute(&connection)
-        .expect("Failed to update balance");
+        .execute(&connection)?;
+
+    return Ok(());
 }
 
-pub fn get_app_balance(data: &GetBalance) -> String {
-    use crate::schema::balances::{self, *};
-    let connection = establish_connection();
-    
-    return balances::table
-        .select(amount)
-        .filter(zone_id.eq(data.zone_id))
-        .first::<String>(&connection)
-        .expect("Balance not found");
-}
+pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
+    let app_balance = &get_current_amount(&withdraw_struct.zone_id)?;
 
-pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> String {
-    let app_balance = &get_current_amount(&withdraw_struct.zone_id);
     let parsed_amount = &withdraw_struct
         .amount
-        .parse::<i128>()
-        .expect("Paid amount parse failed");
+        .parse::<i128>()?;
 
     if parsed_amount > app_balance {
-        return error_json_string("Insufficient funds to withdraw".to_string());
+        return Err(Box::new(ErrorOutput {
+            error: "Insufficient funds to withdraw".into(),
+        }));
     }
 
-    let owner_address = additional_data.address.as_ref().unwrap();
+    let owner_address = match additional_data.address.as_ref() {
+        Some(value) => value,
+        None => return Err(Box::new(ErrorOutput {
+            error: "No Owner address provided".into(),
+        }))
+    };
     
     if check_zone_owner(&withdraw_struct.zone_id, owner_address) {
-        return error_json_string("Only owner can withdraw funds".to_string());
+        return Err(Box::new(ErrorOutput {
+            error: "Only owner can withdraw funds".into(),
+        }));
     }
 
     remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id);
@@ -271,7 +298,7 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
     let address_token = ethabi::Token::Address(parsed_address);
 
     let uint_parsed_token =
-        ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount).unwrap();
+        ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount)?;
 
     let amount_token = ethabi::Token::Uint(uint_parsed_token);
 
@@ -286,7 +313,7 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
 
     let encoded_payload = hex::encode(payload);
 
-    return encoded_payload;
+    return Ok(encoded_payload);
 }
 
 fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
@@ -305,23 +332,32 @@ fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
     }
 }
 
-fn request_timestamp(data: &StandardInput) -> String {
-    return parse_request_timestamp(data).to_rfc3339_opts(SecondsFormat::Millis, true);
+fn request_timestamp(data: &StandardInput) -> Result<String, Box<dyn Error>> {
+    let parsed_request_timestamp = parse_request_timestamp(data)?;
+
+    let rfc = parsed_request_timestamp.to_rfc3339_opts(SecondsFormat::Millis, true);
+
+    return Ok(rfc);
 }
 
-fn parse_request_timestamp(data: &StandardInput) -> DateTime<Utc> {
-    let timestamp = data.request["data"]["metadata"]["timestamp"]
-        .clone()
-        .as_i64()
-        .unwrap();
-    return Utc.timestamp(timestamp, 0);
+fn parse_request_timestamp(data: &StandardInput) -> Result<DateTime<Utc>, Box<dyn Error>> {
+    let timestamp = match data.request["data"]["metadata"]["timestamp"]
+            .clone()
+            .as_i64() {
+        Some(it) => it,
+        None => return Err(Box::new(ErrorOutput {
+            error: "Missin timestamp".into(),
+        })),
+    };
+
+    return Ok(Utc.timestamp(timestamp, 0));
 }
 
-pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> String {
+pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
-    let wallet = parse_request_addres(additional_data);
+    let wallet = parse_request_addres(additional_data)?;
 
     let is_inserted = insert_into(zones::table)
         .values((
@@ -330,45 +366,44 @@ pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> String {
             geo_json.eq(data.geo_json),
             owner_address.eq(&wallet),
         ))
-        .execute(&connection)
-        .unwrap();
+        .execute(&connection)?;
 
     if is_inserted > 0 {
         let zone = zones::table
             .filter(owner_address.eq(wallet))
             .order(id.desc())
-            .first::<Zone>(&connection)
-            .expect("No zone found");
+            .first::<Zone>(&connection)?;
 
-        create_zone_balance(&zone);
+        create_zone_balance(&zone)?;
 
-        return serde_json::to_string(&zone).unwrap();
+        return Ok(serde_json::to_string(&zone)?);
     }
-
-    return error_json_string("Seed zone error!".to_string());
+    return Err(Box::new(ErrorOutput {
+        error: "Seed zone error!".into(),
+    }));
 }
 
-fn create_zone_balance(zone: &Zone) -> bool {
+fn create_zone_balance(zone: &Zone) -> Result<(), Box<dyn Error>> {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
 
-    return insert_into(balances::table)
+    insert_into(balances::table)
         .values((
             zone_id.eq(zone.id),
             amount.eq("0"),
         ))
-        .execute(&connection)
-        .unwrap() > 0;
+        .execute(&connection)?;
+
+    return Ok(());
 }
 
-pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> String {
+pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
-    let wallet = parse_request_addres(additional_data);
+    let wallet = parse_request_addres(additional_data)?;
     
-    let result = diesel::delete(
-        zones::table
+    let result = diesel::delete(zones::table
         .filter(id.eq(data.id))
         .filter(owner_address.eq(wallet))
     ).execute(&connection);
@@ -376,22 +411,29 @@ pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> String {
     match result {
         Ok(value) => {
             if value.eq(&0) {
-                return error_json_string(value.to_string())
+                return Err(Box::new(ErrorOutput {
+                    error: "Zone not deleted!".to_string(),
+                }))
             }
-            return success_json_string(value.to_string())
+            return Ok(success_json_string("Zone deleted!".to_string()))
         },
-        Err(value) => return error_json_string(value.to_string())
+        Err(value) => return Err(Box::new(ErrorOutput {
+            error: value.to_string(),
+        }))
     }
 }
 
-fn parse_request_addres(data: &StandardInput) -> String {
-    let wallet = data
-        .address
-        .clone()
-        .expect("Empty address field")
-        .to_string();
+fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> {
+    let wallet = match data
+            .address
+            .clone() {
+        Some(it) => it,
+        None => return Err(Box::new(ErrorOutput {
+            error: "Missin address".into(),
+        })),
+    }.to_string();
 
-    return format!("0x{}", wallet);
+    return Ok(format!("0x{}", wallet));
 }
 
 pub fn error_json_string(data: String) -> String {
@@ -399,5 +441,5 @@ pub fn error_json_string(data: String) -> String {
 }
 
 pub fn success_json_string(data: String) -> String {
-    return serde_json::to_string(&SuccessOutput { success: data }).unwrap();
+    return serde_json::to_string(&SuccessOutput { message: data }).unwrap();
 }
