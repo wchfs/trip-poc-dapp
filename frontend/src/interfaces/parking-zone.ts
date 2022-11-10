@@ -6,4 +6,5 @@ export type ParkingZone = {
   price: string,
   geo_json: string | GeoJSON,
   owner_address: string,
+  balance?: string,
 };

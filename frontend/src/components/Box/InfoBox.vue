@@ -5,8 +5,10 @@
     <div
       class="
         flex
+        flex-row
         justify-between
         items-start
+        my-auto
       "
     >
       <div class="flex flex-col overflow-hidden">
@@ -106,44 +108,42 @@
         items-center
       "
     >
-      <el-button
+      <TButton
         v-if="props.buttonText"
-        :type="props.buttonType"
-        size="large"
-        @click="buttonClick()"
+        @click="emit('buttonClick')"
+        :color="props.buttonColor"
       >
         {{ props.buttonText }}
-      </el-button>
+      </TButton>
     </div>
   </Box>
 </template>
 
 <script setup lang="ts">
 import Box from '@/components/Box/Box.vue';
-import type { HeroIcon } from '@/interfaces/common';
+import TButton from '@/components/Controls/Button/TButton.vue';
 
-const emits = defineEmits([
-  'buttonClick',
-]);
+const emit = defineEmits<{
+  (e: 'buttonClick'): void;
+}>();
 
 const props = withDefaults(defineProps<{
   topText: string;
   featuredText: string;
   bottomText: string;
-  icon: string | HeroIcon;
+  icon: any;
   textColor?: string;
   showButton?: boolean;
   buttonType?: string;
   buttonText?: string;
+  buttonColor?: 'indigo' | 'red' | 'green' | 'yellow' | 'white';
   additionalClass?: string;
 }>(), {
   textColor: 'text-blue-500',
   showButton: false,
   buttonType: 'success',
   additionalClass: 'col-span-1',
+  buttonText: 'Click',
+  buttonColor: 'white',
 });
-
-function buttonClick() {
-  emits('buttonClick');
-}
 </script>

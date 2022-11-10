@@ -39,6 +39,16 @@
       </div>
     </Box>
   </BaseContainer>
+  <BaseContainer>
+    <ParkingZoneInfoBox
+      v-for="zone of parkingZoneStore.currentUserZones(walletStore.walletAddress)"
+      :zone="zone"
+      :showManageButtons="true"
+      @buttonClick="showDetails(zone)"
+      :showButton="true"
+      showButtonMode="hover"
+    />
+  </BaseContainer>
 </template>
 
 <script setup lang="ts">
@@ -48,6 +58,25 @@ import Box from '@/components/Box/Box.vue';
 import { ref } from 'vue';
 import TButton from '@/components/Controls/Button/TButton.vue';
 import ZoneCreateCard from '@/views/Zones/My/Create/ZoneCreateCard.vue';
+import { useParkingZoneStore } from '@/stores/parking-zone';
+import ParkingZoneInfoBox from '@/components/Box/Dedicated/ParkingZoneInfoBox.vue';
+import { useWalletStore } from '@/stores/wallet';
+import type { ParkingZone } from '@/interfaces/parking-zone';
+import router from '@/router';
 
 const showForm = ref(false);
+
+const parkingZoneStore = useParkingZoneStore();
+const walletStore = useWalletStore();
+
+parkingZoneStore.fetchZones();
+
+function showDetails(zone: ParkingZone) {
+  return router.push({
+    name: 'dapp.zones.my.details',
+    params: {
+      zoneId: zone.id,
+    },
+  });
+}
 </script>

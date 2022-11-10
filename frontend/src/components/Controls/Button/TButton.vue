@@ -1,7 +1,6 @@
 <template>
   <button
     :disabled="props.disabled"
-    @click="emit('click')"
     :type="props.type"
     :class="`
       relative
@@ -39,11 +38,6 @@ const props = withDefaults(defineProps<{
   type: 'button',
   disabled: false,
 });
-
-const emit = defineEmits<{
-  (e: 'click'): void;
-}>();
-
 
 const getColorClasses = (): string => {
   switch (props.color) {

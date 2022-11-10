@@ -1,27 +1,8 @@
 <template>
-  <LMap
+  <div
     style="height:60vh"
-    v-model:zoom="zoom"
-    :center="center"
-    :no-blocking-animations="true"
-    :zoom-animation="true"
-  >
-    <LTileLayer
-      url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"
-      layer-type="base"
-      name="OpenStreetMap"
-    />
-    <LMarker
-      v-if="markerPosition"
-      v-model:lat-lng="markerPosition"
-      draggable
-    />
-    <LGeoJson
-      v-for="zone of zones"
-      :geojson="zone.geo_json"
-      :visible="showOnlyZoneId === null || showOnlyZoneId === zone.id"
-    />
-  </LMap>
+    ref="mapContainer"
+  ></div>
 </template>
 
 <script setup lang="ts">
@@ -29,75 +10,124 @@ import { useLocationStore } from '@/stores/location';
 import { storeToRefs } from 'pinia';
 import { onMounted, ref, watch } from 'vue';
 import "leaflet/dist/leaflet.css";
-import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
-import LMarker from '@vue-leaflet/vue-leaflet/src/components/LMarker.vue';
-import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
-import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
-import type { Error } from '@/interfaces/rollup-api';
 import { useParkingZoneStore } from '@/stores/parking-zone';
-import { RollupService } from '@/services/rollup-service';
+import type { Map } from 'leaflet';
+import L from 'leaflet';
+import type { GeoJSON } from 'geojson';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 
-const zoom = ref(4);
-const center = ref({
-  lat: 50,
-  lng: 19,
-});
-
-const markerPosition = ref<{
+type MarkerPosition = {
   lat: number,
   lng: number,
-}|null>(null);
+};
 
+const mapContainer = ref<HTMLDivElement | null>(null);
+const markerPositionRef = ref<MarkerPosition | null>(null);
 const parkingZoneStore = useParkingZoneStore();
 const {
   zones,
-  showOnlyZoneId,
 } = storeToRefs(parkingZoneStore);
 const locationStore = useLocationStore();
 const {
   coords,
 } = storeToRefs(locationStore);
 
-watch(coords, (coords) => {
-  if (coords === null) {
-    return;
-  }
-
-  markerPosition.value = {
-    lat: coords.latitude,
-    lng: coords.longitude,
-  };
-
-  zoom.value = 14;
-
-  setTimeout(() => {
-    /**
-     * We need timeout here because leaflet for vue3 has issue with zoom and center in the same time
-     */
-    center.value = {
-      lat: coords.latitude,
-      lng: coords.longitude,
-    };
-  }, 100);
-});
-
-watch(markerPosition, (a) => {
-  if (a === null) {
-    return;
-  }
-
-  locationStore.setMarkerPosition(a.lat, a.lng);
-});
+let map = null as Map | null;
 
 onMounted(() => {
-  locationStore.setup();
-
   try {
     parkingZoneStore.fetchZones();
   } catch (e) {
     console.log(e); // TODO handle it
   }
+
+  if (mapContainer.value !== null) {
+    map = setupMap(mapContainer.value);
+  }
+
+  if (map && zones.value.length > 0) {
+    drawZones(map, zones.value);
+  }
+
+  if (map && locationStore.setup() && coords.value) {
+    addAndWatchMarker(map, {
+      lat: coords.value.latitude,
+      lng: coords.value.longitude,
+    });
+  }
+});
+
+function setupMap(mapContainer: HTMLDivElement) {
+  const map = L.map(mapContainer);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png', {
+    attribution: '©OpenStreetMap, ©CartoDB',
+  }).addTo(map);
+
+  map.setView([50, 19], 4);
+
+  return map;
+}
+
+function addAndWatchMarker(map: Map, markerPosition: MarkerPosition) {
+  map.eachLayer((layer) => {
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer);
+    }
+  });
+
+  markerPositionRef.value = markerPosition;
+
+  const marker = L.marker([markerPosition.lat, markerPosition.lng], {
+    draggable: true,
+  }).addTo(map);
+
+  map.setView([markerPosition.lat, markerPosition.lng], 15);
+
+  marker.on('dragend', (e) => {
+    const {lat, lng} = e.target.getLatLng();
+    markerPositionRef.value = {lat, lng};
+  });
+}
+
+function drawZones(map: Map, zones: ParkingZone[]) {
+  map.eachLayer((layer) => {
+    if (layer instanceof L.GeoJSON) {
+      map.removeLayer(layer);
+    }
+  });
+
+  zones.forEach((zone) => {
+    L.geoJSON(zone.geo_json as GeoJSON).addTo(map);
+  });
+}
+
+watch(coords, (coords) => {
+  if (coords === null || map === null || markerPositionRef.value !== null) {
+    return;
+  }
+
+  addAndWatchMarker(map, {
+    lat: coords.latitude,
+    lng: coords.longitude,
+  });
+});
+
+watch(() => parkingZoneStore.zones, (parkingZones) => {
+  if (map) {
+    drawZones(map, parkingZones);
+  }
+}, {
+  deep: true,
+});
+
+
+watch(markerPositionRef, (position) => {
+  if (position === null) {
+    return;
+  }
+
+  locationStore.setMarkerPosition(position.lat, position.lng);
 });
 
 </script>
