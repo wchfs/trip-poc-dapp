@@ -33,10 +33,7 @@ import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
 import LMarker from '@vue-leaflet/vue-leaflet/src/components/LMarker.vue';
 import LGeoJson from '@vue-leaflet/vue-leaflet/src/components/LGeoJson.vue';
 import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
-import type { Error } from '@/interfaces/rollup-api';
 import { useParkingZoneStore } from '@/stores/parking-zone';
-import { RollupService } from '@/services/rollup-service';
-import type { ParkingZone } from '@/interfaces/parking-zone';
 
 const zoom = ref(4);
 const center = ref({

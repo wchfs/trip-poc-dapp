@@ -50,6 +50,12 @@ const router = createRouter({
               name: 'dapp.zones.my',
               component: () => import('../views/Zones/My/MyZonesView.vue'),
             },
+            {
+              path: 'details/:zoneId(\\d+)',
+              name: 'dapp.zones.my.details',
+              component: () => import('../views/Zones/Details/ZoneDetailsView.vue'),
+              props: true,
+            },
           ],
         },
         {
@@ -65,7 +71,7 @@ const router = createRouter({
               component: () => import('../views/Proposals/List/ProposalListView.vue'),
             },
             {
-              path: 'details/:id',
+              path: 'details/:id(\\d+)',
               name: 'dapp.proposals.details',
               component: () => import('../views/Proposals/Details/ProposalDetailsView.vue'),
               props: true,

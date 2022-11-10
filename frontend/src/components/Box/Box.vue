@@ -2,7 +2,10 @@
   <div
     :class="`
       relative
+      flex
+      flex-col
       overflow-hidden
+      items-stretch
       bg-white
       p-6
       rounded-xl
