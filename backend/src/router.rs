@@ -1,8 +1,9 @@
+use json::JsonValue;
 use crate::core::*;
 use crate::structures::*;
 use std::error::Error;
 
-pub fn router(route: Route, data: &StandardInput) -> Result<String, Box<dyn Error>> {
+pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
         "check_point_in_zones" => {

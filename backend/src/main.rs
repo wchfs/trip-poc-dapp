@@ -12,6 +12,7 @@
 
 use dotenv::dotenv;
 use ethabi::{decode, ParamType};
+use hyper::StatusCode;
 use json::{object, JsonValue};
 use parking_dapp::router::{response_type_handler, router};
 use parking_dapp::structures::*;
@@ -28,13 +29,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = hyper::Client::new();
     let server_addr = env::var("ROLLUP_HTTP_SERVER_URL")?;
 
-    let mut status = "accept";
+    let mut status = ResponseStatus::Accept.to_string();
     let mut _rollup_address = String::new();
 
     loop {
         println!("Sending finish");
 
-        let response = object! {"status" => status.clone()};
+        let response = object! {"status" => status.to_string()};
 
         let request = hyper::Request::builder()
             .method(hyper::Method::POST)
@@ -67,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "inspect_state" => handle_inspect(&client, &server_addr[..], req).await?,
                 &_ => {
                     eprintln!("Unknown request type");
-                    "reject"
+                    ResponseStatus::Reject.to_string()
                 }
             };
         }
@@ -78,7 +79,7 @@ pub async fn handle_advance(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
     request: JsonValue,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
 
     let request_input = handle_input(request);
@@ -88,52 +89,70 @@ pub async fn handle_advance(
         Err(_) => request_input,
     };
 
-    let route: Route = payload_parser(&input.bytes);
-
-    let response_type = response_type_handler(&route);
-
-    let output = handle_output(route, input)?;
-
-    return Ok(add_response(response_type, client, server_addr, output).await?);
+    return Ok(payload_parser_handler(client, server_addr, input).await?);
 }
 
 pub async fn handle_inspect(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
     request: JsonValue,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     println!("Received inspect request data {}", &request);
 
     let input = handle_input(request);
+    
+    return Ok(payload_parser_handler(client, server_addr, input).await?);
+}
 
-    let route: Route = payload_parser(&input.bytes);
+pub async fn payload_parser_handler(
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
+    input: StandardInput
+) -> Result<String, Box<dyn std::error::Error>> {
+    return match payload_parser(&input.bytes) {
+        Ok(route) => {
+            let output = handle_output(route, input)?;
 
-    let response_type = response_type_handler(&route);
+            Ok(add_response(client, server_addr, output).await?)
+        },
+        Err(err) => {
+            let output_payload = object! {
+                "status" => StatusCode::BAD_REQUEST.as_u16(),
+                "data" => json::Null,
+                "error" => err.to_string(),
+            }.to_string();
 
-    let output = handle_output(route, input)?;
+            let formatted_output = format!("0x{}", hex::encode(output_payload));
 
-    return Ok(add_response(response_type, client, server_addr, output).await?);
+            let output = object! {
+                "payload" => formatted_output,
+                "status" => ResponseStatus::Reject.to_string(),
+                "response_type" => ResponseType::Report.as_str(),
+            };
+
+            Ok(add_response(client, server_addr, output).await?)
+        },
+    };
 }
 
 pub async fn add_response(
-    response_type: &str,
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
     output: JsonValue
-) -> Result<&'static str, Box<dyn Error>> {
-    println!("Adding {}", response_type);
+) -> Result<String, Box<dyn Error>> {
+    println!("Adding {}", output["response_type"].to_string());
 
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
-        .uri(format!("{}/{}", server_addr, response_type))
+        .uri(format!("{}/{}", server_addr, output["response_type"].to_string()))
         .body(hyper::Body::from(output.dump()))?;
 
     let response = client.request(req).await?;
 
     print_response(response).await?;
 
-    Ok("accept")
+    Ok(output["status"].to_string())
 }
 
 fn handle_input(request: JsonValue) -> StandardInput {
@@ -149,24 +168,34 @@ fn handle_input(request: JsonValue) -> StandardInput {
 fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     let address = env::var("ROLLUP_ADDRESS").expect("ROLLUP_ADDRESS must be set");
 
+    let mut status = ResponseStatus::Accept;
+
+    let mut response_type = response_type_handler(&route);
+
     let output_payload = match router(route, &data) {
-        Ok(it) => object! {
-            "status" => 200,
-            "data" => it,
-            "error" => "",
-        }.to_string(),
-        Err(err) => object! {
-            "status" => 400,
-            "data" => "",
-            "error" => err.to_string(),
-        }.to_string(),
-    };
+        Ok(data) => object! {
+            "status" => StatusCode::OK.as_u16(),
+            "data" => data["data"].clone(),
+            "error" => json::Null,
+        },
+        Err(err) => {
+            response_type = ResponseType::Report.as_str();
+            status = ResponseStatus::Reject;
+            object! {
+                "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                "data" => json::Null,
+                "error" => err.to_string(),
+            }
+        },
+    }.to_string();
 
     let formatted_output = format!("0x{}", hex::encode(output_payload));
 
     return Ok(object! {
         "address" => address,
         "payload" => formatted_output,
+        "status" => status.to_string(),
+        "response_type" => response_type,
     });
 }
 
@@ -179,7 +208,7 @@ fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
                 //bytes32: Some(tokens[0].clone()),
                 address: Some(tokens[1].clone().to_string()),
                 uint256: Some(tokens[2].clone()),
-                bytes: tokens[3].clone().into_bytes().unwrap(),
+                bytes: tokens[3].clone().into_bytes().expect("If decoding is successful there should be a bytes token."),
                 request: data.request.clone(),
             })
         }
@@ -187,14 +216,14 @@ fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
     };
 }
 
-fn payload_parser(data: &Vec<u8>) -> Route {
-    return serde_json::from_slice(&data).unwrap();
+fn payload_parser(data: &Vec<u8>) -> Result<Route, Box<dyn Error>> {
+    return Ok(serde_json::from_slice(&data)?);
 }
 
 fn hex_decoder(request: &JsonValue) -> Vec<u8> {
     let payload = prepare_payload(request);
 
-    return hex::decode(&payload.as_str()).unwrap();
+    return hex::decode(&payload.as_str()).expect("Every payload from the rollup server is hex encoded.");
 }
 
 fn prepare_payload(request: &JsonValue) -> String {
@@ -214,13 +243,6 @@ fn get_abi_ether_parameters() -> [ParamType; 4] {
         ParamType::Uint(256),
         ParamType::Bytes,
     ];
-}
-
-fn is_error(response_string: &String) -> bool {
-    if let Ok(ErrorOutput { .. }) = serde_json::from_str(response_string) {
-        return true;
-    }
-    return false;
 }
 
 async fn print_response<T: hyper::body::HttpBody>(

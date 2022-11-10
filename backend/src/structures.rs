@@ -1,7 +1,7 @@
 use std::{error::Error, fmt};
 
 use serde::{Deserialize, Serialize};
-use json::JsonValue;
+use json::{JsonValue};
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
 
@@ -30,7 +30,28 @@ impl ResponseType {
     }
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Debug)]
+pub enum ResponseStatus {
+    Accept,
+    Reject,
+}
+
+impl ResponseStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ResponseStatus::Accept => "accept",
+            ResponseStatus::Reject => "reject",
+        }
+    }
+}
+
+impl fmt::Display for ResponseStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct Route {
     pub endpoint: String,
     pub payload: Option<RoutePayload>,
@@ -63,7 +84,7 @@ pub struct SuccessOutput {
     pub message: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum RoutePayload {
     Ticket(TicketActions),
     Point(GeoPoint),
@@ -72,36 +93,36 @@ pub enum RoutePayload {
     Remove(Remover),
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum TicketActions {
     Buy(BuyTicket),
     Get(GetTicket),
     Validate(ValidateTicket),
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum BalanceActions {
     Withdraw(WithdrawFunds),
     Get(GetBalance),
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum SeederActions {
     Zone(ZoneSeeder),
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Remover {
     pub id: i32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GeoPoint {
     pub longitude: f64,
     pub latitude: f64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct BuyTicket {
     pub license: String,
     pub longitude: f32,
@@ -111,30 +132,30 @@ pub struct BuyTicket {
     pub zone_id: i32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GetTicket {
     pub license: Option<String>,
     pub owner_address: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ValidateTicket {
     pub license: String,
     pub date: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct WithdrawFunds {
     pub amount: String,
     pub zone_id: i32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GetBalance {
     pub zone_id: i32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ZoneSeeder {
     pub name: String,
     pub price: String,

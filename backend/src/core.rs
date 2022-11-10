@@ -7,13 +7,16 @@ use diesel::insert_into;
 use geo::{Contains, Coordinate, Point};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
+use json::{object, JsonValue};
 use std::error::Error;
 use std::str::FromStr;
 
-pub fn get_zones() -> Result<String, Box<dyn Error>> {
+pub fn get_zones() -> Result<JsonValue, Box<dyn Error>> {
     let zones = get_all_zones()?;
 
-    return Ok(serde_json::to_string(&zones)?);
+    return Ok(object! {
+        "data": zones,
+    });
 }
 
 pub fn get_all_zones() -> Result<Vec<Zone>, Box<dyn Error>> {
@@ -28,10 +31,12 @@ pub fn get_all_zones() -> Result<Vec<Zone>, Box<dyn Error>> {
     return Ok(results);
 }
 
-pub fn check_point_in_zone(point: GeoPoint) -> Result<String, Box<dyn Error>> {
+pub fn check_point_in_zone(point: GeoPoint) -> Result<JsonValue, Box<dyn Error>> {
     let point: Point = point_mapper(point);
 
-    return Ok(is_in_the_toll_zone(point)?.to_string());
+    return Ok(object! {
+        "data": is_in_the_toll_zone(point)?.to_string(),
+    });
 }
 
 pub fn point_mapper(point: GeoPoint) -> Point {
@@ -64,7 +69,7 @@ pub fn get_polygon(geo_json_string: String) -> Result<GeometryCollection, Box<dy
     return Ok(collection);
 }
 
-pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
+pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
     let connection = establish_connection();
 
@@ -118,9 +123,11 @@ pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> Result<St
                 .order(id.desc())
                 .first::<Ticket>(&connection)?;
 
-            add_funds_to_balance(amount, &data.zone_id);
+            add_funds_to_balance(amount, &data.zone_id)?;
 
-            return Ok(serde_json::to_string(&ticket)?);
+            return Ok(object! {
+                "data": ticket
+            });
         }
     }
 
@@ -145,7 +152,7 @@ pub fn calculate_amount(zone_id: i32, duration: i32) -> Result<f64, Box<dyn Erro
     return Ok(pricing * hours);
 }
 
-pub fn get_tickets(data: GetTicket) -> Result<String, Box<dyn Error>> {
+pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
     if data.license.is_none() && data.owner_address.is_none() {
         return Err(Box::new(ErrorOutput {
             error: "Missing license and owner address!".into(),
@@ -180,11 +187,13 @@ pub fn get_tickets(data: GetTicket) -> Result<String, Box<dyn Error>> {
     }
 
     let results = tickets_query.load::<Ticket>(&connection)?;
-    
-    return Ok(serde_json::to_string(&results)?);
+
+    return Ok(object! {
+        "data": results
+    });
 }
 
-pub fn validate_ticket(data: ValidateTicket) -> Result<String, Box<dyn Error>> {
+pub fn validate_ticket(data: ValidateTicket) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
     let connection = establish_connection();
 
@@ -194,13 +203,15 @@ pub fn validate_ticket(data: ValidateTicket) -> Result<String, Box<dyn Error>> {
         .load::<Ticket>(&connection)
     {
         Ok(filtered_tickets) => {
-            for t in &filtered_tickets {
+            for t in filtered_tickets {
                 let ticket_date = t.started_at.parse::<DateTime<Utc>>()?;
                 let date_to_check = data.date.parse::<DateTime<Utc>>()?;
                 let diff = (date_to_check - ticket_date).num_minutes();
 
                 if diff < t.duration.into() && diff > 0 {
-                    return Ok(serde_json::to_string(&t)?);
+                    return Ok(object! {
+                        "data": t
+                    });
                 }
             }
 
@@ -212,19 +223,21 @@ pub fn validate_ticket(data: ValidateTicket) -> Result<String, Box<dyn Error>> {
     };
 }
 
-pub fn get_app_balance(data: &GetBalance) -> Result<String, Box<dyn Error>> {
+pub fn get_app_balance(data: &GetBalance) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
     
-    return Ok(balances::table
-        .select(amount)
-        .filter(zone_id.eq(data.zone_id))
-        .first::<String>(&connection)?);
+    return Ok(object! {
+        "data": balances::table
+            .select(amount)
+            .filter(zone_id.eq(data.zone_id))
+            .first::<String>(&connection)?
+    });
 }
 
 pub fn get_current_amount(zone_id: &i32) -> Result<i128, Box<dyn Error>> {
 
-    return Ok(get_app_balance(&GetBalance { zone_id: (*zone_id) })?.parse::<i128>()?)
+    return Ok(get_app_balance(&GetBalance { zone_id: (*zone_id) })?["data"].to_string().parse::<i128>()?)
 }
 
 pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
@@ -234,7 +247,7 @@ pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) -> Result<()
 
     let new_amount = (current_amount + parsed_value).to_string();
 
-    update_balance(new_amount, requested_zone_id);
+    update_balance(new_amount, requested_zone_id)?;
 
     return Ok(());
 }
@@ -246,7 +259,7 @@ pub fn remove_funds_from_balance(value: String, requested_zone_id: &i32) -> Resu
 
     let new_amount = (current_amount - parsed_value).to_string();
 
-    update_balance(new_amount, requested_zone_id);
+    update_balance(new_amount, requested_zone_id)?;
 
     return Ok(());
 }
@@ -263,9 +276,9 @@ pub fn update_balance(new_amount: String, requested_zone_id: &i32) -> Result<(),
     return Ok(());
 }
 
-pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
+pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     let app_balance = &get_current_amount(&withdraw_struct.zone_id)?;
-
+    
     let parsed_amount = &withdraw_struct
         .amount
         .parse::<i128>()?;
@@ -289,7 +302,7 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
         }));
     }
 
-    remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id);
+    remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id)?;
 
     let parsed_address = ethabi::ethereum_types::H160::from_slice(
         owner_address.as_bytes(),
@@ -313,7 +326,9 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
 
     let encoded_payload = hex::encode(payload);
 
-    return Ok(encoded_payload);
+    return Ok(object! {
+        "data": encoded_payload
+    });
 }
 
 fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
@@ -353,7 +368,7 @@ fn parse_request_timestamp(data: &StandardInput) -> Result<DateTime<Utc>, Box<dy
     return Ok(Utc.timestamp(timestamp, 0));
 }
 
-pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
+pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
@@ -376,7 +391,9 @@ pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> Result<St
 
         create_zone_balance(&zone)?;
 
-        return Ok(serde_json::to_string(&zone)?);
+        return Ok(object! {
+            "data": zone
+        });
     }
     return Err(Box::new(ErrorOutput {
         error: "Seed zone error!".into(),
@@ -397,7 +414,7 @@ fn create_zone_balance(zone: &Zone) -> Result<(), Box<dyn Error>> {
     return Ok(());
 }
 
-pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> Result<String, Box<dyn Error>> {
+pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
@@ -415,7 +432,9 @@ pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> Result<Str
                     error: "Zone not deleted!".to_string(),
                 }))
             }
-            return Ok(success_json_string("Zone deleted!".to_string()))
+            return Ok(object! {
+                "data": success_json_string("Zone deleted!".to_string())
+            });
         },
         Err(value) => return Err(Box::new(ErrorOutput {
             error: value.to_string(),
@@ -437,9 +456,9 @@ fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> 
 }
 
 pub fn error_json_string(data: String) -> String {
-    return serde_json::to_string(&ErrorOutput { error: data }).unwrap();
+    return serde_json::to_string(&ErrorOutput { error: data }).expect("Static typing ensures that there will not be any errors.");
 }
 
 pub fn success_json_string(data: String) -> String {
-    return serde_json::to_string(&SuccessOutput { message: data }).unwrap();
+    return serde_json::to_string(&SuccessOutput { message: data }).expect("Static typing ensures that there will not be any errors.");
 }
