@@ -1,14 +1,17 @@
 use crate::core::*;
 use crate::structures::*;
+use std::error::Error;
 
-pub fn router(route: Route, data: &StandardInput) -> String {
+pub fn router(route: Route, data: &StandardInput) -> Result<String, Box<dyn Error>> {
     return match route.endpoint.as_str() {
         "get_zones" => get_zones(),
         "check_point_in_zones" => {
             if let Some(RoutePayload::Point(value)) = route.payload {
                 return check_point_in_zone(value);
             } else {
-                panic!("")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Point does not meet requirements".into(),
+                }));
             }
         }
         "buy_ticket" => {
@@ -16,10 +19,14 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 if let TicketActions::Buy(value) = value {
                     return buy_ticket(value, &data);
                 } else {
-                    panic!("Validation failed! Buy Ticket does not meet requirements")
+                    return Err(Box::new(ErrorOutput {
+                        error: "Validation failed! Buy Ticket does not meet requirements".into(),
+                    }));
                 }
             } else {
-                panic!("Validation failed! Ticket does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Ticket does not meet requirements".into(),
+                }));
             }
         }
         "get_tickets" => {
@@ -27,10 +34,14 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 if let TicketActions::Get(value) = value {
                     return get_tickets(value);
                 } else {
-                    panic!("Validation failed! Get Ticket does not meet requirements")
+                    return Err(Box::new(ErrorOutput {
+                        error: "Validation failed! Get Ticket does not meet requirements".into(),
+                    }));
                 }
             } else {
-                panic!("Validation failed! Ticket does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Ticket does not meet requirements".into(),
+                }));
             }
         }
         "validate_ticket" => {
@@ -38,10 +49,14 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 if let TicketActions::Validate(value) = value {
                     return validate_ticket(value);
                 } else {
-                    panic!("Validation failed! Validate Ticket does not meet requirements")
+                    return Err(Box::new(ErrorOutput {
+                        error: "Validation failed! Validate Ticket does not meet requirements".into(),
+                    }));
                 }
             } else {
-                panic!("Validation failed! Ticket does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Ticket does not meet requirements".into(),
+                }));
             }
         }
         "get_app_balance" => {
@@ -49,10 +64,14 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 if let BalanceActions::Get(value) = value {
                     return get_app_balance(&value);
                 } else {
-                    panic!("Validation failed! Get Balance does not meet requirements")    
+                    return Err(Box::new(ErrorOutput {
+                        error: "Validation failed! Get Balance does not meet requirements".into(),
+                    }));
                 }
             } else {
-                panic!("Validation failed! Balance does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Balance does not meet requirements".into(),
+                }));
             }
         }
         "withdraw_funds" => {
@@ -60,10 +79,14 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 if let BalanceActions::Withdraw(value) = value {
                     return withdraw_funds(value, data);
                 } else {
-                    panic!("Validation failed! Withdraw funds does not meet requirements")    
+                    return Err(Box::new(ErrorOutput {
+                        error: "Validation failed! Withdraw funds does not meet requirements".into(),
+                    }));
                 }
             } else {
-                panic!("Validation failed! Withdraw funds does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Withdraw funds does not meet requirements".into(),
+                }));
             }
         }
         "seed_zone" => {
@@ -71,14 +94,18 @@ pub fn router(route: Route, data: &StandardInput) -> String {
                 let SeederActions::Zone(value) = value;
                 return seed_zone(value, data);
             } else {
-                panic!("Validation failed! Seed Zone does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Seed Zone does not meet requirements".into(),
+                }));
             }
         }
         "remove_zone" => {
             if let Some(RoutePayload::Remove(value)) = route.payload {
                 return remove_zone(value, data);
             } else {
-                panic!("Validation failed! Remove Zone does not meet requirements")
+                return Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Remove Zone does not meet requirements".into(),
+                }));
             }
         }
         _ => todo!(),

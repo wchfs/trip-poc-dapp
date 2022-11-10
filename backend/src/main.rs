@@ -16,6 +16,7 @@ use json::{object, JsonValue};
 use parking_dapp::router::{response_type_handler, router};
 use parking_dapp::structures::*;
 use std::env;
+use std::error::Error;
 
 extern crate diesel;
 extern crate parking_dapp;
@@ -91,7 +92,7 @@ pub async fn handle_advance(
 
     let response_type = response_type_handler(&route);
 
-    let output = handle_output(route, input);
+    let output = handle_output(route, input)?;
 
     return Ok(add_response(response_type, client, server_addr, output).await?);
 }
@@ -109,8 +110,8 @@ pub async fn handle_inspect(
 
     let response_type = response_type_handler(&route);
 
-    let output = handle_output(route, input);
-    
+    let output = handle_output(route, input)?;
+
     return Ok(add_response(response_type, client, server_addr, output).await?);
 }
 
@@ -118,8 +119,8 @@ pub async fn add_response(
     response_type: &str,
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
-    output: JsonValue,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
+    output: JsonValue
+) -> Result<&'static str, Box<dyn Error>> {
     println!("Adding {}", response_type);
 
     let req = hyper::Request::builder()
@@ -145,16 +146,28 @@ fn handle_input(request: JsonValue) -> StandardInput {
     };
 }
 
-fn handle_output(route: Route, data: StandardInput) -> JsonValue {
-    let address = env::var("ROLLUP_ADDRESS").unwrap();
+fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn Error>> {
+    let address = env::var("ROLLUP_ADDRESS").expect("ROLLUP_ADDRESS must be set");
 
-    let output_payload: String = router(route, &data);
+    let output_payload = match router(route, &data) {
+        Ok(it) => object! {
+            "status" => 200,
+            "data" => it,
+            "error" => "",
+        }.to_string(),
+        Err(err) => object! {
+            "status" => 400,
+            "data" => "",
+            "error" => err.to_string(),
+        }.to_string(),
+    };
 
-    let is_error = is_error(&output_payload);
-    
     let formatted_output = format!("0x{}", hex::encode(output_payload));
 
-    return object! {"address" => address, "payload" => formatted_output, "error" => is_error};
+    return Ok(object! {
+        "address" => address,
+        "payload" => formatted_output,
+    });
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
@@ -204,7 +217,7 @@ fn get_abi_ether_parameters() -> [ParamType; 4] {
 }
 
 fn is_error(response_string: &String) -> bool {
-    if let Ok(ErrorOutput {..}) = serde_json::from_str(response_string) {
+    if let Ok(ErrorOutput { .. }) = serde_json::from_str(response_string) {
         return true;
     }
     return false;

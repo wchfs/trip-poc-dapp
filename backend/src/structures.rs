@@ -1,3 +1,5 @@
+use std::{error::Error, fmt};
+
 use serde::{Deserialize, Serialize};
 use json::JsonValue;
 
@@ -48,9 +50,17 @@ pub struct ErrorOutput {
     pub error: String,
 }
 
+impl fmt::Display for ErrorOutput {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.error)
+    }
+}
+
+impl Error for ErrorOutput {}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SuccessOutput {
-    pub success: String,
+    pub message: String,
 }
 
 #[derive(Deserialize, Debug)]
