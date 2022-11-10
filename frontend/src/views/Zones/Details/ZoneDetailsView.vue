@@ -58,18 +58,9 @@
       <Box
         additionalClass="col-span-3"
       >
-        <LMap
-          style="height:60vh"
-          @ready="onMapReady"
-          :no-blocking-animations="true"
-          :zoom-animation="true"
-        >
-          <LTileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"
-            layer-type="base"
-            name="OpenStreetMap"
-          />
-        </LMap>
+        <ZoneDetailMap
+          :zone="zone"
+        />
       </Box>
     </BaseContainer>
   </div>
@@ -85,13 +76,10 @@ import type { ParkingZone } from '@/interfaces/parking-zone';
 import { useWalletStore } from '@/stores/wallet';
 import { gwei2eth } from '@/helpers/helpers';
 import "leaflet/dist/leaflet.css";
-import LMap from '@vue-leaflet/vue-leaflet/src/components/LMap.vue';
-import LTileLayer from '@vue-leaflet/vue-leaflet/src/components/LTileLayer.vue';
 import type { Map } from 'leaflet';
-import L from 'leaflet';
-import type { GeoJsonObject } from 'geojson';
 import ZoneActionButtons from '@/views/Zones/Details/Partials/ZoneActionButtons.vue';
 import router from '@/router';
+import ZoneDetailMap from '@/views/Zones/Details/Partials/ZoneDetailMap.vue';
 
 const props = defineProps<{
   zoneId: string;
@@ -99,43 +87,20 @@ const props = defineProps<{
 
 const walletStore = useWalletStore();
 const parkingZoneStore = useParkingZoneStore();
-parkingZoneStore.fetchZones(true);
-
 const zone = ref<ParkingZone | null>(null);
+let map = null as Map | null;
 
-watch(parkingZoneStore.zones, () => {
+parkingZoneStore.fetchZones(true).then(() => {
   zone.value = parkingZoneStore.currentUserZones(walletStore.walletAddress).find(z => {
     return z.id === parseInt(props.zoneId);
   }) || null;
+});
 
+watch(zone, (z) => {
   if (zone.value === null) {
-    router.push({
+    return router.push({
       name: 'dapp.zones.my',
     });
   }
 });
-
-function onMapReady(map: Map) {
-  const geoJsonFeature = zone.value?.geo_json;
-
-  if (!geoJsonFeature) {
-    return;
-  }
-
-  const bounds = L.geoJSON(geoJsonFeature as GeoJsonObject)
-    .addTo(map)
-    .getBounds();
-
-  //map.fitBounds(bounds) // throws an error if bounds is not valid
-  map.fitBounds([
-    [
-      bounds.getSouthWest().lat,
-      bounds.getSouthWest().lng,
-    ],
-    [
-      bounds.getNorthEast().lat,
-      bounds.getNorthEast().lng,
-    ],
-  ]);
-}
 </script>

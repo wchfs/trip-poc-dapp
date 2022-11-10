@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import type { GeoJSON } from 'geojson';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { RollupService } from '@/services/rollup-service';
-import type { Error } from '@/interfaces/rollup-api';
 
 export const useParkingZoneStore = defineStore('parking-zone', {
   state: () => ({
@@ -60,27 +59,37 @@ export const useParkingZoneStore = defineStore('parking-zone', {
     clearZones() {
       this.zones = [];
     },
-    fetchZones(
+    async fetchZones(
       force: boolean = false,
-    ) {
+    ): Promise<boolean> {
       if (!force && this.zones.length > 1) {
-        return;
+        return Promise.resolve(true);
       }
 
       this.clearZones();
 
-      RollupService.inspect<ParkingZone[]>({
-        endpoint: "get_zones",
-        payload: null,
-      }).then((result) => {
-        result.forEach(reports => {
-          reports.forEach(zoneReport => {
-            this.addZone(zoneReport);
-          });
+      let result = null;
+
+      try {
+        result = await RollupService.inspect<ParkingZone[]>({
+          endpoint: "get_zones",
+          payload: null,
         });
-      }).catch((error: Error) => {
-        throw error;
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (result === null) {
+        return Promise.reject(false);
+      }
+
+      result.forEach(reports => {
+        reports.forEach(zoneReport => {
+          this.addZone(zoneReport);
+        });
       });
+
+      return Promise.resolve(true);
     },
     addZone(zone: ParkingZone) {
       zone.geo_json = JSON.parse(zone.geo_json.toString()) as GeoJSON;

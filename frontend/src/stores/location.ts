@@ -38,11 +38,15 @@ export const useLocationStore = defineStore('location', {
       this.error = error;
       this.coords = null;
     },
-    setup() {
+    setup(): boolean {
       if (!navigator.geolocation) {
         this.clear(true);
 
-        return;
+        return false;
+      }
+
+      if (this.coords !== null && this.error === false && this.loading === false) {
+        return true;
       }
 
       navigator.geolocation.getCurrentPosition(
@@ -54,7 +58,9 @@ export const useLocationStore = defineStore('location', {
         () => {
           this.clear(true);
         },
-      )
+      );
+
+      return true;
     },
     setMarkerPosition(lat: number, lng: number) {
       this.markerPosition = {lat, lng};
