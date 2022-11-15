@@ -179,8 +179,9 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
             "error" => json::Null,
         },
         Err(err) => {
-            response_type = ResponseType::Report.as_str();
             status = ResponseStatus::Reject;
+            response_type = ResponseType::Report.as_str();
+
             object! {
                 "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
                 "data" => json::Null,
