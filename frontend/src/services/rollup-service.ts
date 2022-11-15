@@ -16,13 +16,19 @@ import type {
 } from '@/generated/graphql';
 import { NoticesByEpochAndInputDocument } from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
-import type { AdvanceRequest, InspectResponseDecodedPayload } from '@/interfaces/rollup-api';
+import type {
+  AdvanceRequest,
+  Error as InspectError,
+  InspectRequest,
+  InspectResponse,
+  InspectResponseDecodedPayload,
+  Report
+} from '@/interfaces/rollup-api';
 import { ApolloService } from '@/services/apollo-service';
 import { useWalletStore } from '@/stores/wallet';
 import fetch from 'cross-fetch';
-import type { Error as InspectError, InspectRequest, InspectResponse, Report } from '@/interfaces/rollup-api';
 import { hex2str } from '@/helpers/helpers';
-import { inject } from 'vue';
+import type { Event } from '@ethersproject/contracts/src.ts';
 
 export interface InputKeys {
   epoch_index: number;
@@ -194,7 +200,7 @@ export abstract class RollupService {
 
       response.json().then((r: InspectResponse) => {
         const decodedReports = r.reports.map((report: Report) => {
-          return JSON.parse(hex2str(report.payload)) as T;
+          return JSON.parse(hex2str(report.payload)) as InspectResponseDecodedPayload<T>;
         });
 
         resolve(decodedReports);
@@ -232,7 +238,11 @@ export abstract class RollupService {
   public static getInputKeysFromAdvanceReceipt(
     receipt: ContractReceipt,
   ): InputKeys {
-    const event = receipt.events?.find((event) => event.event === "InputAdded");
+    if (!receipt.events) {
+      throw new Error('InputAdded event not found in receipt');
+    }
+
+    const event = receipt.events.find((event: Event) => event.event === "InputAdded");
 
     if (!event) {
       throw new Error(
