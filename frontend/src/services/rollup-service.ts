@@ -125,7 +125,10 @@ export abstract class RollupService {
     });
   }
 
-  public static async addInput<T>(payload: AdvanceRequest, deposit: string | null = null): Promise<ContractTransactionResponse<T>> {
+  public static async addInput<T>(
+    payload: AdvanceRequest,
+    deposit: string | null = null,
+  ): Promise<ContractTransactionResponse<InspectResponseDecodedPayload<T>>> {
     const payloadBytes = ethers.utils.isBytesLike(payload)
       ? payload
       : ethers.utils.toUtf8Bytes(JSON.stringify(payload));
@@ -179,7 +182,7 @@ export abstract class RollupService {
 
                 clearInterval(intervalId);
                 const decodedNoticePayload = ethers.utils.toUtf8String(notice.payload);
-                resolve(JSON.parse(decodedNoticePayload) as T);
+                resolve(JSON.parse(decodedNoticePayload) as InspectResponseDecodedPayload<T>);
               }
             }).catch((error: GraphQLError) => {
               console.log(error.message);

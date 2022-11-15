@@ -118,10 +118,10 @@ export const useParkingZoneStore = defineStore('parking-zone', {
         },
       });
 
-      result.response.then((zone: ParkingZone) => {
+      result.response.then((zone) => {
         this.waitingForNewZone = false;
 
-        this.addZone(zone);
+        this.addZone(zone.data);
       });
 
       return result;
