@@ -160,10 +160,6 @@ export abstract class RollupService {
               query: NoticesByEpochAndInputDocument,
               variables,
             }).then((response) => {
-              if (response === null) {
-                return;
-              }
-
               if (response?.data?.epoch?.input?.notices) {
                 const notice = response
                   .data
@@ -172,6 +168,10 @@ export abstract class RollupService {
                   .notices
                   .nodes
                   .filter<PartialNotice>((n: PartialNotice | null): n is PartialNotice => n !== null)[0];
+
+                if (!notice) {
+                  return;
+                }
 
                 clearInterval(intervalId);
                 const decodedNoticePayload = ethers.utils.toUtf8String(notice.payload);

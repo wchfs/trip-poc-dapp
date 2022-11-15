@@ -62,7 +62,8 @@
                       sm:w-10
                     `"
                   >
-                    <ExclamationTriangleIcon
+                    <component
+                      :is="options.icon"
                       :class="`h-6 w-6 ${ getIconColorClasses(options.color) }`"
                       aria-hidden="true"
                     />
@@ -126,6 +127,7 @@ type Events = {
 };
 
 type Options = {
+  icon: any,
   color: 'indigo' | 'red' | 'green' | 'yellow' | 'white';
   title?: string;
   message?: string;
@@ -136,6 +138,7 @@ type Options = {
 const isOpen = ref(false);
 
 const defaultOptions: Options = {
+  icon: ExclamationTriangleIcon,
   color: 'red',
   title: 'Are you sure?',
   message: 'Are you confirm that action? This action cannot be undone.',

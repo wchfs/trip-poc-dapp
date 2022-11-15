@@ -1,4 +1,7 @@
 <template>
+  <ConfirmDialog
+    ref="confirmDialogRef"
+  />
   <ElForm
     @submit.prevent
     ref="addTicketFormRef"
@@ -61,7 +64,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessageBox } from 'element-plus';
 import { useLocationStore } from '@/stores/location';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import 'element-plus/es/components/message-box/style/css';
@@ -73,12 +75,17 @@ import { useWalletStore } from '@/stores/wallet';
 import { gwei2eth } from '@/helpers/helpers';
 import { BigNumber } from 'ethers';
 import TButton from '@/components/Controls/Button/TButton.vue';
+import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
+import { TicketIcon } from '@heroicons/vue/24/outline';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
 const parkingTicketStore = useParkingTicketStore();
 
 const addTicketFormRef = ref<FormInstance>();
+
+const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
+
 const addTicketForm = reactive({
   date: DateTime.now().toJSDate(),
   duration: '01:00',
@@ -144,17 +151,20 @@ const sendToRollup = async () => {
     return; // TODO throw error
   }
 
-  ElMessageBox.confirm(
-    `You should pay ${ price } ETH. Continue?`,
-    'Info', {
-      confirmButtonText: 'OK',
-      cancelButtonText: 'Cancel',
-      type: 'info',
-    }
-  ).then(() => {
-    executeDepositConfirmed(duration, price);
-  }).catch(() => {
-    executeDepositDeclined();
+  confirmDialogRef.value?.open({
+    confirmed: () => {
+      executeDepositConfirmed(duration, price);
+    },
+    canceled: () => {
+      executeDepositDeclined();
+    },
+  }, {
+    color: 'green',
+    icon: TicketIcon,
+    title: 'Buy ticket',
+    message: `You should pay ${ price } ETH. Continue?`,
+    confirmButtonText: 'Yes',
+    cancelButtonText: 'No',
   });
 };
 
@@ -188,7 +198,7 @@ const executeDepositDeclined = () => {
 };
 
 function calculatePrice(zone: ParkingZone, duration: number): string {
-  const price = BigNumber.from(zone.price).div(60).mul(duration);
+  const price = BigNumber.from(zone.price).toNumber() * (duration / 60);
 
   return gwei2eth(price.toString());
 }
