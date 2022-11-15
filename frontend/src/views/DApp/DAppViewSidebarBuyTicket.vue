@@ -163,8 +163,8 @@ const sendToRollup = async () => {
     icon: TicketIcon,
     title: 'Buy ticket',
     message: `You should pay ${ price } ETH. Continue?`,
-    confirmButtonText: 'Yes',
-    cancelButtonText: 'No',
+    confirmButtonText: 'Yes, buy ticket',
+    cancelButtonText: 'Cancel',
   });
 };
 

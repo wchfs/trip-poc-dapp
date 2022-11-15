@@ -155,11 +155,15 @@ export abstract class RollupService {
               epoch_index: keys.epoch_index,
             };
 
+            console.log('variables', variables);
+
             ApolloService.getClient().query<NoticesByEpochAndInputQuery, NoticesByEpochAndInputQueryVariables>({
               fetchPolicy: 'no-cache',
               query: NoticesByEpochAndInputDocument,
               variables,
             }).then((response) => {
+              console.log('response', response);
+
               if (response?.data?.epoch?.input?.notices) {
                 const notice = response
                   .data
