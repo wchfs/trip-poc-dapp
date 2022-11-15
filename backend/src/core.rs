@@ -452,7 +452,7 @@ fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> 
         })),
     }.to_string();
 
-    return Ok(format!("0x{}", wallet));
+    return Ok(format!("{}", wallet));
 }
 
 pub fn error_json_string(data: String) -> String {
