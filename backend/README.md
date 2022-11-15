@@ -139,7 +139,8 @@ Request:
   "payload": {
     "Balance": {
       "Withdraw": {
-        "amount": "1000000"
+        "amount": "1000000",
+        "zone_id": 1
       }
     }
   }
