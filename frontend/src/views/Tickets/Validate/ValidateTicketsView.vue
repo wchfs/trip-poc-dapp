@@ -57,7 +57,7 @@ import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { RollupService } from '@/services/rollup-service';
-import type { Error, InspectError } from '@/interfaces/rollup-api';
+import type { Error } from '@/interfaces/rollup-api';
 import type { ParkingTicket } from '@/interfaces/parking-ticket';
 import ParkingTicketBox from '@/components/ParkingTicket/ParkingTicketBox.vue';
 
@@ -100,10 +100,10 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   })
 };
 
-const result: Ref<ParkingTicket|InspectError|null> = ref(null);
+const result: Ref<ParkingTicket | null> = ref(null);
 
 function sendInspect() {
-  RollupService.inspect<ParkingTicket|InspectError>({
+  RollupService.inspect<ParkingTicket>({
     endpoint: "validate_ticket",
     payload: {
       Ticket: {
@@ -114,7 +114,7 @@ function sendInspect() {
     },
   }).then((reports) => {
     reports.forEach(report => {
-      result.value = report;
+      result.value = report.data;
     });
   }).catch((error: Error) => {
     console.log(error); // TODO handle it

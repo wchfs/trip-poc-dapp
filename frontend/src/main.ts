@@ -1,5 +1,6 @@
 import { createApp, h } from 'vue'
 import { createPinia } from 'pinia'
+import RayPlugin from 'vue-ray';
 import App from './App.vue'
 import './assets/index.css'
 
@@ -42,6 +43,20 @@ pinia.use(() => {
 /** -------- END PINIA SETUP -------- */
 
 
+/** -------- RAY SETUP -------- */
+const rayConf = {
+  interceptErrors: true,
+  host: '127.0.0.1',
+  port: 23517,
+  showComponentEvents: [
+    // 'mounted',
+  ],
+  nodeRaySettings: {
+    interceptConsoleLog: false,
+  },
+};
+/** -------- END RAY SETUP -------- */
+
 /** -------- APP SETUP -------- */
 const app = createApp({
   setup() {
@@ -52,6 +67,7 @@ const app = createApp({
 
 app.use(pinia);
 app.use(router);
+app.use(RayPlugin, rayConf);
 
 app.mount('#app');
 /** -------- END APP SETUP -------- */

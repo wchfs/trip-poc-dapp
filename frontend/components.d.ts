@@ -8,7 +8,9 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BaseContainer: typeof import('./src/components/Containers/BaseContainer.vue')['default']
+    BaseDialog: typeof import('./src/components/Dialogs/BaseDialog.vue')['default']
     Box: typeof import('./src/components/Box/Box.vue')['default']
+    ConfirmDialog: typeof import('./src/components/Dialogs/ConfirmDialog.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
     ElForm: typeof import('element-plus/es')['ElForm']
@@ -18,6 +20,7 @@ declare module '@vue/runtime-core' {
     ElTimeSelect: typeof import('element-plus/es')['ElTimeSelect']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     FooterContainer: typeof import('./src/components/Containers/FooterContainer.vue')['default']
+    GeoJsonMapPreviewBox: typeof import('./src/components/Box/Dedicated/GeoJsonMapPreviewBox.vue')['default']
     InfoBox: typeof import('./src/components/Box/InfoBox.vue')['default']
     MainContainer: typeof import('./src/components/Containers/MainContainer.vue')['default']
     Map: typeof import('./src/components/Map/Map.vue')['default']

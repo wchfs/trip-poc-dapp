@@ -16,12 +16,13 @@ import type {
 } from '@/generated/graphql';
 import { NoticesByEpochAndInputDocument } from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
-import type { AdvanceRequest } from '@/interfaces/rollup-api';
+import type { AdvanceRequest, InspectResponseDecodedPayload } from '@/interfaces/rollup-api';
 import { ApolloService } from '@/services/apollo-service';
 import { useWalletStore } from '@/stores/wallet';
 import fetch from 'cross-fetch';
 import type { Error as InspectError, InspectRequest, InspectResponse, Report } from '@/interfaces/rollup-api';
 import { hex2str } from '@/helpers/helpers';
+import { inject } from 'vue';
 
 export interface InputKeys {
   epoch_index: number;
@@ -179,7 +180,7 @@ export abstract class RollupService {
     });
   }
 
-  public static async inspect<T>(params: InspectRequest): Promise<T[]> {
+  public static async inspect<T>(params: InspectRequest): Promise<InspectResponseDecodedPayload<T>[]> {
     const url = import.meta.env.VITE_APP_INSPECT_ENDPOINT;
     const response = await fetch(`${url}/${JSON.stringify(params)}`);
 

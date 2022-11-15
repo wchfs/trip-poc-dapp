@@ -6,6 +6,7 @@
       relative
       inline-flex
       items-center
+      place-content-center
       rounded-md
       border
       border-transparent

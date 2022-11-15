@@ -32,7 +32,15 @@
             class="col-span-2 sm:col-span-6 sm:col-start-4"
           >
             <TInputDropZone
+              class="mb-3"
               @fileChanged="fileChanged"
+            />
+            <GeoJsonMapPreviewBox
+              v-if="newZone.geo_json"
+              class="border border-gray-300 rounded-md shadow-sm"
+              style="height: 20vh"
+              :unwrapContainer="true"
+              :geoJsonString="newZone.geo_json"
             />
           </div>
         </form>
@@ -71,6 +79,7 @@ import TInputLeftSide from '@/components/Controls/Input/Partials/Sides/Left/TInp
 import TInputDropZone from '@/components/Controls/Input/TInputDropZone.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { eth2gwei } from '@/helpers/helpers';
+import GeoJsonMapPreviewBox from '@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue';
 
 const parkingZoneStore = useParkingZoneStore();
 
@@ -138,5 +147,7 @@ function submit() {
     eth2gwei(newZone.price).toString(),
     newZone.geo_json as GeoJSON,
   );
+
+  emit('cancel');
 }
 </script>

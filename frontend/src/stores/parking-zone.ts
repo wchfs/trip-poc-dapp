@@ -2,12 +2,14 @@ import { defineStore } from 'pinia';
 import type { GeoJSON } from 'geojson';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { RollupService } from '@/services/rollup-service';
+import type { InspectResponseDecodedPayload } from '@/interfaces/rollup-api';
 
 export const useParkingZoneStore = defineStore('parking-zone', {
   state: () => ({
     zones: [] as ParkingZone[],
     selectedZoneId: null as number | null,
     showOnlyZoneId: null as number | null,
+    waitingForNewZone: false as boolean,
   }),
   getters: {
     selectedZone: (state) => {
@@ -46,7 +48,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
               },
             }).then(reports => {
               reports.forEach(report => {
-                z.balance = report;
+                z.balance = report.data;
               });
             });
 
@@ -68,7 +70,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
 
       this.clearZones();
 
-      let result = null;
+      let result = null as InspectResponseDecodedPayload<ParkingZone[]>[] | null;
 
       try {
         result = await RollupService.inspect<ParkingZone[]>({
@@ -84,7 +86,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
       }
 
       result.forEach(reports => {
-        reports.forEach(zoneReport => {
+        reports.data.forEach(zoneReport => {
           this.addZone(zoneReport);
         });
       });
@@ -101,6 +103,8 @@ export const useParkingZoneStore = defineStore('parking-zone', {
       price: string,
       geoJson: GeoJSON,
     ) {
+      this.waitingForNewZone = true;
+
       const result = await RollupService.addInput<ParkingZone>({
         endpoint: "seed_zone",
         payload: {
@@ -115,13 +119,15 @@ export const useParkingZoneStore = defineStore('parking-zone', {
       });
 
       result.response.then((zone: ParkingZone) => {
+        this.waitingForNewZone = false;
+
         this.addZone(zone);
       });
 
       return result;
     },
-    async deleteZone(zoneId: number): Promise<boolean> {
-      const result = await RollupService.addInput<{
+    async deleteZone(zoneId: number): Promise<void> {
+      RollupService.addInput<{
         errors: string[];
       }>({
         endpoint: "remove_zone",
@@ -130,13 +136,9 @@ export const useParkingZoneStore = defineStore('parking-zone', {
             id: zoneId,
           },
         },
+      }).then((result) => {
+        this.fetchZones(true);
       });
-
-      this.fetchZones(true);
-
-      console.log(result);
-
-      return true;
     },
     setSelectedZoneId(zoneId: number | null) {
       this.selectedZoneId = zoneId;

@@ -58,7 +58,7 @@ watch(markerPositionWithSpaceSeparator, function (value) {
 function check() {
   parkingZoneStore.setSelectedZoneId(null)
 
-  RollupService.inspect<number>({
+  RollupService.inspect<string>({
     endpoint: "check_point_in_zones",
     payload: {
       Point: {
@@ -68,7 +68,7 @@ function check() {
     },
   }).then((reports) => {
     reports.forEach(report => {
-      parkingZoneStore.setSelectedZoneId(report);
+      parkingZoneStore.setSelectedZoneId(parseInt(report.data));
     });
   }).catch((error: Error) => {
     console.log(error); // TODO handle it

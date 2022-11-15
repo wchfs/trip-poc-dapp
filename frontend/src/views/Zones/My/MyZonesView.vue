@@ -1,6 +1,31 @@
 <template>
   <BaseContainer>
     <Box
+      additionalClass="col-span-3 border border-orange-500 mb-5"
+    >
+      <div
+        class="
+          flex
+          justify-center
+        "
+      >
+        <p v-if="parkingZoneStore.waitingForNewZone" class="text-orange-700 text-center">
+          Your new parking zone is already on the way, please wait...
+        </p>
+        <p v-else class="text-indigo-900 text-center">
+          If you do not see your just-created parking zone, wait a moment and then hit
+          <ElButton
+            type="success"
+            @click="parkingZoneStore.fetchZones(true)"
+          >
+            reload zones
+          </ElButton>
+        </p>
+      </div>
+    </Box>
+  </BaseContainer>
+  <BaseContainer>
+    <Box
       additionalClass="col-span-3 p-0 mb-6"
     >
       <div

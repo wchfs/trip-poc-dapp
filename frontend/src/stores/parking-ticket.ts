@@ -48,7 +48,7 @@ export const useParkingTicketStore = defineStore('parking-ticket', {
         },
       }).then((result) => {
         result.forEach(tickets => {
-          tickets.forEach(ticket => {
+          tickets.data.forEach(ticket => {
             this.addTicket(ticket);
           });
         });

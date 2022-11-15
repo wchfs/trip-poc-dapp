@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { DateTime } from 'luxon';
 
 export const hex2str = (hex: string) => {
@@ -10,10 +10,18 @@ export const hex2str = (hex: string) => {
   }
 };
 
-export const eth2gwei = (eth: string) => {
+export const eth2gwei = (eth: string | undefined): BigNumber => {
+  if (!eth) {
+    throw new Error('eth2gwei: eth is undefined');
+  }
+
   return ethers.utils.parseUnits(eth, "gwei");
 }
 
-export const gwei2eth = (gwei: string) => {
+export const gwei2eth = (gwei: string | undefined): string => {
+  if (!gwei) {
+    throw new Error('gwei2eth: gwei is undefined');
+  }
+
   return ethers.utils.formatUnits(gwei, "gwei");
 }

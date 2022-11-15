@@ -55,13 +55,10 @@
     <BaseContainer
       class="mb-5 xl:mb-6"
     >
-      <Box
-        additionalClass="col-span-3"
-      >
-        <ZoneDetailMap
-          :zone="zone"
-        />
-      </Box>
+      <GeoJsonMapPreviewBox
+        style="height:60vh"
+        :geoJsonString="zone.geo_json"
+      />
     </BaseContainer>
   </div>
 </template>
@@ -69,7 +66,7 @@
 <script setup lang="ts">
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import ZoneDetailRow from '@/views/Zones/Details/Partials/ZoneDetailRow.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import type { ParkingZone } from '@/interfaces/parking-zone';
@@ -79,7 +76,7 @@ import "leaflet/dist/leaflet.css";
 import type { Map } from 'leaflet';
 import ZoneActionButtons from '@/views/Zones/Details/Partials/ZoneActionButtons.vue';
 import router from '@/router';
-import ZoneDetailMap from '@/views/Zones/Details/Partials/ZoneDetailMap.vue';
+import GeoJsonMapPreviewBox from '@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue';
 
 const props = defineProps<{
   zoneId: string;
@@ -91,16 +88,16 @@ const zone = ref<ParkingZone | null>(null);
 let map = null as Map | null;
 
 parkingZoneStore.fetchZones(true).then(() => {
-  zone.value = parkingZoneStore.currentUserZones(walletStore.walletAddress).find(z => {
+  const filteredZone = parkingZoneStore.currentUserZones(walletStore.walletAddress).find(z => {
     return z.id === parseInt(props.zoneId);
   }) || null;
-});
 
-watch(zone, (z) => {
-  if (zone.value === null) {
+  if (filteredZone === null) {
     return router.push({
       name: 'dapp.zones.my',
     });
   }
+
+  zone.value = filteredZone;
 });
 </script>

@@ -1,21 +1,36 @@
 <template>
+  <Box
+    v-if="!unwrapContainer"
+    :additionalClass="props.additionalClass"
+  >
+    <div
+      class="h-full"
+      ref="mapContainer"
+    />
+  </Box>
   <div
-    style="height:60vh"
+    v-else
+    class="h-full"
     ref="mapContainer"
-  ></div>
+  />
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import type { ParkingZone } from '@/interfaces/parking-zone';
 import "leaflet/dist/leaflet.css";
 import type { Map } from 'leaflet';
 import L from 'leaflet';
 import type { GeoJSON } from 'geojson';
+import Box from '@/components/Box/Box.vue';
 
-const props = defineProps<{
-  zone: ParkingZone;
-}>();
+const props = withDefaults(defineProps<{
+  geoJsonString: string | object | GeoJSON;
+  additionalClass?: string;
+  unwrapContainer?: boolean;
+}>(), {
+  additionalClass: 'col-span-3',
+  unwrapContainer: false,
+});
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 
@@ -27,7 +42,7 @@ onMounted(() => {
   }
 
   if (map) {
-    drawZone(map, props.zone);
+    drawGeoJson(map, props.geoJsonString);
   }
 });
 
@@ -43,14 +58,20 @@ function setupMap(mapContainer: HTMLDivElement) {
   return map;
 }
 
-function drawZone(map: Map, zone: ParkingZone) {
+function drawGeoJson(map: Map, geoJson: string | object | GeoJSON) {
   map.eachLayer((layer) => {
     if (layer instanceof L.GeoJSON) {
       map.removeLayer(layer);
     }
   });
 
-  const layer = L.geoJSON(zone.geo_json as GeoJSON).addTo(map);
+  if (typeof geoJson === 'string') {
+    geoJson = JSON.parse(geoJson);
+  }
+
+  const layer = L.geoJSON(geoJson as GeoJSON);
+
+  layer.addTo(map);
 
   map.fitBounds(layer.getBounds());
 }

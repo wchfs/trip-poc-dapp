@@ -18,6 +18,12 @@ export enum CompletionStatus {
   TimeLimitExceeded = 'TimeLimitExceeded',
 }
 
+export type InspectResponseDecodedPayload<T> = {
+  data: T,
+  error: string | null,
+  status: number,
+};
+
 export type InspectMetadata = {
   active_epoch_index: number,
   current_input_index: number,
