@@ -334,15 +334,20 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
 fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
     use crate::schema::zones::dsl::*;
     let connection = establish_connection();
-
-    let result = zones
+    
+    let result: Result<i64, diesel::result::Error> = zones
+        .find(requested_zone_id)    
         .filter(owner_address.eq(requested_by))
-        .filter(id.eq(requested_zone_id))
         .count()
-        .execute(&connection);
-
+        .get_result(&connection);
+    
     return match result {
-        Ok(_) => true,
+        Ok(count) => {
+            if count > 0 {
+                true;
+            }
+            false
+        }   
         Err(_) => false,
     }
 }
