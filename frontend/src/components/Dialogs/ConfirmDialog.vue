@@ -155,7 +155,7 @@ const events = ref<Events | null>(null);
  */
 const open = (
   dialogEvents: Events,
-  dialogOptions?: Options
+  dialogOptions?: Partial<Options>
 ) => {
   Object.assign(options, defaultOptions, dialogOptions);
 

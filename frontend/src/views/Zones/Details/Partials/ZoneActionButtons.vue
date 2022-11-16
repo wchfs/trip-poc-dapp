@@ -3,7 +3,7 @@
     ref="confirmDialogRef"
   />
   <TButton
-    :disabled="parseInt(zone.balance) <= 0"
+    :disabled="parseInt(zone.balance ?? '0') <= 0"
     class="px-3"
     color="yellow"
     @click="showWithdrawFundsDialog()"
