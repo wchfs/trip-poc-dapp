@@ -113,17 +113,17 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
     };
 }
 
-pub fn response_type_handler(route: &Route) -> &'static str {
+pub fn response_type_handler(route: &Route) -> ResponseType {
     return match route.endpoint.as_str() {
-        "get_zones" => ResponseType::Report.as_str(),
-        "check_point_in_zones" => ResponseType::Report.as_str(),
-        "buy_ticket" => ResponseType::Notice.as_str(),
-        "get_tickets" => ResponseType::Report.as_str(),
-        "validate_ticket" => ResponseType::Report.as_str(),
-        "get_app_balance" => ResponseType::Report.as_str(),
-        "withdraw_funds" => ResponseType::Voucher.as_str(),
-        "seed_zone" => ResponseType::Notice.as_str(),
-        "remove_zone" => ResponseType::Notice.as_str(),
+        "get_zones" => ResponseType::Report,
+        "check_point_in_zones" => ResponseType::Report,
+        "buy_ticket" => ResponseType::Notice,
+        "get_tickets" => ResponseType::Report,
+        "validate_ticket" => ResponseType::Report,
+        "get_app_balance" => ResponseType::Report,
+        "withdraw_funds" => ResponseType::Voucher,
+        "seed_zone" => ResponseType::Notice,
+        "remove_zone" => ResponseType::Notice,
         &_ => todo!(),
     };
 }

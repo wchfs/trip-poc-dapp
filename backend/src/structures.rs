@@ -30,6 +30,12 @@ impl ResponseType {
     }
 }
 
+impl Into<JsonValue> for ResponseType {
+    fn into(self) -> JsonValue {
+        self.as_str().into()
+    }
+}
+
 #[derive(Debug)]
 pub enum ResponseStatus {
     Accept,

@@ -179,18 +179,19 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
 
     let output_payload: JsonValue = match router(route, &data) {
         Ok(data) => {
-            match response_type.eq(ResponseType::Voucher.as_str()) {
-                true => data["data"].clone(),
-                false => object! {
+            if matches!(response_type, ResponseType::Voucher) {
+                data["data"].clone()
+            } else {
+                object! {
                     "status" => StatusCode::OK.as_u16(),
                     "data" => data["data"].clone(),
                     "error" => json::Null,
-                },
+                }
             }
         }
         Err(err) => {
             status = ResponseStatus::Reject;
-            response_type = ResponseType::Report.as_str();
+            response_type = ResponseType::Report;
             
             object! {
                 "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
