@@ -69,34 +69,43 @@ pub fn get_polygon(geo_json_string: String) -> Result<GeometryCollection, Box<dy
     return Ok(collection);
 }
 
-pub fn buy_ticket(data: BuyTicket, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
+pub fn buy_ticket(
+    data: BuyTicket,
+    additional_data: &StandardInput,
+) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
     let connection = establish_connection();
 
     let received_uint256_token = match additional_data.uint256.clone() {
         Some(value) => value,
-        None => return Err(Box::new(ErrorOutput {
-            error: "Empty amount field".into(),
-        })),
+        None => {
+            return Err(Box::new(ErrorOutput {
+                error: "Empty amount field".into(),
+            }))
+        }
     };
 
     let received_uint = match received_uint256_token.into_uint() {
         Some(value) => value,
-        None => return Err(Box::new(ErrorOutput {
-            error: "Failed parsing amount".into(),
-        })),
+        None => {
+            return Err(Box::new(ErrorOutput {
+                error: "Failed parsing amount".into(),
+            }))
+        }
     };
 
     let amount = (received_uint / WEI_TO_GWEI_FACTOR).to_string();
-    
+
     let calculated_amount = calculate_amount(data.zone_id, data.duration)?.to_string();
 
     if amount == calculated_amount {
         let received_address = match additional_data.address.clone() {
             Some(value) => value,
-            None => return Err(Box::new(ErrorOutput {
-                error: "Empty address field".into(),
-            })),
+            None => {
+                return Err(Box::new(ErrorOutput {
+                    error: "Empty address field".into(),
+                }))
+            }
         };
 
         let wallet = received_address.to_string();
@@ -167,20 +176,24 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
     if !data.license.is_none() {
         let received_license = match data.license {
             Some(value) => value.to_string(),
-            None => return Err(Box::new(ErrorOutput {
-                error: "No license provided".into(),
-            }))
+            None => {
+                return Err(Box::new(ErrorOutput {
+                    error: "No license provided".into(),
+                }))
+            }
         };
-        
+
         tickets_query = tickets_query.filter(license.eq(received_license));
     }
 
     if !data.owner_address.is_none() {
         let received_owner_address = match data.owner_address {
             Some(value) => value.to_string(),
-            None => return Err(Box::new(ErrorOutput {
-                error: "No Owner address provided".into(),
-            }))
+            None => {
+                return Err(Box::new(ErrorOutput {
+                    error: "No Owner address provided".into(),
+                }))
+            }
         };
 
         tickets_query = tickets_query.filter(owner_address.eq(received_owner_address));
@@ -226,7 +239,7 @@ pub fn validate_ticket(data: ValidateTicket) -> Result<JsonValue, Box<dyn Error>
 pub fn get_app_balance(data: &GetBalance) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::balances::{self, *};
     let connection = establish_connection();
-    
+
     return Ok(object! {
         "data": balances::table
             .select(amount)
@@ -236,8 +249,11 @@ pub fn get_app_balance(data: &GetBalance) -> Result<JsonValue, Box<dyn Error>> {
 }
 
 pub fn get_current_amount(zone_id: &i32) -> Result<i128, Box<dyn Error>> {
-
-    return Ok(get_app_balance(&GetBalance { zone_id: (*zone_id) })?["data"].to_string().parse::<i128>()?)
+    return Ok(get_app_balance(&GetBalance {
+        zone_id: (*zone_id),
+    })?["data"]
+        .to_string()
+        .parse::<i128>()?);
 }
 
 pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
@@ -252,7 +268,10 @@ pub fn add_funds_to_balance(value: String, requested_zone_id: &i32) -> Result<()
     return Ok(());
 }
 
-pub fn remove_funds_from_balance(value: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
+pub fn remove_funds_from_balance(
+    value: String,
+    requested_zone_id: &i32,
+) -> Result<(), Box<dyn Error>> {
     let current_amount = get_current_amount(requested_zone_id)?;
 
     let parsed_value = value.parse::<i128>()?;
@@ -276,26 +295,29 @@ pub fn update_balance(new_amount: String, requested_zone_id: &i32) -> Result<(),
     return Ok(());
 }
 
-pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
+pub fn withdraw_funds(
+    withdraw_struct: WithdrawFunds,
+    additional_data: &StandardInput,
+) -> Result<JsonValue, Box<dyn Error>> {
     let app_balance = &get_current_amount(&withdraw_struct.zone_id)?;
-    
-    let parsed_amount = &withdraw_struct
-        .amount
-        .parse::<i128>()?;
+
+    let parsed_amount = &withdraw_struct.amount.parse::<i128>()?;
 
     if parsed_amount > app_balance {
         return Err(Box::new(ErrorOutput {
             error: "Insufficient funds to withdraw".into(),
         }));
     }
-
+    
     let owner_address = match additional_data.address.as_ref() {
         Some(value) => value,
-        None => return Err(Box::new(ErrorOutput {
-            error: "No Owner address provided".into(),
-        }))
+        None => {
+            return Err(Box::new(ErrorOutput {
+                error: "No Owner address provided".into(),
+            }))
+        }
     };
-    
+
     if check_zone_owner(&withdraw_struct.zone_id, owner_address) {
         return Err(Box::new(ErrorOutput {
             error: "Only owner can withdraw funds".into(),
@@ -304,14 +326,11 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
 
     remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id)?;
 
-    let parsed_address = ethabi::ethereum_types::H160::from_slice(
-        owner_address.as_bytes(),
-    );
+    let parsed_address = ethabi::ethereum_types::Address::from_str(owner_address.as_str())?;
 
     let address_token = ethabi::Token::Address(parsed_address);
 
-    let uint_parsed_token =
-        ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount)?;
+    let uint_parsed_token = ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount)?;
 
     let amount_token = ethabi::Token::Uint(uint_parsed_token);
 
@@ -325,31 +344,31 @@ pub fn withdraw_funds(withdraw_struct: WithdrawFunds, additional_data: &Standard
     payload.append(&mut data);
 
     let encoded_payload = hex::encode(payload);
-
+    
     return Ok(object! {
-        "data": encoded_payload
+        "data": format!("0x{}", encoded_payload)
     });
 }
 
 fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
     use crate::schema::zones::dsl::*;
     let connection = establish_connection();
-    
+
     let result: Result<i64, diesel::result::Error> = zones
-        .find(requested_zone_id)    
+        .find(requested_zone_id)
         .filter(owner_address.eq(requested_by))
         .count()
         .get_result(&connection);
-    
+
     return match result {
         Ok(count) => {
             if count > 0 {
                 true;
             }
             false
-        }   
+        }
         Err(_) => false,
-    }
+    };
 }
 
 fn request_timestamp(data: &StandardInput) -> Result<String, Box<dyn Error>> {
@@ -362,18 +381,24 @@ fn request_timestamp(data: &StandardInput) -> Result<String, Box<dyn Error>> {
 
 fn parse_request_timestamp(data: &StandardInput) -> Result<DateTime<Utc>, Box<dyn Error>> {
     let timestamp = match data.request["data"]["metadata"]["timestamp"]
-            .clone()
-            .as_i64() {
+        .clone()
+        .as_i64()
+    {
         Some(it) => it,
-        None => return Err(Box::new(ErrorOutput {
-            error: "Missin timestamp".into(),
-        })),
+        None => {
+            return Err(Box::new(ErrorOutput {
+                error: "Missin timestamp".into(),
+            }))
+        }
     };
 
     return Ok(Utc.timestamp(timestamp, 0));
 }
 
-pub fn seed_zone(data: ZoneSeeder, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
+pub fn seed_zone(
+    data: ZoneSeeder,
+    additional_data: &StandardInput,
+) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
@@ -410,60 +435,67 @@ fn create_zone_balance(zone: &Zone) -> Result<(), Box<dyn Error>> {
     let connection = establish_connection();
 
     insert_into(balances::table)
-        .values((
-            zone_id.eq(zone.id),
-            amount.eq("0"),
-        ))
+        .values((zone_id.eq(zone.id), amount.eq("0")))
         .execute(&connection)?;
 
     return Ok(());
 }
 
-pub fn remove_zone(data: Remover, additional_data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
+pub fn remove_zone(
+    data: Remover,
+    additional_data: &StandardInput,
+) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
 
     let wallet = parse_request_addres(additional_data)?;
-    
-    let result = diesel::delete(zones::table
-        .filter(id.eq(data.id))
-        .filter(owner_address.eq(wallet))
-    ).execute(&connection);
+
+    let result = diesel::delete(
+        zones::table
+            .filter(id.eq(data.id))
+            .filter(owner_address.eq(wallet)),
+    )
+    .execute(&connection);
 
     match result {
         Ok(value) => {
             if value.eq(&0) {
                 return Err(Box::new(ErrorOutput {
                     error: "Zone not deleted!".to_string(),
-                }))
+                }));
             }
             return Ok(object! {
                 "data": success_json_string("Zone deleted!".to_string())
             });
-        },
-        Err(value) => return Err(Box::new(ErrorOutput {
-            error: value.to_string(),
-        }))
+        }
+        Err(value) => {
+            return Err(Box::new(ErrorOutput {
+                error: value.to_string(),
+            }))
+        }
     }
 }
 
 fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> {
-    let wallet = match data
-            .address
-            .clone() {
+    let wallet = match data.address.clone() {
         Some(it) => it,
-        None => return Err(Box::new(ErrorOutput {
-            error: "Missin address".into(),
-        })),
-    }.to_string();
+        None => {
+            return Err(Box::new(ErrorOutput {
+                error: "Missin address".into(),
+            }))
+        }
+    }
+    .to_string();
 
     return Ok(format!("{}", wallet));
 }
 
 pub fn error_json_string(data: String) -> String {
-    return serde_json::to_string(&ErrorOutput { error: data }).expect("Static typing ensures that there will not be any errors.");
+    return serde_json::to_string(&ErrorOutput { error: data })
+        .expect("Static typing ensures that there will not be any errors.");
 }
 
 pub fn success_json_string(data: String) -> String {
-    return serde_json::to_string(&SuccessOutput { message: data }).expect("Static typing ensures that there will not be any errors.");
+    return serde_json::to_string(&SuccessOutput { message: data })
+        .expect("Static typing ensures that there will not be any errors.");
 }

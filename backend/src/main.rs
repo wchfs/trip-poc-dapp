@@ -100,27 +100,28 @@ pub async fn handle_inspect(
     println!("Received inspect request data {}", &request);
 
     let input = handle_input(request);
-    
+
     return Ok(payload_parser_handler(client, server_addr, input).await?);
 }
 
 pub async fn payload_parser_handler(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
-    input: StandardInput
+    input: StandardInput,
 ) -> Result<String, Box<dyn std::error::Error>> {
     return match payload_parser(&input.bytes) {
         Ok(route) => {
             let output = handle_output(route, input)?;
 
             Ok(add_response(client, server_addr, output).await?)
-        },
+        }
         Err(err) => {
             let output_payload = object! {
                 "status" => StatusCode::BAD_REQUEST.as_u16(),
                 "data" => json::Null,
                 "error" => err.to_string(),
-            }.to_string();
+            }
+            .to_string();
 
             let formatted_output = format!("0x{}", hex::encode(output_payload));
 
@@ -131,21 +132,25 @@ pub async fn payload_parser_handler(
             };
 
             Ok(add_response(client, server_addr, output).await?)
-        },
+        }
     };
 }
 
 pub async fn add_response(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
-    output: JsonValue
+    output: JsonValue,
 ) -> Result<String, Box<dyn Error>> {
     println!("Adding {}", output["response_type"].to_string());
 
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
-        .uri(format!("{}/{}", server_addr, output["response_type"].to_string()))
+        .uri(format!(
+            "{}/{}",
+            server_addr,
+            output["response_type"].to_string()
+        ))
         .body(hyper::Body::from(output.dump()))?;
 
     let response = client.request(req).await?;
@@ -172,25 +177,32 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
 
     let mut response_type = response_type_handler(&route);
 
-    let output_payload = match router(route, &data) {
-        Ok(data) => object! {
-            "status" => StatusCode::OK.as_u16(),
-            "data" => data["data"].clone(),
-            "error" => json::Null,
-        },
+    let output_payload: JsonValue = match router(route, &data) {
+        Ok(data) => {
+            match response_type.eq(ResponseType::Voucher.as_str()) {
+                true => data["data"].clone(),
+                false => object! {
+                    "status" => StatusCode::OK.as_u16(),
+                    "data" => data["data"].clone(),
+                    "error" => json::Null,
+                },
+            }
+        }
         Err(err) => {
             status = ResponseStatus::Reject;
             response_type = ResponseType::Report.as_str();
-
+            
             object! {
                 "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
                 "data" => json::Null,
                 "error" => err.to_string(),
             }
-        },
-    }.to_string();
+        }
+    };
+    
+    let stringify_payload = output_payload.to_string();
 
-    let formatted_output = format!("0x{}", hex::encode(output_payload));
+    let formatted_output = format!("0x{}", hex::encode(stringify_payload));
 
     return Ok(object! {
         "address" => address,
@@ -209,7 +221,10 @@ fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
                 //bytes32: Some(tokens[0].clone()),
                 address: Some(tokens[1].clone().to_string()),
                 uint256: Some(tokens[2].clone()),
-                bytes: tokens[3].clone().into_bytes().expect("If decoding is successful there should be a bytes token."),
+                bytes: tokens[3]
+                    .clone()
+                    .into_bytes()
+                    .expect("If decoding is successful there should be a bytes token."),
                 request: data.request.clone(),
             })
         }
@@ -224,7 +239,8 @@ fn payload_parser(data: &Vec<u8>) -> Result<Route, Box<dyn Error>> {
 fn hex_decoder(request: &JsonValue) -> Vec<u8> {
     let payload = prepare_payload(request);
 
-    return hex::decode(&payload.as_str()).expect("Every payload from the rollup server is hex encoded.");
+    return hex::decode(&payload.as_str())
+        .expect("Every payload from the rollup server is hex encoded.");
 }
 
 fn prepare_payload(request: &JsonValue) -> String {
