@@ -140,6 +140,26 @@ export const useParkingZoneStore = defineStore('parking-zone', {
         this.fetchZones(true);
       });
     },
+    async withdrawFunds(zoneId: number, amount: string): Promise<void> {
+      RollupService.addInput<{
+        errors: string[];
+      }>({
+        endpoint: "withdraw_funds",
+        payload: {
+          Balance: {
+            Withdraw: {
+              amount: amount,
+              zone_id: zoneId,
+            }
+          },
+        },
+      }).then((result) => {
+        console.log("I'm out!");
+        console.log(result.response.then((value) => {
+          console.log(value);
+        }));
+      });
+    },
     setSelectedZoneId(zoneId: number | null) {
       this.selectedZoneId = zoneId;
     },

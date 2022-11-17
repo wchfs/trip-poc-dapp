@@ -12,9 +12,16 @@ import type {
   Input,
   Notice,
   NoticesByEpochAndInputQuery,
-  NoticesByEpochAndInputQueryVariables
+  NoticesByEpochAndInputQueryVariables,
+  Proof,
+  Voucher,
+  VouchersByEpochAndInputQuery,
+  VouchersByEpochAndInputQueryVariables
 } from '@/generated/graphql';
-import { NoticesByEpochAndInputDocument } from '@/generated/graphql';
+import { 
+  NoticesByEpochAndInputDocument,
+  VouchersByEpochAndInputDocument
+} from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
 import type {
   AdvanceRequest,
@@ -51,6 +58,11 @@ export interface ContractTransactionResponse<T> {
 export type PartialEpoch = Pick<Input, "index">;
 export type PartialInput = PartialEpoch & { epoch: PartialEpoch };
 export type PartialNotice = Pick<Notice, "__typename" | "id" | "index" | "payload"> & {
+  input: PartialInput;
+};
+export type PartialProof = Pick<Proof, "__typename" | "keccakInHashesSiblings" | "machineStateHash" | "noticesEpochRootHash" | "outputHashesInEpochSiblings" | "outputHashesRootHash" | "vouchersEpochRootHash">;
+export type PartialVoucher = Pick<Voucher, "__typename" | "destination" | "id" | "index" | "payload"> & {
+  proof?: PartialProof;
   input: PartialInput;
 };
 
@@ -158,15 +170,38 @@ export abstract class RollupService {
               epoch_index: keys.epoch_index,
             };
 
-            console.log('variables', variables);
+            ApolloService.getClient().query<VouchersByEpochAndInputQuery, VouchersByEpochAndInputQueryVariables>({
+              fetchPolicy: 'no-cache',
+              query: VouchersByEpochAndInputDocument,
+              variables,
+            }).then((response) => {
+              if (response?.data?.epoch?.input?.vouchers) {
+                const voucher = response
+                  .data
+                  .epoch
+                  .input
+                  .vouchers
+                  .nodes
+                  .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
+
+                if (!voucher) {
+                  return;
+                }
+                
+                clearInterval(intervalId);
+                const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
+                resolve(JSON.parse(decodedPayload) as InspectResponseDecodedPayload<T>);
+              }
+
+            }).catch((error: GraphQLError) => {
+              console.log(error.message);
+            });
 
             ApolloService.getClient().query<NoticesByEpochAndInputQuery, NoticesByEpochAndInputQueryVariables>({
               fetchPolicy: 'no-cache',
               query: NoticesByEpochAndInputDocument,
               variables,
             }).then((response) => {
-              console.log('response', response);
-
               if (response?.data?.epoch?.input?.notices) {
                 const notice = response
                   .data
