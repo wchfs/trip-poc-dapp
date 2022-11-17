@@ -1,4 +1,4 @@
-use crate::schema::{tickets, zones, balances};
+use crate::schema::{tickets, zones, balances, super_wallets};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
@@ -75,4 +75,10 @@ impl From<Balance> for JsonValue {
             amount: item.amount,
         }
     }
+}
+
+#[derive(Identifiable, Queryable, Insertable, Serialize, Debug)]
+pub struct SuperWallet {
+    pub id: i32,
+    pub address: String,
 }

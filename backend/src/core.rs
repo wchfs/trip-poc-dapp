@@ -100,7 +100,7 @@ pub fn buy_ticket(
 
     if amount == calculated_amount {
         let received_address = match additional_data.address.clone() {
-            Some(value) => value,
+            Some(value) => value.to_lowercase(),
             None => {
                 return Err(Box::new(ErrorOutput {
                     error: "Empty address field".into(),
@@ -188,7 +188,7 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
 
     if !data.owner_address.is_none() {
         let received_owner_address = match data.owner_address {
-            Some(value) => value.to_string(),
+            Some(value) => value.to_lowercase(),
             None => {
                 return Err(Box::new(ErrorOutput {
                     error: "No Owner address provided".into(),
@@ -356,7 +356,7 @@ fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
 
     let result: Result<i64, diesel::result::Error> = zones
         .find(requested_zone_id)
-        .filter(owner_address.eq(requested_by))
+        .filter(owner_address.eq(requested_by.to_lowercase()))
         .count()
         .get_result(&connection);
 
@@ -399,23 +399,25 @@ pub fn seed_zone(
     data: ZoneSeeder,
     additional_data: &StandardInput,
 ) -> Result<JsonValue, Box<dyn Error>> {
+    let wallet = parse_request_addres(additional_data)?;
+
+    if super_wallet_validator(wallet)? {}
+
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
-
-    let wallet = parse_request_addres(additional_data)?;
 
     let is_inserted = insert_into(zones::table)
         .values((
             name.eq(data.name),
             price.eq(data.price),
             geo_json.eq(data.geo_json),
-            owner_address.eq(&wallet),
+            owner_address.eq(&data.zone_owner_address.to_lowercase()),
         ))
         .execute(&connection)?;
 
     if is_inserted > 0 {
         let zone = zones::table
-            .filter(owner_address.eq(wallet))
+            .filter(owner_address.eq(data.zone_owner_address.to_lowercase()))
             .order(id.desc())
             .first::<Zone>(&connection)?;
 
@@ -445,15 +447,16 @@ pub fn remove_zone(
     data: Remover,
     additional_data: &StandardInput,
 ) -> Result<JsonValue, Box<dyn Error>> {
+    let wallet = parse_request_addres(additional_data)?;
+
+    if super_wallet_validator(wallet)? {}
+
     use crate::schema::zones::{self, *};
     let connection = establish_connection();
-
-    let wallet = parse_request_addres(additional_data)?;
 
     let result = diesel::delete(
         zones::table
             .filter(id.eq(data.id))
-            .filter(owner_address.eq(wallet)),
     )
     .execute(&connection);
 
@@ -476,12 +479,30 @@ pub fn remove_zone(
     }
 }
 
+fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>> {
+    use crate::schema::super_wallets::dsl::*;
+    let connection = establish_connection();
+    
+    let result: i64 = super_wallets
+        .filter(address.eq(sender_address.to_lowercase()))
+        .count()
+        .get_result(&connection)?;
+    
+    return if result > 0 {
+        Ok(true)
+    } else {
+        Err(Box::new(ErrorOutput {
+            error: "You don't have permission to perform this action.".to_string(),
+        }))
+    }
+}
+
 fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> {
     let wallet = match data.address.clone() {
-        Some(it) => it,
+        Some(it) => it.to_lowercase(),
         None => {
             return Err(Box::new(ErrorOutput {
-                error: "Missin address".into(),
+                error: "Missing address".into(),
             }))
         }
     }

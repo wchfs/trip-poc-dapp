@@ -166,6 +166,7 @@ pub struct ZoneSeeder {
     pub name: String,
     pub price: String,
     pub geo_json: String,
+    pub zone_owner_address: String,
 }
 
 //What are those numbers? Let's explain with code: keccak_hash::keccak("etherWithdrawal(bytes)".as_bytes()).as_bytes().get(0..4).unwrap();

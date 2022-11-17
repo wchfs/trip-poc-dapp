@@ -7,6 +7,13 @@ table! {
 }
 
 table! {
+    super_wallets (id) {
+        id -> Integer,
+        address -> Text,
+    }
+}
+
+table! {
     tickets (id) {
         id -> Integer,
         license -> Text,
@@ -38,6 +45,7 @@ joinable!(tickets -> zones (zone_id));
 
 allow_tables_to_appear_in_same_query!(
     balances,
+    super_wallets,
     tickets,
     zones,
 );

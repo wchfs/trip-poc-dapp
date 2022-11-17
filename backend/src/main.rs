@@ -163,7 +163,7 @@ pub async fn add_response(
 fn handle_input(request: JsonValue) -> StandardInput {
     return StandardInput {
         /*bytes32: None,*/
-        address: Some(request["data"]["metadata"]["msg_sender"].to_string()),
+        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
         uint256: None,
         bytes: hex_decoder(&request),
         request: request,
