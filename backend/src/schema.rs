@@ -7,6 +7,25 @@ table! {
 }
 
 table! {
+    proposal_votes (id) {
+        id -> Integer,
+        vote -> Integer,
+        proposal_id -> Integer,
+    }
+}
+
+table! {
+    proposals (id) {
+        id -> Integer,
+        title -> Text,
+        description -> Text,
+        status -> Integer,
+        proposal_type -> Integer,
+        created_at -> Text,
+    }
+}
+
+table! {
     super_wallets (id) {
         id -> Integer,
         address -> Text,
@@ -41,10 +60,13 @@ table! {
 }
 
 joinable!(balances -> zones (zone_id));
+joinable!(proposal_votes -> proposals (proposal_id));
 joinable!(tickets -> zones (zone_id));
 
 allow_tables_to_appear_in_same_query!(
     balances,
+    proposal_votes,
+    proposals,
     super_wallets,
     tickets,
     zones,

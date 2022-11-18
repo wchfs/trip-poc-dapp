@@ -82,3 +82,14 @@ pub struct SuperWallet {
     pub id: i32,
     pub address: String,
 }
+
+#[derive(Identifiable, Queryable, Insertable, Serialize, Debug)]
+pub struct Proposals {
+    pub id: i32,
+    pub title: String,
+    pub description: String,
+    pub status: i32,
+    pub proposal_type: i32,
+    pub created_at: String,
+}
+

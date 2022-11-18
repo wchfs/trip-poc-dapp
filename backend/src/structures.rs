@@ -13,6 +13,8 @@ pub enum TicketStatus {
     PaidOut = 3,
 }
 
+
+
 #[derive(Debug)]
 pub enum ResponseType {
     Notice,
