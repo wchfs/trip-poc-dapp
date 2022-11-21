@@ -1,4 +1,4 @@
-use crate::schema::{tickets, zones, balances, super_wallets};
+use crate::schema::{tickets, zones, balances, super_wallets, proposals};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
@@ -24,7 +24,7 @@ impl From<Zone> for JsonValue {
 }
 
 #[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
-#[belongs_to(Zone)]
+#[diesel(belongs_to(Zone))]
 pub struct Ticket {
     pub id: i32,
     pub license: String,
@@ -60,7 +60,7 @@ impl From<Ticket> for JsonValue {
 }
 
 #[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
-#[belongs_to(Zone)]
+#[diesel(belongs_to(Zone))]
 pub struct Balance {
     pub id: i32,
     pub zone_id: i32,
@@ -84,7 +84,7 @@ pub struct SuperWallet {
 }
 
 #[derive(Identifiable, Queryable, Insertable, Serialize, Debug)]
-pub struct Proposals {
+pub struct Proposal {
     pub id: i32,
     pub title: String,
     pub description: String,

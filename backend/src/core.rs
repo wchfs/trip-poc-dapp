@@ -21,12 +21,12 @@ pub fn get_zones() -> Result<JsonValue, Box<dyn Error>> {
 
 pub fn get_all_zones() -> Result<Vec<Zone>, Box<dyn Error>> {
     use crate::schema::zones::dsl::*;
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let results = zones
         .order(id.desc())
         .limit(100)
-        .load::<Zone>(&connection)?;
+        .load::<Zone>(&mut connection)?;
 
     return Ok(results);
 }
@@ -74,7 +74,7 @@ pub fn buy_ticket(
     additional_data: &StandardInput,
 ) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let received_uint256_token = match additional_data.uint256.clone() {
         Some(value) => value,
@@ -124,13 +124,13 @@ pub fn buy_ticket(
                 to_pay.eq(&calculated_amount), // In the future, we want to add the possibility to pay extra later.
                 status.eq(TicketStatus::Paid as i32),
             ))
-            .execute(&connection)?;
+            .execute(&mut connection)?;
 
         if is_inserted > 0 {
             let ticket = tickets::table
                 .filter(owner_address.eq(format!("0x{}", wallet)))
                 .order(id.desc())
-                .first::<Ticket>(&connection)?;
+                .first::<Ticket>(&mut connection)?;
 
             add_funds_to_balance(amount, &data.zone_id)?;
 
@@ -147,12 +147,12 @@ pub fn buy_ticket(
 
 pub fn calculate_amount(zone_id: i32, duration: i32) -> Result<f64, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let zone_price_per_hour = zones::table
         .filter(id.eq(zone_id))
         .select(price)
-        .first::<String>(&connection)?;
+        .first::<String>(&mut connection)?;
 
     let pricing: f64 = zone_price_per_hour.parse::<f64>()?;
 
@@ -169,7 +169,7 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
     }
 
     use crate::schema::tickets::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let mut tickets_query = tickets::table.order(id.desc()).into_boxed();
 
@@ -199,7 +199,7 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
         tickets_query = tickets_query.filter(owner_address.eq(received_owner_address));
     }
 
-    let results = tickets_query.load::<Ticket>(&connection)?;
+    let results = tickets_query.load::<Ticket>(&mut connection)?;
 
     return Ok(object! {
         "data": results
@@ -208,12 +208,12 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
 
 pub fn validate_ticket(data: ValidateTicket) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::tickets::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     return match tickets::table
         .filter(license.eq(&data.license.to_string()))
         .order(id.desc())
-        .load::<Ticket>(&connection)
+        .load::<Ticket>(&mut connection)
     {
         Ok(filtered_tickets) => {
             for t in filtered_tickets {
@@ -238,13 +238,13 @@ pub fn validate_ticket(data: ValidateTicket) -> Result<JsonValue, Box<dyn Error>
 
 pub fn get_app_balance(data: &GetBalance) -> Result<JsonValue, Box<dyn Error>> {
     use crate::schema::balances::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     return Ok(object! {
         "data": balances::table
             .select(amount)
             .filter(zone_id.eq(data.zone_id))
-            .first::<String>(&connection)?
+            .first::<String>(&mut connection)?
     });
 }
 
@@ -285,12 +285,12 @@ pub fn remove_funds_from_balance(
 
 pub fn update_balance(new_amount: String, requested_zone_id: &i32) -> Result<(), Box<dyn Error>> {
     use crate::schema::balances::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     diesel::update(balances::table)
         .filter(zone_id.eq(requested_zone_id))
         .set(amount.eq(new_amount))
-        .execute(&connection)?;
+        .execute(&mut connection)?;
 
     return Ok(());
 }
@@ -352,13 +352,13 @@ pub fn withdraw_funds(
 
 fn check_zone_owner(requested_zone_id: &i32, requested_by: &String) -> bool {
     use crate::schema::zones::dsl::*;
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let result: Result<i64, diesel::result::Error> = zones
         .find(requested_zone_id)
         .filter(owner_address.eq(requested_by.to_lowercase()))
         .count()
-        .get_result(&connection);
+        .get_result(&mut connection);
 
     return match result {
         Ok(count) => {
@@ -404,7 +404,7 @@ pub fn seed_zone(
     if super_wallet_validator(wallet)? {}
 
     use crate::schema::zones::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let is_inserted = insert_into(zones::table)
         .values((
@@ -413,13 +413,13 @@ pub fn seed_zone(
             geo_json.eq(data.geo_json),
             owner_address.eq(&data.zone_owner_address.to_lowercase()),
         ))
-        .execute(&connection)?;
+        .execute(&mut connection)?;
 
     if is_inserted > 0 {
         let zone = zones::table
             .filter(owner_address.eq(data.zone_owner_address.to_lowercase()))
             .order(id.desc())
-            .first::<Zone>(&connection)?;
+            .first::<Zone>(&mut connection)?;
 
         create_zone_balance(&zone)?;
 
@@ -434,11 +434,11 @@ pub fn seed_zone(
 
 fn create_zone_balance(zone: &Zone) -> Result<(), Box<dyn Error>> {
     use crate::schema::balances::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     insert_into(balances::table)
         .values((zone_id.eq(zone.id), amount.eq("0")))
-        .execute(&connection)?;
+        .execute(&mut connection)?;
 
     return Ok(());
 }
@@ -452,13 +452,13 @@ pub fn remove_zone(
     if super_wallet_validator(wallet)? {}
 
     use crate::schema::zones::{self, *};
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     let result = diesel::delete(
         zones::table
             .filter(id.eq(data.id))
     )
-    .execute(&connection);
+    .execute(&mut connection);
 
     match result {
         Ok(value) => {
@@ -481,12 +481,12 @@ pub fn remove_zone(
 
 fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>> {
     use crate::schema::super_wallets::dsl::*;
-    let connection = establish_connection();
+    let mut connection = establish_connection();
     
     let result: i64 = super_wallets
         .filter(address.eq(sender_address.to_lowercase()))
         .count()
-        .get_result(&connection)?;
+        .get_result(&mut connection)?;
     
     return if result > 0 {
         Ok(true)
