@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use json::{JsonValue};
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
+pub static mut ROLLUP_ADDRESS: String = String::new();
 
 #[derive(Debug)]
 pub enum TicketStatus {
@@ -12,8 +13,6 @@ pub enum TicketStatus {
     Refunded = 2,
     PaidOut = 3,
 }
-
-
 
 #[derive(Debug)]
 pub enum ResponseType {
