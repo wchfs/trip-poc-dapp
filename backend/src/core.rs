@@ -29,11 +29,11 @@ pub fn get_zones(filters: GetZone) -> Result<JsonValue, Box<dyn Error>> {
         Some(value) => value,
         None => Default::default(),
     };
-    
+
     let offset = pagination.page - 1;
-        query = query
-            .limit(pagination.per_page)
-            .offset(offset * pagination.per_page);
+    query = query
+        .limit(pagination.per_page)
+        .offset(offset * pagination.per_page);
 
     return Ok(object! {
         "data": query.load::<Zone>(&mut connection)?,
@@ -324,7 +324,7 @@ pub fn withdraw_funds(
             error: "Insufficient funds to withdraw".into(),
         }));
     }
-    
+
     let owner_address = match additional_data.address.as_ref() {
         Some(value) => value,
         None => {
@@ -360,7 +360,7 @@ pub fn withdraw_funds(
     payload.append(&mut data);
 
     let encoded_payload = hex::encode(payload);
-    
+
     return Ok(object! {
         "data": format!("0x{}", encoded_payload)
     });
@@ -467,14 +467,12 @@ pub fn remove_zone(
 
     if super_wallet_validator(wallet)? {}
 
+    remove_zone_balance(&data)?;
+
     use crate::schema::zones::{self, *};
     let mut connection = establish_connection();
 
-    let result = diesel::delete(
-        zones::table
-            .filter(id.eq(data.id))
-    )
-    .execute(&mut connection);
+    let result = diesel::delete(zones::table.filter(id.eq(data.id))).execute(&mut connection);
 
     match result {
         Ok(value) => {
@@ -490,7 +488,34 @@ pub fn remove_zone(
         Err(value) => {
             return Err(Box::new(ErrorOutput {
                 error: value.to_string(),
-            }))
+            }));
+        }
+    }
+}
+
+fn remove_zone_balance(zone: &Remover) -> Result<JsonValue, Box<dyn Error>> {
+    use crate::schema::balances::{self, *};
+    let mut connection = establish_connection();
+
+    let result =
+        diesel::delete(balances::table.filter(zone_id.eq(zone.id))).execute(&mut connection);
+
+    match result {
+        Ok(value) => {
+            if value.eq(&0) {
+                return Err(Box::new(ErrorOutput {
+                    error: "Balance not deleted!".to_string(),
+                }));
+            }
+            return Ok(object! {
+                "data": success_json_string("Balance deleted!".to_string())
+            });
+        }
+        Err(value) => {
+            println!("{:?}", value);
+            return Err(Box::new(ErrorOutput {
+                error: value.to_string(),
+            }));
         }
     }
 }
@@ -498,19 +523,19 @@ pub fn remove_zone(
 fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>> {
     use crate::schema::super_wallets::dsl::*;
     let mut connection = establish_connection();
-    
+
     let result: i64 = super_wallets
         .filter(address.eq(sender_address.to_lowercase()))
         .count()
         .get_result(&mut connection)?;
-    
+
     return if result > 0 {
         Ok(true)
     } else {
         Err(Box::new(ErrorOutput {
             error: "You don't have permission to perform this action.".to_string(),
         }))
-    }
+    };
 }
 
 fn parse_request_addres(data: &StandardInput) -> Result<String, Box<dyn Error>> {
