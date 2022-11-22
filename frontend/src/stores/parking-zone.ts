@@ -75,7 +75,14 @@ export const useParkingZoneStore = defineStore('parking-zone', {
       try {
         result = await RollupService.inspect<ParkingZone[]>({
           endpoint: "get_zones",
-          payload: null,
+          payload: {
+            Zone: {
+              Get: {
+                zone_id: null,
+                owner_address: null,
+              }
+            }
+          },
         });
       } catch (e) {
         console.error(e);
@@ -100,6 +107,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
     },
     async createZone(
       name: string,
+      zone_owner_address: string,
       price: string,
       geoJson: GeoJSON,
     ) {
@@ -111,6 +119,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
           Seed: {
             Zone: {
               name,
+              zone_owner_address,
               price,
               geo_json: JSON.stringify(geoJson),
             },
