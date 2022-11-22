@@ -11,31 +11,40 @@ use json::{object, JsonValue};
 use std::error::Error;
 use std::str::FromStr;
 
-pub fn get_zones() -> Result<JsonValue, Box<dyn Error>> {
-    let zones = get_all_zones()?;
-
-    return Ok(object! {
-        "data": zones,
-    });
-}
-
-pub fn get_all_zones() -> Result<Vec<Zone>, Box<dyn Error>> {
-    use crate::schema::zones::dsl::*;
+pub fn get_zones(filters: GetZone) -> Result<JsonValue, Box<dyn Error>> {
+    use crate::schema::zones::{self, *};
     let mut connection = establish_connection();
 
-    let results = zones
-        .order(id.desc())
-        .limit(100)
-        .load::<Zone>(&mut connection)?;
+    let mut query = zones::table.into_boxed();
 
-    return Ok(results);
+    if let Some(received_value) = filters.zone_id {
+        query = query.filter(id.eq(received_value));
+    }
+
+    if let Some(received_value) = filters.owner_address {
+        query = query.filter(owner_address.eq(received_value));
+    }
+
+    let pagination: Pagination = match filters.paginate {
+        Some(value) => value,
+        None => Default::default(),
+    };
+    
+    let offset = pagination.page - 1;
+        query = query
+            .limit(pagination.per_page)
+            .offset(offset * pagination.per_page);
+
+    return Ok(object! {
+        "data": query.load::<Zone>(&mut connection)?,
+    });
 }
 
 pub fn check_point_in_zone(point: GeoPoint) -> Result<JsonValue, Box<dyn Error>> {
     let point: Point = point_mapper(point);
 
     return Ok(object! {
-        "data": is_in_the_toll_zone(point)?.to_string(),
+        "data": is_in_the_toll_zone(point)?,
     });
 }
 
@@ -46,21 +55,28 @@ pub fn point_mapper(point: GeoPoint) -> Point {
     });
 }
 
-pub fn is_in_the_toll_zone(gps_data: Point) -> Result<i32, Box<dyn Error>> {
-    let zones: Vec<Zone> = get_all_zones()?;
+pub fn is_in_the_toll_zone(gps_data: Point) -> Result<JsonValue, Box<dyn Error>> {
+    use crate::schema::zones::{self};
+    let mut connection = establish_connection();
+
+    let zones = zones::table.load::<Zone>(&mut connection)?;
 
     for zone in zones {
-        let polygon = get_polygon(zone.geo_json)?;
+        let polygon = get_polygon(&zone.geo_json)?;
 
         if polygon.contains(&gps_data) {
-            return Ok(zone.id);
+            return Ok(object! {
+                "data": zone
+            });
         }
     }
 
-    return Ok(0);
+    return Ok(object! {
+        "data": json::Null
+    });
 }
 
-pub fn get_polygon(geo_json_string: String) -> Result<GeometryCollection, Box<dyn Error>> {
+pub fn get_polygon(geo_json_string: &String) -> Result<GeometryCollection, Box<dyn Error>> {
     //Example point in the zone: 19.943540573120117,50.0565299987793
     let geo_json: GeoJson = geo_json_string.parse::<GeoJson>()?;
 

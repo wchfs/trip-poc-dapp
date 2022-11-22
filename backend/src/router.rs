@@ -5,9 +5,18 @@ use std::error::Error;
 
 pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn Error>> {
     return match route.endpoint.as_str() {
-        "get_zones" => get_zones(),
+        "get_zones" => {
+            if let Some(RoutePayload::Zone(value)) = route.payload {
+                let ZoneActions::Get(value) = value;
+                get_zones(value)
+            } else {
+                Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Get Zone does not meet requirements".into(),
+                }))
+            }
+        }
         "check_point_in_zones" => {
-            return if let Some(RoutePayload::Point(value)) = route.payload {
+            if let Some(RoutePayload::Point(value)) = route.payload {
                 check_point_in_zone(value)
             } else {
                 Err(Box::new(ErrorOutput {
@@ -16,7 +25,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "buy_ticket" => {
-            return if let Some(RoutePayload::Ticket(value)) = route.payload {
+            if let Some(RoutePayload::Ticket(value)) = route.payload {
                 if let TicketActions::Buy(value) = value {
                     buy_ticket(value, &data)
                 } else {
@@ -31,7 +40,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "get_tickets" => {
-            return if let Some(RoutePayload::Ticket(value)) = route.payload {
+            if let Some(RoutePayload::Ticket(value)) = route.payload {
                 if let TicketActions::Get(value) = value {
                     get_tickets(value)
                 } else {
@@ -46,7 +55,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "validate_ticket" => {
-            return if let Some(RoutePayload::Ticket(value)) = route.payload {
+            if let Some(RoutePayload::Ticket(value)) = route.payload {
                 if let TicketActions::Validate(value) = value {
                     validate_ticket(value)
                 } else {
@@ -61,7 +70,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "get_app_balance" => {
-            return if let Some(RoutePayload::Balance(value)) = route.payload {
+            if let Some(RoutePayload::Balance(value)) = route.payload {
                 if let BalanceActions::Get(value) = value {
                     get_app_balance(&value)
                 } else {
@@ -76,7 +85,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "withdraw_funds" => {
-            return if let Some(RoutePayload::Balance(value)) = route.payload {
+            if let Some(RoutePayload::Balance(value)) = route.payload {
                 if let BalanceActions::Withdraw(value) = value {
                     withdraw_funds(value, data)
                 } else {
@@ -91,7 +100,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "seed_zone" => {
-            return if let Some(RoutePayload::Seed(value)) = route.payload {
+            if let Some(RoutePayload::Seed(value)) = route.payload {
                 let SeederActions::Zone(value) = value;
                 seed_zone(value, data)
             } else {
@@ -101,7 +110,7 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
             }
         }
         "remove_zone" => {
-            return if let Some(RoutePayload::Remove(value)) = route.payload {
+            if let Some(RoutePayload::Remove(value)) = route.payload {
                 remove_zone(value, data)
             } else {
                 Err(Box::new(ErrorOutput {

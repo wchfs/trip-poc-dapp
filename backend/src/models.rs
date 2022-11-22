@@ -2,7 +2,7 @@ use crate::schema::{tickets, zones, balances, super_wallets, proposals};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
-#[derive(Identifiable, Queryable, Deserialize, Serialize, Debug)]
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug, Clone)]
 pub struct Zone {
     pub id: i32,
     pub name: String,
