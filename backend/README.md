@@ -164,7 +164,8 @@ Request:
       "Zone": {
         "name": "Zone A",
         "price": "1000000",
-        "geo_json": "Stringify GeoJSON"
+        "geo_json": "Stringify GeoJSON",
+        "address": "0xAddress"
       }
     }
   }

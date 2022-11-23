@@ -1,5 +1,5 @@
-#[macro_use]
-extern crate diesel;
+#[macro_use] extern crate diesel;
+extern crate diesel_migrations;
 extern crate dotenv;
 
 pub mod core;
@@ -12,6 +12,9 @@ use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 
+use crate::diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
 
@@ -19,4 +22,10 @@ pub fn establish_connection() -> SqliteConnection {
 
     SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+
+pub fn run_migration() {
+    let mut connection = establish_connection();
+
+    connection.run_pending_migrations(MIGRATIONS).unwrap();
 }

@@ -1,9 +1,11 @@
 use std::{error::Error, fmt};
-
 use serde::{Deserialize, Serialize};
 use json::{JsonValue};
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
+pub static mut ROLLUP_ADDRESS: String = String::new();
+const DEFAULT_PER_PAGE: i64 = 15;
+const DEFAULT_PAGE: i64 = 1;
 
 #[derive(Debug)]
 pub enum TicketStatus {
@@ -92,11 +94,24 @@ pub struct SuccessOutput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub enum RoutePayload {
+    Zone(ZoneActions),
     Ticket(TicketActions),
     Point(GeoPoint),
     Balance(BalanceActions),
     Seed(SeederActions),
     Remove(Remover),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Pagination {
+    pub per_page: i64,
+    pub page: i64,
+}
+
+impl Default for Pagination {
+    fn default() -> Self {
+        Self { per_page: DEFAULT_PER_PAGE, page: DEFAULT_PAGE }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -115,6 +130,18 @@ pub enum BalanceActions {
 #[derive(Deserialize, Debug, Clone)]
 pub enum SeederActions {
     Zone(ZoneSeeder),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub enum ZoneActions {
+    Get(GetZone),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct GetZone {
+    pub zone_id: Option<i32>,
+    pub owner_address: Option<String>,
+    pub paginate: Option<Pagination>
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -166,6 +193,7 @@ pub struct ZoneSeeder {
     pub name: String,
     pub price: String,
     pub geo_json: String,
+    pub zone_owner_address: String,
 }
 
 //What are those numbers? Let's explain with code: keccak_hash::keccak("etherWithdrawal(bytes)".as_bytes()).as_bytes().get(0..4).unwrap();

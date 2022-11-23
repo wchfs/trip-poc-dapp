@@ -1,8 +1,8 @@
-use crate::schema::{tickets, zones, balances};
+use crate::schema::{tickets, zones, balances, super_wallets, proposals};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
-#[derive(Identifiable, Queryable, Deserialize, Serialize, Debug)]
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug, Clone)]
 pub struct Zone {
     pub id: i32,
     pub name: String,
@@ -23,8 +23,8 @@ impl From<Zone> for JsonValue {
     }
 }
 
-#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
-#[belongs_to(Zone)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Deserialize, Serialize, Debug)]
+#[diesel(belongs_to(Zone))]
 pub struct Ticket {
     pub id: i32,
     pub license: String,
@@ -59,8 +59,8 @@ impl From<Ticket> for JsonValue {
     }
 }
 
-#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
-#[belongs_to(Zone)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Deserialize, Serialize, Debug)]
+#[diesel(belongs_to(Zone))]
 pub struct Balance {
     pub id: i32,
     pub zone_id: i32,
@@ -76,3 +76,20 @@ impl From<Balance> for JsonValue {
         }
     }
 }
+
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
+pub struct SuperWallet {
+    pub id: i32,
+    pub address: String,
+}
+
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
+pub struct Proposal {
+    pub id: i32,
+    pub title: String,
+    pub description: String,
+    pub status: i32,
+    pub proposal_type: i32,
+    pub created_at: String,
+}
+

@@ -1,19 +1,10 @@
 # syntax=docker.io/docker/dockerfile:1.4
 FROM cartesi/toolchain:0.11.0 as dapp-build
 
-RUN apt update \
-    && apt install -y \
-    libsqlite3-dev
-
 WORKDIR /opt/cartesi/dapp
 COPY . .
 
-RUN cargo build -Z build-std=std,core,alloc,panic_abort,proc_macro --target riscv64ima-cartesi-linux-gnu.json --release
+ENV CC=riscv64-cartesi-linux-gnu-gcc
+ENV CFLAGS="-march=rv64ima -mabi=lp64"
 
-RUN cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
-#
-RUN echo DATABASE_URL=database.db > .env
-#
-RUN diesel setup
-#
-RUN diesel migration run
+RUN cargo build -Z build-std=std,core,alloc,panic_abort,proc_macro --target riscv64ima-cartesi-linux-gnu.json --release

@@ -3,6 +3,7 @@
     "files": [
       "target/riscv64ima-cartesi-linux-gnu/release/parking_dapp",
       "entrypoint.sh"
-    ]
+    ],
+    "size": 128000
   }
 }

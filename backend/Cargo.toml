@@ -1,6 +1,6 @@
 [package]
 name = "parking_dapp" #point_in_polygon_dapp_paid_parking_assistant
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = [
     "Kamil Zawadzki <kamil.zawadzki@authentic-studio.com>",
@@ -16,10 +16,12 @@ hex = { version = "^0.4.3" }
 geo = { version = "^0.23.0" }
 geojson = { version = "^0.24.0", features = ["geo-types"] }
 geo-types = "^0.7.7"
-diesel = { version = "^1.4.4", features = ["sqlite"] }
+rusqlite = { version = "0.28.0", features = ["bundled"] }
+diesel = { version = "^2.0.2", features = ["sqlite"] }
+diesel_migrations = { version = "^2.0.0" }
 dotenv = "^0.15.0"
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
-ethabi = "^17.2.0"
+ethabi = "^18.0.0"
 chrono = "^0.4.22"
 keccak-hash = "0.10.0"

@@ -25,12 +25,12 @@ extern crate parking_dapp;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
+    parking_dapp::run_migration();
 
     let client = hyper::Client::new();
     let server_addr = env::var("ROLLUP_HTTP_SERVER_URL")?;
 
     let mut status = ResponseStatus::Accept.to_string();
-    let mut _rollup_address = String::new();
 
     loop {
         println!("Sending finish");
@@ -55,7 +55,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let req = json::parse(utf)?;
 
             if let Some(address) = process_initial(&req["data"]["metadata"]) {
-                _rollup_address = address;
+                unsafe {
+                    ROLLUP_ADDRESS = address.to_lowercase();
+                }
+                
                 continue;
             }
 
@@ -163,7 +166,7 @@ pub async fn add_response(
 fn handle_input(request: JsonValue) -> StandardInput {
     return StandardInput {
         /*bytes32: None,*/
-        address: Some(request["data"]["metadata"]["msg_sender"].to_string()),
+        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
         uint256: None,
         bytes: hex_decoder(&request),
         request: request,
@@ -171,8 +174,6 @@ fn handle_input(request: JsonValue) -> StandardInput {
 }
 
 fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn Error>> {
-    let address = env::var("ROLLUP_ADDRESS").expect("ROLLUP_ADDRESS must be set");
-
     let mut status = ResponseStatus::Accept;
 
     let mut response_type = response_type_handler(&route);
@@ -205,12 +206,14 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
 
     let formatted_output = format!("0x{}", hex::encode(stringify_payload));
 
-    return Ok(object! {
-        "address" => address,
-        "payload" => formatted_output,
-        "status" => status.to_string(),
-        "response_type" => response_type,
-    });
+    unsafe {
+        return Ok(object! {
+            "address" => ROLLUP_ADDRESS.clone(), //static variable
+            "payload" => formatted_output,
+            "status" => status.to_string(),
+            "response_type" => response_type,
+        });
+    }
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {

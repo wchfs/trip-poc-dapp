@@ -16,6 +16,15 @@
 
           <TInput
             class="col-span-2 sm:col-span-6 sm:col-start-4"
+            v-model="newZone.owner_address"
+            type="text"
+            placeholder="Your wallet address..."
+          >
+            <template #label> Zone owner wallet address </template>
+          </TInput>
+
+          <TInput
+            class="col-span-2 sm:col-span-6 sm:col-start-4"
             v-model="newZone.price"
             type="number"
             placeholder="Hourly rate..."
@@ -28,13 +37,8 @@
             </template>
           </TInput>
 
-          <div
-            class="col-span-2 sm:col-span-6 sm:col-start-4"
-          >
-            <TInputDropZone
-              class="mb-3"
-              @fileChanged="fileChanged"
-            />
+          <div class="col-span-2 sm:col-span-6 sm:col-start-4">
+            <TInputDropZone class="mb-3" @fileChanged="fileChanged" />
             <GeoJsonMapPreviewBox
               v-if="newZone.geo_json"
               class="border border-gray-300 rounded-md shadow-sm"
@@ -49,11 +53,7 @@
 
     <div class="pt-5">
       <div class="flex justify-end">
-        <TButton
-          @click="this.emit('cancel')"
-          type="button"
-          color="white"
-        >
+        <TButton @click="this.emit('cancel')" type="button" color="white">
           Cancel
         </TButton>
         <TButton
@@ -71,20 +71,22 @@
 </template>
 
 <script setup lang="ts">
-import TButton from '@/components/Controls/Button/TButton.vue';
-import TInput from '@/components/Controls/Input/TInput.vue';
-import { computed, reactive, ref, watch } from 'vue';
-import type { GeoJSON } from 'geojson';
-import TInputLeftSide from '@/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue';
-import TInputDropZone from '@/components/Controls/Input/TInputDropZone.vue';
-import { useParkingZoneStore } from '@/stores/parking-zone';
-import { eth2gwei } from '@/helpers/helpers';
-import GeoJsonMapPreviewBox from '@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue';
+import TButton from "@/components/Controls/Button/TButton.vue";
+import TInput from "@/components/Controls/Input/TInput.vue";
+import { computed, reactive, ref, watch } from "vue";
+import type { GeoJSON } from "geojson";
+import TInputLeftSide from "@/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue";
+import TInputDropZone from "@/components/Controls/Input/TInputDropZone.vue";
+import { useParkingZoneStore } from "@/stores/parking-zone";
+import { eth2gwei } from "@/helpers/helpers";
+import GeoJsonMapPreviewBox from "@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue";
+import { useWalletStore } from "@/stores/wallet";
 
 const parkingZoneStore = useParkingZoneStore();
+const walletStore = useWalletStore();
 
 const emit = defineEmits<{
-  (e: 'cancel'): void;
+  (e: "cancel"): void;
 }>();
 
 const file = ref<File | null>(null);
@@ -96,22 +98,24 @@ reader.onload = (e) => {
     newZone.geo_json = JSON.parse(e.target?.result as string) as GeoJSON;
   } catch (e) {
     file.value = null;
-    alert('Invalid file');
+    alert("Invalid file");
   }
 };
 
 const newZone = reactive<{
   name: string;
+  owner_address: string;
   price: string;
   geo_json: GeoJSON | null;
 }>({
-  name: '',
-  price: '',
+  name: "",
+  owner_address: walletStore.walletAddress ?? "",
+  price: "",
   geo_json: null,
 });
 
 const disableSubmit = computed(() => {
-  let bigNumberPrice = eth2gwei('0');
+  let bigNumberPrice = eth2gwei("0");
 
   try {
     bigNumberPrice = eth2gwei(newZone.price);
@@ -120,7 +124,8 @@ const disableSubmit = computed(() => {
   }
 
   return !(
-    (newZone.name.length >= 3 && newZone.name.length <= 100) &&
+    newZone.name.length >= 3 &&
+    newZone.name.length <= 100 &&
     bigNumberPrice.lte("1000000000") &&
     bigNumberPrice.gte("100000") &&
     newZone.geo_json !== null
@@ -144,10 +149,11 @@ function fileChanged(e: File | null) {
 function submit() {
   parkingZoneStore.createZone(
     newZone.name,
+    newZone.owner_address,
     eth2gwei(newZone.price).toString(),
-    newZone.geo_json as GeoJSON,
+    newZone.geo_json as GeoJSON
   );
 
-  emit('cancel');
+  emit("cancel");
 }
 </script>
