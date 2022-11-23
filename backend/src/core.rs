@@ -219,24 +219,34 @@ pub fn get_tickets(data: GetTicket) -> Result<JsonValue, Box<dyn Error>> {
 }
 
 pub fn validate_ticket(data: ValidateTicket) -> Result<JsonValue, Box<dyn Error>> {
-    use crate::schema::tickets::{self, *};
+    use crate::schema::{*};
     let mut connection = establish_connection();
-
+    
     return match tickets::table
-        .filter(license.eq(&data.license.to_string()))
-        .order(id.desc())
-        .load::<Ticket>(&mut connection)
+        .filter(tickets::license.eq(&data.license.to_string()))
+        .inner_join(zones::table)                                             
+        .select((
+            (tickets::all_columns),
+            (zones::all_columns)
+        ))
+        .order(tickets::id.desc())
+        .load::<(Ticket, Zone)>(&mut connection)
     {
         Ok(filtered_tickets) => {
             for t in filtered_tickets {
-                let ticket_date = t.started_at.parse::<DateTime<Utc>>()?;
+                
+                let ticket_date = t.0.started_at.parse::<DateTime<Utc>>()?;
                 let date_to_check = data.date.parse::<DateTime<Utc>>()?;
                 let diff = (date_to_check - ticket_date).num_minutes();
 
-                if diff < t.duration.into() && diff > 0 {
-                    return Ok(object! {
-                        "data": t
-                    });
+                if diff < t.0.duration.into() && diff > 0 {
+                    let mut object = object! {
+                        "data": t.0
+                    };
+                    
+                    object["data"].insert("zone", t.1)?;
+                    
+                    return Ok(object);
                 }
             }
 

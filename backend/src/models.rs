@@ -23,7 +23,7 @@ impl From<Zone> for JsonValue {
     }
 }
 
-#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Deserialize, Serialize, Debug)]
 #[diesel(belongs_to(Zone))]
 pub struct Ticket {
     pub id: i32,
@@ -59,7 +59,7 @@ impl From<Ticket> for JsonValue {
     }
 }
 
-#[derive(Identifiable, Associations, Queryable, Insertable, Serialize, Debug)]
+#[derive(Identifiable, Associations, Queryable, Insertable, Deserialize, Serialize, Debug)]
 #[diesel(belongs_to(Zone))]
 pub struct Balance {
     pub id: i32,
@@ -77,13 +77,13 @@ impl From<Balance> for JsonValue {
     }
 }
 
-#[derive(Identifiable, Queryable, Insertable, Serialize, Debug)]
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
 pub struct SuperWallet {
     pub id: i32,
     pub address: String,
 }
 
-#[derive(Identifiable, Queryable, Insertable, Serialize, Debug)]
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
 pub struct Proposal {
     pub id: i32,
     pub title: String,

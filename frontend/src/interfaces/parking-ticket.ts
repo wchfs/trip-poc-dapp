@@ -1,3 +1,4 @@
+import type { ParkingZone } from './parking-zone';
 export type ParkingTicket = {
   id: number,
   license: string,
@@ -8,6 +9,7 @@ export type ParkingTicket = {
   purchased_at: string,
   duration: number,
   zone_id: number,
+  zone: ParkingZone | undefined,
   paid: number,
   to_pay: number,
   status: number,
