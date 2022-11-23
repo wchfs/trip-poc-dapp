@@ -48,14 +48,14 @@ pub fn check_point_in_zone(point: GeoPoint) -> Result<JsonValue, Box<dyn Error>>
     });
 }
 
-pub fn point_mapper(point: GeoPoint) -> Point {
+fn point_mapper(point: GeoPoint) -> Point {
     return Point(Coordinate {
         x: point.longitude,
         y: point.latitude,
     });
 }
 
-pub fn is_in_the_toll_zone(gps_data: Point) -> Result<JsonValue, Box<dyn Error>> {
+fn is_in_the_toll_zone(gps_data: Point) -> Result<Option<Zone>, Box<dyn Error>> {
     use crate::schema::zones::{self};
     let mut connection = establish_connection();
 
@@ -65,15 +65,11 @@ pub fn is_in_the_toll_zone(gps_data: Point) -> Result<JsonValue, Box<dyn Error>>
         let polygon = get_polygon(&zone.geo_json)?;
 
         if polygon.contains(&gps_data) {
-            return Ok(object! {
-                "data": zone
-            });
+            return Ok(Some(zone));
         }
     }
 
-    return Ok(object! {
-        "data": json::Null
-    });
+    return Ok(None);
 }
 
 pub fn get_polygon(geo_json_string: &String) -> Result<GeometryCollection, Box<dyn Error>> {
