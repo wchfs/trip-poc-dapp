@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::schema::{tickets, zones, balances, super_wallets, proposals, env_vars};
+use crate::schema::{tickets, zones, balances, super_wallets, proposals, env_vars, vouchers};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
@@ -111,4 +111,13 @@ impl fmt::Display for EnvVar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.var_value.as_str())
     }
+}
+
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
+pub struct Voucher {
+    pub id: i32,
+    pub epoch_index: i32,
+    pub input_index: i32,
+    pub voucher_index: Option<i32>,
+    pub requested_by: String
 }
