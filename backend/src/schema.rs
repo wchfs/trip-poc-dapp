@@ -7,6 +7,14 @@ table! {
 }
 
 table! {
+    env_vars (id) {
+        id -> Integer,
+        var_name -> Text,
+        var_value -> Text,
+    }
+}
+
+table! {
     proposal_votes (id) {
         id -> Integer,
         vote -> Integer,
@@ -65,6 +73,7 @@ joinable!(tickets -> zones (zone_id));
 
 allow_tables_to_appear_in_same_query!(
     balances,
+    env_vars,
     proposal_votes,
     proposals,
     super_wallets,

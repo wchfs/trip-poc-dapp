@@ -1,4 +1,5 @@
-use crate::schema::{tickets, zones, balances, super_wallets, proposals};
+use std::fmt;
+use crate::schema::{tickets, zones, balances, super_wallets, proposals, env_vars};
 use json::{JsonValue, object};
 use serde::{Serialize, Deserialize};
 
@@ -93,3 +94,21 @@ pub struct Proposal {
     pub created_at: String,
 }
 
+#[derive(Identifiable, Queryable, Insertable, Deserialize, Serialize, Debug)]
+pub struct EnvVar {
+    pub id: i32,
+    pub var_name: String,
+    pub var_value: String,
+}
+
+impl Into<JsonValue> for EnvVar {
+    fn into(self) -> JsonValue {
+        self.var_value.as_str().into()
+    }
+}
+
+impl fmt::Display for EnvVar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.var_value.as_str())
+    }
+}

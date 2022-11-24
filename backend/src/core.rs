@@ -345,9 +345,7 @@ pub fn withdraw_funds(
             error: "Only owner can withdraw funds".into(),
         }));
     }
-
-    remove_funds_from_balance(withdraw_struct.amount.clone(), &withdraw_struct.zone_id)?;
-
+    
     let parsed_address = ethabi::ethereum_types::Address::from_str(owner_address.as_str())?;
 
     let address_token = ethabi::Token::Address(parsed_address);
@@ -366,6 +364,8 @@ pub fn withdraw_funds(
     payload.append(&mut data);
 
     let encoded_payload = hex::encode(payload);
+
+    remove_funds_from_balance(withdraw_struct.amount, &withdraw_struct.zone_id)?;
 
     return Ok(object! {
         "data": format!("0x{}", encoded_payload)
