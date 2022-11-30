@@ -9,15 +9,15 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
-
 use dotenv::dotenv;
 use ethabi::{decode, ParamType};
 use hyper::StatusCode;
 use json::{object, JsonValue};
 use parking_dapp::router::{response_type_handler, router};
-use parking_dapp::{structures::*, set_db_env_var, get_db_env_var};
+use parking_dapp::{get_db_env_var, set_db_env_var, structures::*};
 use std::env;
 use std::error::Error;
+use diesel::prelude::*;
 
 extern crate diesel;
 extern crate parking_dapp;
@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let body = hyper::body::to_bytes(response).await?;
             let utf = std::str::from_utf8(&body)?;
             let req = json::parse(utf)?;
-            
+
             if let Some(address) = process_initial(&req["data"]["metadata"]) {
                 set_db_env_var(ROLLUP_ADDRESS, address.to_lowercase());
 
@@ -105,10 +105,14 @@ pub async fn handle_inspect(
     return Ok(payload_parser_handler(client, server_addr, input).await?);
 }
 
- fn handle_input(request: JsonValue) -> StandardInput {
+fn handle_input(request: JsonValue) -> StandardInput {
     return StandardInput {
         /*bytes32: None,*/
-        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
+        address: Some(
+            request["data"]["metadata"]["msg_sender"]
+                .to_string()
+                .to_lowercase(),
+        ),
         uint256: None,
         bytes: hex_decoder(&request),
         request: request,
@@ -123,7 +127,7 @@ pub async fn payload_parser_handler(
     return match payload_parser(&input.bytes) {
         Ok(route) => {
             let output = handle_output(route, input)?;
-            
+
             Ok(add_response(client, server_addr, output).await?)
         }
         Err(err) => {
@@ -167,7 +171,7 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
         Err(err) => {
             status = ResponseStatus::Reject;
             response_type = ResponseType::Report;
-            
+
             object! {
                 "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
                 "data" => json::Null,
@@ -175,13 +179,15 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
             }
         }
     };
-    
+
     let stringify_payload = output_payload.to_string();
 
     let formatted_output = format!("0x{}", hex::encode(stringify_payload));
-    
+
     return Ok(object! {
         "address" => get_db_env_var(ROLLUP_ADDRESS),
+        "epoch_index" => data.request["data"]["metadata"]["epoch_index"].as_i32(),
+        "input_index" => data.request["data"]["metadata"]["input_index"].as_i32(),
         "payload" => formatted_output,
         "status" => status.to_string(),
         "response_type" => response_type,
@@ -194,7 +200,7 @@ pub async fn add_response(
     output: JsonValue,
 ) -> Result<String, Box<dyn Error>> {
     println!("Adding {}", output["response_type"].to_string());
-    
+
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
@@ -207,9 +213,7 @@ pub async fn add_response(
 
     let response = client.request(req).await?;
 
-    println!("RESPONSEEE: {:?}", response);
-
-    print_response(response).await?;
+    save_response(response, &output).await;
 
     Ok(output["status"].to_string())
 }
@@ -264,23 +268,6 @@ fn get_abi_ether_parameters() -> [ParamType; 4] {
     ];
 }
 
-async fn print_response<T: hyper::body::HttpBody>(
-    response: hyper::Response<T>,
-) -> Result<(), Box<dyn std::error::Error>>
-where
-    <T as hyper::body::HttpBody>::Error: 'static,
-    <T as hyper::body::HttpBody>::Error: std::error::Error,
-{
-    let response_status = response.status().as_u16();
-    let response_body = hyper::body::to_bytes(response).await?;
-    println!(
-        "Received status: {}; body: {}",
-        response_status,
-        std::str::from_utf8(&response_body)?
-    );
-    Ok(())
-}
-
 fn process_initial(metadata: &JsonValue) -> Option<String> {
     let epoch_index = metadata["epoch_index"].as_u64()?;
     let input_index = metadata["input_index"].as_u64()?;
@@ -292,4 +279,41 @@ fn process_initial(metadata: &JsonValue) -> Option<String> {
     }
 
     return None;
+}
+
+async fn save_response<T: hyper::body::HttpBody>(
+    response: hyper::Response<T>,
+    output: &JsonValue,
+) -> () {
+    println!("Received status: {};", response.status().as_u16());
+    
+    if ResponseType::Voucher.as_str() == output["response_type"] {
+        if let Ok(bytes) = hyper::body::to_bytes(response).await {
+            if let Ok(body) = serde_json::from_slice::<ResponseBody>(&bytes.to_vec().as_slice()) {
+                if let (
+                    Some(epoch_index_value),
+                    Some(input_index_value),
+                    Some(address_value)
+                ) = (
+                    output["epoch_index"].as_i32(),
+                    output["input_index"].as_i32(),
+                    output["address"].as_str()
+                ) {
+                    use parking_dapp::schema::vouchers::{self, *};
+                    let mut connection = parking_dapp::establish_connection();
+
+                    diesel::RunQueryDsl::execute(diesel::insert_into(vouchers::table)
+                        .values((
+                            epoch_index.eq(epoch_index_value),
+                            input_index.eq(input_index_value),
+                            voucher_index.eq(body.index),
+                            requested_by.eq(address_value),
+                        )), &mut connection)
+                        .ok();
+                }
+            }
+        }
+    }
+
+    return ();
 }

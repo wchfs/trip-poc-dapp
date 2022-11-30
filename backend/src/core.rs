@@ -3,7 +3,6 @@ use crate::establish_connection;
 use crate::models::{Ticket, Zone};
 use crate::structures::*;
 use chrono::prelude::*;
-use diesel::insert_into;
 use geo::{Contains, Coordinate, Point};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
@@ -122,7 +121,7 @@ pub fn buy_ticket(
 
         let wallet = received_address.to_string();
 
-        let is_inserted = insert_into(tickets::table)
+        let is_inserted = diesel::insert_into(tickets::table)
             .values((
                 license.eq(data.license),
                 longitude.eq(data.longitude),
@@ -428,7 +427,7 @@ pub fn seed_zone(
     use crate::schema::zones::{self, *};
     let mut connection = establish_connection();
 
-    let is_inserted = insert_into(zones::table)
+    let is_inserted = diesel::insert_into(zones::table)
         .values((
             name.eq(data.name),
             price.eq(data.price),
@@ -458,7 +457,7 @@ fn create_zone_balance(zone: &Zone) -> Result<(), Box<dyn Error>> {
     use crate::schema::balances::{self, *};
     let mut connection = establish_connection();
 
-    insert_into(balances::table)
+    diesel::insert_into(balances::table)
         .values((zone_id.eq(zone.id), amount.eq("0")))
         .execute(&mut connection)?;
 

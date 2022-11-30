@@ -38,6 +38,12 @@ impl Into<JsonValue> for ResponseType {
     }
 }
 
+impl fmt::Display for ResponseType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
 #[derive(Debug)]
 pub enum ResponseStatus {
     Accept,
@@ -203,4 +209,9 @@ pub const ETHER_WITHDRAWAL_HEADER: [u8; 4] = [116, 149, 107, 148];
 pub struct VoucherResponse {
     pub address: String,
     pub payload: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ResponseBody {
+    pub index: i32
 }
