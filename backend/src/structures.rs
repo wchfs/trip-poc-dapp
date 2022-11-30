@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use json::{JsonValue};
 
 pub const WEI_TO_GWEI_FACTOR: u128 = 1000000000;
-pub static mut ROLLUP_ADDRESS: String = String::new();
+pub const ROLLUP_ADDRESS: &str = "ROLLUPS_ADDRESS";
 const DEFAULT_PER_PAGE: i64 = 15;
 const DEFAULT_PAGE: i64 = 1;
 

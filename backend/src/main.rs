@@ -15,7 +15,7 @@ use ethabi::{decode, ParamType};
 use hyper::StatusCode;
 use json::{object, JsonValue};
 use parking_dapp::router::{response_type_handler, router};
-use parking_dapp::structures::*;
+use parking_dapp::{structures::*, set_db_env_var, get_db_env_var};
 use std::env;
 use std::error::Error;
 
@@ -53,12 +53,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let body = hyper::body::to_bytes(response).await?;
             let utf = std::str::from_utf8(&body)?;
             let req = json::parse(utf)?;
-
+            
             if let Some(address) = process_initial(&req["data"]["metadata"]) {
-                unsafe {
-                    ROLLUP_ADDRESS = address.to_lowercase();
-                }
-                
+                set_db_env_var(ROLLUP_ADDRESS, address.to_lowercase());
+
                 continue;
             }
 
@@ -107,6 +105,16 @@ pub async fn handle_inspect(
     return Ok(payload_parser_handler(client, server_addr, input).await?);
 }
 
+ fn handle_input(request: JsonValue) -> StandardInput {
+    return StandardInput {
+        /*bytes32: None,*/
+        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
+        uint256: None,
+        bytes: hex_decoder(&request),
+        request: request,
+    };
+}
+
 pub async fn payload_parser_handler(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
@@ -115,7 +123,7 @@ pub async fn payload_parser_handler(
     return match payload_parser(&input.bytes) {
         Ok(route) => {
             let output = handle_output(route, input)?;
-
+            
             Ok(add_response(client, server_addr, output).await?)
         }
         Err(err) => {
@@ -136,40 +144,6 @@ pub async fn payload_parser_handler(
 
             Ok(add_response(client, server_addr, output).await?)
         }
-    };
-}
-
-pub async fn add_response(
-    client: &hyper::Client<hyper::client::HttpConnector>,
-    server_addr: &str,
-    output: JsonValue,
-) -> Result<String, Box<dyn Error>> {
-    println!("Adding {}", output["response_type"].to_string());
-
-    let req = hyper::Request::builder()
-        .method(hyper::Method::POST)
-        .header(hyper::header::CONTENT_TYPE, "application/json")
-        .uri(format!(
-            "{}/{}",
-            server_addr,
-            output["response_type"].to_string()
-        ))
-        .body(hyper::Body::from(output.dump()))?;
-
-    let response = client.request(req).await?;
-
-    print_response(response).await?;
-
-    Ok(output["status"].to_string())
-}
-
-fn handle_input(request: JsonValue) -> StandardInput {
-    return StandardInput {
-        /*bytes32: None,*/
-        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
-        uint256: None,
-        bytes: hex_decoder(&request),
-        request: request,
     };
 }
 
@@ -205,15 +179,39 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
     let stringify_payload = output_payload.to_string();
 
     let formatted_output = format!("0x{}", hex::encode(stringify_payload));
+    
+    return Ok(object! {
+        "address" => get_db_env_var(ROLLUP_ADDRESS),
+        "payload" => formatted_output,
+        "status" => status.to_string(),
+        "response_type" => response_type,
+    });
+}
 
-    unsafe {
-        return Ok(object! {
-            "address" => ROLLUP_ADDRESS.clone(), //static variable
-            "payload" => formatted_output,
-            "status" => status.to_string(),
-            "response_type" => response_type,
-        });
-    }
+pub async fn add_response(
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
+    output: JsonValue,
+) -> Result<String, Box<dyn Error>> {
+    println!("Adding {}", output["response_type"].to_string());
+    
+    let req = hyper::Request::builder()
+        .method(hyper::Method::POST)
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .uri(format!(
+            "{}/{}",
+            server_addr,
+            output["response_type"].to_string()
+        ))
+        .body(hyper::Body::from(output.dump()))?;
+
+    let response = client.request(req).await?;
+
+    println!("RESPONSEEE: {:?}", response);
+
+    print_response(response).await?;
+
+    Ok(output["status"].to_string())
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
@@ -276,7 +274,7 @@ where
     let response_status = response.status().as_u16();
     let response_body = hyper::body::to_bytes(response).await?;
     println!(
-        "Received notice status {} body {}",
+        "Received status: {}; body: {}",
         response_status,
         std::str::from_utf8(&response_body)?
     );

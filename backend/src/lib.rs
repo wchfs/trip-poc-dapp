@@ -10,7 +10,8 @@ pub mod structures;
 
 use diesel::prelude::*;
 use dotenv::dotenv;
-use std::env;
+use crate::models::{EnvVar};
+use std::{env};
 
 use crate::diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -28,4 +29,42 @@ pub fn run_migration() {
     let mut connection = establish_connection();
 
     connection.run_pending_migrations(MIGRATIONS).unwrap();
+}
+
+pub fn set_db_env_var(key: &str, value: String) -> bool {
+    use crate::schema::{*};
+    let mut connection = establish_connection();
+
+    let result: Result<i64, diesel::result::Error> = env_vars::table
+        .filter(env_vars::var_name.eq(key))
+        .count()
+        .get_result(&mut connection);
+
+    return if let Ok(count) = result {
+        if count > 0 {
+            return true;
+        }
+
+        match diesel::insert_into(env_vars::table)
+                    .values((env_vars::var_name.eq(key), env_vars::var_value.eq(value)))
+                    .execute(&mut connection) {
+            Ok(_) => return true,
+            Err(_) => return false,
+        };
+
+    } else {
+        false
+    };
+}
+
+pub fn get_db_env_var(key: &str) -> Option<EnvVar> {
+    use crate::schema::{*};
+    let mut connection = establish_connection();
+
+    return match env_vars::table
+            .filter(env_vars::var_name.eq(key))
+            .first::<EnvVar>(&mut connection) {
+        Ok(it) => Some(it),
+        Err(_) => None,
+    };
 }

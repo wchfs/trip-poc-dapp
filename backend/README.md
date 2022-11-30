@@ -40,30 +40,36 @@ build the project
 cargo build
 ```
 
-project is using SQLite Database, install Diesel CLI
-```shell
-cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
-```
-
-all setup should be handled by
-```shell
-diesel setup
-```
-
 run the project
 ```shell
 cargo run
 ```
 
-but as project will grow with new migrations, run
+Cargo-watch is helpful in the dev environment
 ```shell
-diesel migration run
+cargo watch -c -w src -x run
 ```
 
 After the back-end successfully starts, it should print an output like the following:
 ```log
 Sending finish
+Received finish status 200 OK
+Captured rollup address: 0xRollupAddress
 ```
+
+> #### Those steps are not relevant because we move migration to the main function (I'm leaving it here because it might be helpful)
+> project is using SQLite Database, install Diesel CLI
+> ```shell
+> cargo install diesel_cli --no-default-features --features sqlite --version ^1.4
+> ```
+> all setup should be handled by
+> ```shell
+> diesel setup
+> ```
+> but as project will grow with new migrations, run
+> ```shell
+> diesel migration run
+> ```
 
 ## Interacting with the application
 
@@ -75,7 +81,7 @@ this console should interact with the rollup by the advance state and inspect st
 
 in the app is present Router that acting as proxy to properly maintain routing.
 
-Main payload structure:
+#### Main payload structure:
 ```json
 {
   "endpoint": "example_endpoint_name",
@@ -84,12 +90,21 @@ Main payload structure:
   }
 }
 ```
-
 inner payload is defined by structs and depends on the endpoint</br>
+#### Main response structure:
+```json
+{
+  "status": 200,
+  "data": {},
+  "error": null
+}
+```
+app response is present in the data field as an object
+
 as for now, available functionalities are:
 
-### advance state (ABI encoded by Ether Portal)
-#### Buy Ticket:
+### advance state
+#### Buy Ticket (ABI encoded by Ether Portal):
 Request:
 ```json
 {
@@ -108,7 +123,7 @@ Request:
   }
 }
 ```
-Response (notice):
+Response (notice) - Ticket:
 ```json
 {
   "id": 1,
@@ -121,7 +136,8 @@ Response (notice):
   "duration": 60,
   "zone_id": 1,
   "paid": "1000000000000000",
-  "to_pay": "1000000000000000"
+  "to_pay": "1000000000000000",
+  "status": 1
 }
 ```
 If the calculated price is different from the paid amount.
@@ -146,7 +162,7 @@ Request:
   }
 }
 ```
-Response:
+Response (voucher):
 ```json
 {
   "address": "0xrollup_address",
@@ -171,19 +187,15 @@ Request:
   }
 }
 ```
-Response:
+Response - Zone:
 ```json
-[
-  {
-    "id": 1,
-    "name": "String",
-    "price": "1000000",
-    "geo_json": "Stringify GeoJSON",
-    "owner_address": "0xString"
-  },
-  {},
-  {}
-]
+{
+  "id": 1,
+  "name": "String",
+  "price": "1000000",
+  "geo_json": "Stringify GeoJSON",
+  "owner_address": "0xString"
+}
 ```
 
 #### To remove the zone in the app
@@ -198,28 +210,34 @@ Request:
   }
 }
 ```
-Response:
+Response - Success:
 ```json
-[
-  {
-    "success": 1
-  },
-  {
-    "error": 0
-  }
-]
+{
+  "message": "Zone deleted!"
+}
 ```
 
 ### inspect state (only hex encoding) - reports
-#### Get (5) Zones:
+#### Get Zones:
 Request:
 ```json
 {
   "endpoint": "get_zones",
-  "payload": null
+  "payload": {
+    "Zone": {
+      "Get": {
+        "zone_id": 1,
+        "owner_address": "0xAddress",
+        "paginate": {
+          "per_page": 15,
+          "page": 1
+        }
+      }
+    }
+  }
 }
 ```
-Response:
+Response - Zone:
 ```json
 [
   {
@@ -227,14 +245,14 @@ Response:
     "name": "String",
     "price": "1000000",
     "geo_json": "Stringify GeoJSON",
-    "owner_address": "0xString"
+    "owner_address": "0xAddress"
   },
   {},
   {}
 ]
 ```
 
-#### Check point in (5) zones
+#### Check point in zones
 Request:
 ```json
 {
@@ -247,12 +265,15 @@ Request:
   }
 }
 ```
-Response:
-```
-zone_id: 
-"0" - means the point is not found in any zone
-"1" - means the point is in the zone with id = 1
-"2" - -||- id = 2 etc.
+Response - Zone:
+```json
+{
+  "id": 1,
+  "name": "String",
+  "price": "1000000",
+  "geo_json": "Stringify GeoJSON",
+  "owner_address": "0xAddress"
+}
 ```
 
 #### Get tickets by license plate or owner address
@@ -277,12 +298,12 @@ both fields are optional -> with both fields missing there will be an error
 }
 ```
 
-Response:
+Response - Ticket:
 ```json
 [
   {
     "id": 1,
-    "license": "example_license_plate",
+    "license": "String",
     "longitude": 19.943540573120117,
     "latitude": 50.0565299987793,
     "started_at": "2022-09-24T14:25:00Z",
@@ -291,7 +312,8 @@ Response:
     "duration": 60,
     "zone_id": 1,
     "paid": "1000000000000000",
-    "to_pay": "1000000000000000"
+    "to_pay": "1000000000000000",
+    "status": 1
   },
   {},
   {}
@@ -313,20 +335,28 @@ Request:
   }
 }
 ```
-Response:
+Response - Ticket, Zone:
 ```json
 {
+  "id": 1,
+  "license": "String",
+  "longitude": 19.943540573120117,
+  "latitude": 50.0565299987793,
+  "started_at": "2022-09-24T14:25:00Z",
+  "owner_address": "0xString",
+  "purchased_at": "2022-09-24T14:04:20Z",
+  "duration": 60,
+  "zone_id": 1,
+  "paid": "1000000000000000",
+  "to_pay": "1000000000000000",
+  "status": 1,
+  "zone": {
     "id": 1,
-    "license": "example_license_plate",
-    "longitude": 19.943540573120117,
-    "latitude": 50.0565299987793,
-    "started_at": "2022-09-24T14:25:00Z",
-    "owner_address": "0xString",
-    "purchased_at": "2022-09-24T14:04:20Z",
-    "duration": 60,
-    "zone_id": 1,
-    "paid": "1000000000000000",
-    "to_pay": "1000000000000000"
+    "name": "String",
+    "price": "1000000",
+    "geo_json": "Stringify GeoJSON",
+    "owner_address": "0xAddress"
+  }
 }
 ```
 If there is no valid ticket there will be a proper error.
