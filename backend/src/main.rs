@@ -105,6 +105,16 @@ pub async fn handle_inspect(
     return Ok(payload_parser_handler(client, server_addr, input).await?);
 }
 
+ fn handle_input(request: JsonValue) -> StandardInput {
+    return StandardInput {
+        /*bytes32: None,*/
+        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
+        uint256: None,
+        bytes: hex_decoder(&request),
+        request: request,
+    };
+}
+
 pub async fn payload_parser_handler(
     client: &hyper::Client<hyper::client::HttpConnector>,
     server_addr: &str,
@@ -134,40 +144,6 @@ pub async fn payload_parser_handler(
 
             Ok(add_response(client, server_addr, output).await?)
         }
-    };
-}
-
-pub async fn add_response(
-    client: &hyper::Client<hyper::client::HttpConnector>,
-    server_addr: &str,
-    output: JsonValue,
-) -> Result<String, Box<dyn Error>> {
-    println!("Adding {}", output["response_type"].to_string());
-    
-    let req = hyper::Request::builder()
-        .method(hyper::Method::POST)
-        .header(hyper::header::CONTENT_TYPE, "application/json")
-        .uri(format!(
-            "{}/{}",
-            server_addr,
-            output["response_type"].to_string()
-        ))
-        .body(hyper::Body::from(output.dump()))?;
-
-    let response = client.request(req).await?;
-
-    print_response(response).await?;
-
-    Ok(output["status"].to_string())
-}
-
-fn handle_input(request: JsonValue) -> StandardInput {
-    return StandardInput {
-        /*bytes32: None,*/
-        address: Some(request["data"]["metadata"]["msg_sender"].to_string().to_lowercase()),
-        uint256: None,
-        bytes: hex_decoder(&request),
-        request: request,
     };
 }
 
@@ -210,6 +186,32 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
         "status" => status.to_string(),
         "response_type" => response_type,
     });
+}
+
+pub async fn add_response(
+    client: &hyper::Client<hyper::client::HttpConnector>,
+    server_addr: &str,
+    output: JsonValue,
+) -> Result<String, Box<dyn Error>> {
+    println!("Adding {}", output["response_type"].to_string());
+    
+    let req = hyper::Request::builder()
+        .method(hyper::Method::POST)
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .uri(format!(
+            "{}/{}",
+            server_addr,
+            output["response_type"].to_string()
+        ))
+        .body(hyper::Body::from(output.dump()))?;
+
+    let response = client.request(req).await?;
+
+    println!("RESPONSEEE: {:?}", response);
+
+    print_response(response).await?;
+
+    Ok(output["status"].to_string())
 }
 
 fn abi_decoder(data: &StandardInput) -> Result<StandardInput, String> {
