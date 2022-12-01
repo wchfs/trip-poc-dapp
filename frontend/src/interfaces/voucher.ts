@@ -4,4 +4,5 @@ export interface Voucher {
     input_index: number;
     voucher_index: number;
     owner_address: string;
+    status?: "pending" | "approved";
 }

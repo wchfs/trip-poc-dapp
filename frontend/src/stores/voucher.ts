@@ -42,7 +42,7 @@ export const useVoucherStore = defineStore('voucher', {
             if (result === null) {
                 return Promise.reject(false);
             }
-            console.log(result);
+            
             result.forEach(reports => {
                 if(reports === null || reports.data === null || reports.error !== null) {
                     console.error("back-end error: ", reports.error);
@@ -54,7 +54,7 @@ export const useVoucherStore = defineStore('voucher', {
                     this.addVoucher(voucherReport);
                 })
             })
-            console.log(this.vouchers);
+            
             return Promise.resolve(true);
         },
         addVoucher(voucher: Voucher) {
