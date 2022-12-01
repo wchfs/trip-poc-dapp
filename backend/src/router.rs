@@ -118,6 +118,16 @@ pub fn router(route: Route, data: &StandardInput) -> Result<JsonValue, Box<dyn E
                 }))
             }
         }
+        "get_vouchers" => {
+            if let Some(RoutePayload::Voucher(value)) = route.payload {
+                let VoucherActions::Get(value) = value;
+                get_vouchers(value)
+            } else {
+                Err(Box::new(ErrorOutput {
+                    error: "Validation failed! Get Voucher does not meet requirements".into(),
+                }))
+            }
+        }
         _ => todo!(),
     };
 }
@@ -133,6 +143,7 @@ pub fn response_type_handler(route: &Route) -> ResponseType {
         "withdraw_funds" => ResponseType::Voucher,
         "seed_zone" => ResponseType::Notice,
         "remove_zone" => ResponseType::Notice,
+        "get_vouchers" => ResponseType::Report,
         &_ => todo!(),
     };
 }

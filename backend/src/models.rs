@@ -121,3 +121,15 @@ pub struct Voucher {
     pub voucher_index: Option<i32>,
     pub requested_by: String
 }
+
+impl From<Voucher> for JsonValue {
+    fn from(item: Voucher) -> Self {
+        object! { 
+            id: item.id,
+            epoch_index: item.epoch_index,
+            input_index: item.input_index,
+            voucher_index: item.voucher_index,
+            owner_address: item.requested_by
+        }
+    }
+}

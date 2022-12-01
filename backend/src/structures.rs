@@ -106,6 +106,7 @@ pub enum RoutePayload {
     Balance(BalanceActions),
     Seed(SeederActions),
     Remove(Remover),
+    Voucher(VoucherActions),
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -214,4 +215,15 @@ pub struct VoucherResponse {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ResponseBody {
     pub index: i32
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub enum VoucherActions {
+    Get(GetVoucher),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct GetVoucher {
+    pub owner_address: String,
+    pub paginate: Option<Pagination>
 }

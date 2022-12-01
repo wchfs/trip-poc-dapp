@@ -1,6 +1,6 @@
 use crate::diesel::prelude::*;
 use crate::establish_connection;
-use crate::models::{Ticket, Zone};
+use crate::models::{Ticket, Zone, Voucher};
 use crate::structures::*;
 use chrono::prelude::*;
 use geo::{Contains, Coordinate, Point};
@@ -523,6 +523,28 @@ fn remove_zone_balance(zone: &Remover) -> Result<JsonValue, Box<dyn Error>> {
             }));
         }
     }
+}
+
+pub fn get_vouchers(filters: GetVoucher) -> Result<JsonValue, Box<dyn Error>> {
+    use crate::schema::vouchers::{self, *};
+    let mut connection = establish_connection();
+    
+    let mut query = vouchers::table.into_boxed()
+        .filter(requested_by.eq(filters.owner_address));
+    
+    let pagination: Pagination = match filters.paginate {
+        Some(value) => value,
+        None => Default::default(),
+    };
+
+    let offset = pagination.page - 1;
+    query = query
+        .limit(pagination.per_page)
+        .offset(offset * pagination.per_page);
+
+    return Ok(object! {
+        "data": query.load::<Voucher>(&mut connection)?,
+    });
 }
 
 fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>> {
