@@ -5,16 +5,16 @@
         <li v-for="menuItem of menuItems">
           <router-link
             :to="{
-              name: menuItem.routeName
+              name: menuItem.routeName,
             }"
             :class="`
               px-2
               xl:px-4
               py-2
-              ${ menuItem.active ? 'text-gray-900' : 'text-gray-500' }
+              ${menuItem.active ? 'text-gray-900' : 'text-gray-500'}
               rounded-md
-              ${ menuItem.active ? 'bg-gray-300' : 'bg-gray-200' }
-              ${ menuItem.active ? '' : 'hover:bg-gray-300 hover:text-gray-900' }
+              ${menuItem.active ? 'bg-gray-300' : 'bg-gray-200'}
+              ${menuItem.active ? '' : 'hover:bg-gray-300 hover:text-gray-900'}
             `"
           >
             {{ menuItem.displayName }}
@@ -33,39 +33,43 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { ref, watch } from 'vue';
+import { useRouter } from "vue-router";
+import { ref, watch } from "vue";
 
 interface MenuItem {
-  displayName: string,
-  routeName: string,
-  active?: boolean,
+  displayName: string;
+  routeName: string;
+  active?: boolean;
 }
 
 const menuItems = ref<MenuItem[]>([
   {
-    displayName: 'Parking DApp',
-    routeName: 'dapp.home',
+    displayName: "Parking DApp",
+    routeName: "dapp.home",
   },
   {
-    displayName: 'My Tickets',
-    routeName: 'dapp.tickets.my',
+    displayName: "My Tickets",
+    routeName: "dapp.tickets.my",
   },
   {
-    displayName: 'My Zones',
-    routeName: 'dapp.zones.my',
+    displayName: "My Zones",
+    routeName: "dapp.zones.my",
   },
   {
-    displayName: 'Tickets Validator',
-    routeName: 'dapp.tickets.validate',
+    displayName: "Tickets Validator",
+    routeName: "dapp.tickets.validate",
   },
   {
-    displayName: 'Proposals',
-    routeName: 'dapp.proposals',
+    displayName: "Proposals",
+    routeName: "dapp.proposals",
   },
   {
-    displayName: 'DApp Summary',
-    routeName: 'dapp.summary',
+    displayName: "Vouchers",
+    routeName: "dapp.vouchers",
+  },
+  {
+    displayName: "DApp Summary",
+    routeName: "dapp.summary",
   },
 ]);
 
@@ -73,7 +77,8 @@ watch(useRouter().currentRoute, async (currentRoute) => {
   const currentRouteName = currentRoute.name;
 
   menuItems.value = menuItems.value.map((menuItem: MenuItem) => {
-    menuItem.active = !!currentRouteName && currentRouteName.toString().startsWith(menuItem.routeName);
+    menuItem.active =
+      !!currentRouteName && currentRouteName.toString().startsWith(menuItem.routeName);
 
     return menuItem;
   });

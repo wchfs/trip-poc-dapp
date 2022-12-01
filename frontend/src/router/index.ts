@@ -78,6 +78,20 @@ const router = createRouter({
             },
           ],
         },
+        {
+          path: 'vouchers',
+          name: 'dapp.vouchers',
+          redirect: {
+            name: 'dapp.vouchers.list',
+          },
+          children: [
+            {
+              path: 'list',
+              name: 'dapp.vouchers.list',
+              component: () => import('../views/Vouchers/List/VoucherListView.vue'),
+            }
+          ]
+        }
       ],
     },
   ]
