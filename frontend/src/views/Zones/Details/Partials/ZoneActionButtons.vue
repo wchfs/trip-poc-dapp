@@ -1,8 +1,5 @@
 <template>
   <ConfirmDialog ref="confirmDialogRef" />
-  <TButton class="px-3" @click="execute()">
-    <span class="pl-1"> execute </span>
-  </TButton>
   <TButton
     :disabled="parseInt(zone.balance ?? '0') <= 0"
     class="px-3"
@@ -10,7 +7,7 @@
     @click="showWithdrawFundsDialog()"
   >
     <BanknotesIcon class="h-4 w-4 text-white" />
-    <span class="pl-1"> Withdraw funds </span>
+    <span class="pl-1"> Generate voucher </span>
   </TButton>
   <TButton class="px-3" color="red" @click="showDeleteDialog()">
     <TrashIcon class="h-4 w-4 text-white" />
@@ -88,54 +85,6 @@ async function withdrawFunds() {
 
   return router.push({
     name: 'dapp.zones.my',
-  });
-}
-
-async function execute() {
-  const variables: VoucherQueryVariables = {
-    id: "1",
-  };
-
-  ApolloService.getClient().query<VoucherQuery, VoucherQueryVariables>({
-    fetchPolicy: 'no-cache',
-    query: VoucherDocument,
-    variables,
-  }).then((response) => {
-    if (response?.data?.voucher) {
-      const voucher = response
-        .data
-        .voucher
-        // .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
-
-      if (!voucher) {
-        return;
-      }
-
-      const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
-
-      // const payload_object = JSON.parse(decodedPayload);
-      // console.log(payload_object.data);
-      if (!voucher.proof) {
-        throw new Error("no proof");
-      }
-
-      const proof: OutputValidityProofStruct = {
-        ...voucher.proof,
-        epochIndex: voucher.input.epoch.index,
-        inputIndex: voucher.input.index,
-        outputIndex: voucher.index,
-      };
-      console.log(voucher.payload);
-      RollupService.getContracts().outputContract.executeVoucher(
-        voucher.destination,
-        voucher.payload,
-        proof
-      ).then((value) => {
-        console.log(value);
-      })
-    }
-  }).catch((error: GraphQLError) => {
-    console.log(error.message);
   });
 }
 </script>

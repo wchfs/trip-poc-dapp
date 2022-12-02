@@ -1,3 +1,5 @@
+import type { Voucher as GeneratedVoucher} from '@/generated/graphql/index';
+
 export interface Voucher {
     id: number;
     epoch_index: number;
@@ -5,4 +7,5 @@ export interface Voucher {
     voucher_index: number;
     owner_address: string;
     status?: "pending" | "approved";
+    generated_voucher: GeneratedVoucher
 }

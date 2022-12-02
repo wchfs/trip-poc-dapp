@@ -67,7 +67,7 @@ export const useVoucherStore = defineStore("voucher", {
                     })
                 );
             });
-
+            
             return Promise.resolve(true);
         },
         addVoucher(voucher: Voucher) {
