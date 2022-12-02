@@ -7,7 +7,7 @@
             Voucher #{{ voucher.id }}
           </h3>
           <TBadge :color="getBadgeColor()">
-            {{ props.voucher.status ?? "Checking" }}
+            {{ props.voucher.status ?? "checking" }}
           </TBadge>
         </div>
         <p class="mt-1 truncate text-sm text-gray-500">
@@ -35,18 +35,13 @@
 import Box from "@/components/Box/Box.vue";
 import TBadge from "@/components/Common/TBadge/TBadge.vue";
 import type { Voucher } from "@/interfaces/voucher";
-import { Bars3BottomLeftIcon, HashtagIcon } from "@heroicons/vue/20/solid";
-import { onMounted } from "vue";
+import { Bars3BottomLeftIcon } from "@heroicons/vue/20/solid";
 
 const props = defineProps<{
   voucher: Voucher;
 }>();
 
-onMounted(() => {
-  checkVoucher();
-});
-
-function getBadgeColor() {
+function getBadgeColor(): "red" | "green" | "indigo" {
   switch (props.voucher.status) {
     case undefined:
       return "red";
@@ -55,12 +50,6 @@ function getBadgeColor() {
     default:
       return "indigo";
   }
-}
-
-function checkVoucher() {
-  //todo grahpql check;
-  props.voucher.status = "pending";
-  console.log("todo");
 }
 
 function execute() {

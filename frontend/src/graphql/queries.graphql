@@ -124,6 +124,33 @@ query vouchers {
   }
 }
 
+query voucherByEpochInputAndVoucherIndex($epoch_index: Int!, $input_index: Int!, $voucher_index: Int!) {
+  epoch: epochI(index: $epoch_index) {
+    input: input(index: $input_index) {
+      voucher: voucher(index: $voucher_index) {
+        id
+        destination
+        payload
+        index
+        proof {
+          outputHashesRootHash
+          vouchersEpochRootHash
+          noticesEpochRootHash
+          machineStateHash
+          keccakInHashesSiblings
+          outputHashesInEpochSiblings
+        }
+        input {
+          index
+          epoch {
+            index
+          }
+        }
+      }
+    }
+  }
+}
+
 query vouchersByEpochAndInput($epoch_index: Int!, $input_index: Int!) {
   epoch: epochI(index: $epoch_index) {
     input(index: $input_index) {
