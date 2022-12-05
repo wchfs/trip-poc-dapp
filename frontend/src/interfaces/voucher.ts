@@ -1,4 +1,4 @@
-import type { Voucher as GeneratedVoucher} from '@/generated/graphql/index';
+import type { PartialVoucher } from '@/services/rollup-service';
 
 export interface Voucher {
     id: number;
@@ -7,5 +7,5 @@ export interface Voucher {
     voucher_index: number;
     owner_address: string;
     status?: "pending" | "approved";
-    generated_voucher: GeneratedVoucher
+    generated_voucher?: PartialVoucher
 }

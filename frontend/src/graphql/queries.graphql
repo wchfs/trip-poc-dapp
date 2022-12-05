@@ -140,12 +140,6 @@ query voucherByEpochInputAndVoucherIndex($epoch_index: Int!, $input_index: Int!,
           keccakInHashesSiblings
           outputHashesInEpochSiblings
         }
-        input {
-          index
-          epoch {
-            index
-          }
-        }
       }
     }
   }

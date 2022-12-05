@@ -53,46 +53,42 @@ function getBadgeColor(): "red" | "green" | "indigo" {
   }
 }
 
-// async function execute() {
-//   ApolloService.getClient()
-//     .query<VoucherQuery, VoucherQueryVariables>({
-//       fetchPolicy: "no-cache",
-//       query: VoucherDocument,
-//       variables,
-//     })
-//     .then((response) => {
-//       if (response?.data?.voucher) {
-//         const voucher = response.data.voucher;
-//         // .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
-
-//         if (!voucher) {
-//           return;
-//         }
-
-//         const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
-
-//         // const payload_object = JSON.parse(decodedPayload);
-//         // console.log(payload_object.data);
-//         if (!voucher.proof) {
-//           throw new Error("no proof");
-//         }
-
-//         const proof: OutputValidityProofStruct = {
-//           ...voucher.proof,
-//           epochIndex: voucher.input.epoch.index,
-//           inputIndex: voucher.input.index,
-//           outputIndex: voucher.index,
-//         };
-//         console.log(voucher.payload);
-//         RollupService.getContracts()
-//           .outputContract.executeVoucher(voucher.destination, voucher.payload, proof)
-//           .then((value) => {
-//             console.log(value);
-//           });
-//       }
-//     })
-//     .catch((error: GraphQLError) => {
-//       console.log(error.message);
-//     });
-// }
+async function execute() {
+  //   ApolloService.getClient()
+  //     .query<VoucherQuery, VoucherQueryVariables>({
+  //       fetchPolicy: "no-cache",
+  //       query: VoucherDocument,
+  //       variables,
+  //     })
+  //     .then((response) => {
+  //       if (response?.data?.voucher) {
+  //         const voucher = response.data.voucher;
+  //         // .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
+  //         if (!voucher) {
+  //           return;
+  //         }
+  //         const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
+  //         // const payload_object = JSON.parse(decodedPayload);
+  //         // console.log(payload_object.data);
+  //         if (!voucher.proof) {
+  //           throw new Error("no proof");
+  //         }
+  //         const proof: OutputValidityProofStruct = {
+  //           ...voucher.proof,
+  //           epochIndex: voucher.input.epoch.index,
+  //           inputIndex: voucher.input.index,
+  //           outputIndex: voucher.index,
+  //         };
+  //         console.log(voucher.payload);
+  //         RollupService.getContracts()
+  //           .outputContract.executeVoucher(voucher.destination, voucher.payload, proof)
+  //           .then((value) => {
+  //             console.log(value);
+  //           });
+  //       }
+  //     })
+  //     .catch((error: GraphQLError) => {
+  //       console.log(error.message);
+  //     });
+}
 </script>

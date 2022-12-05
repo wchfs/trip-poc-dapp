@@ -60,10 +60,8 @@ export type PartialInput = PartialEpoch & { epoch: PartialEpoch };
 export type PartialNotice = Pick<Notice, "__typename" | "id" | "index" | "payload"> & {
   input: PartialInput;
 };
-export type PartialProof = Pick<Proof, "__typename" | "keccakInHashesSiblings" | "machineStateHash" | "noticesEpochRootHash" | "outputHashesInEpochSiblings" | "outputHashesRootHash" | "vouchersEpochRootHash">;
 export type PartialVoucher = Pick<Voucher, "__typename" | "destination" | "id" | "index" | "payload"> & {
-  proof?: PartialProof;
-  input: PartialInput;
+  proof?: Proof | null;
 };
 
 export abstract class RollupService {
