@@ -531,7 +531,7 @@ fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>
     let mut connection = establish_connection();
 
     let result: i64 = super_wallets
-        .filter(address.eq(sender_address.to_lowercase()))
+        .filter(address.eq(&sender_address.to_lowercase()))
         .count()
         .get_result(&mut connection)?;
 
@@ -539,7 +539,7 @@ fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>
         Ok(true)
     } else {
         Err(Box::new(ErrorOutput {
-            error: "You don't have permission to perform this action.".to_string(),
+            error: format!("You don't have permission to perform this action: {}", sender_address.to_lowercase()),
         }))
     };
 }
