@@ -186,6 +186,7 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
 
     return Ok(object! {
         "address" => get_db_env_var(ROLLUP_ADDRESS),
+        "requested_by" => data.address,
         "epoch_index" => data.request["data"]["metadata"]["epoch_index"].as_i32(),
         "input_index" => data.request["data"]["metadata"]["input_index"].as_i32(),
         "payload" => formatted_output,
@@ -201,6 +202,11 @@ pub async fn add_response(
 ) -> Result<String, Box<dyn Error>> {
     println!("Adding {}", output["response_type"].to_string());
 
+    let body = object! {
+        "address" => output["address"].clone(),
+        "payload" => output["payload"].clone()
+    };
+    
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
         .header(hyper::header::CONTENT_TYPE, "application/json")
@@ -209,7 +215,7 @@ pub async fn add_response(
             server_addr,
             output["response_type"].to_string()
         ))
-        .body(hyper::Body::from(output.dump()))?;
+        .body(hyper::Body::from(body.dump()))?;
 
     let response = client.request(req).await?;
 
@@ -297,7 +303,7 @@ async fn save_response<T: hyper::body::HttpBody>(
                 ) = (
                     output["epoch_index"].as_i32(),
                     output["input_index"].as_i32(),
-                    output["address"].as_str()
+                    output["requested_by"].as_str()
                 ) {
                     use parking_dapp::schema::vouchers::{self, *};
                     let mut connection = parking_dapp::establish_connection();
