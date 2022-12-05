@@ -36,6 +36,8 @@
 import Box from "@/components/Box/Box.vue";
 import TBadge from "@/components/Common/TBadge/TBadge.vue";
 import type { Voucher } from "@/interfaces/voucher";
+import { RollupService } from "@/services/rollup-service";
+import type { OutputValidityProofStruct } from "@cartesi/rollups/dist/src/types/contracts/interfaces/IOutput";
 import { Bars3BottomLeftIcon } from "@heroicons/vue/20/solid";
 
 const props = defineProps<{
@@ -54,41 +56,51 @@ function getBadgeColor(): "red" | "green" | "indigo" {
 }
 
 async function execute() {
-  //   ApolloService.getClient()
-  //     .query<VoucherQuery, VoucherQueryVariables>({
-  //       fetchPolicy: "no-cache",
-  //       query: VoucherDocument,
-  //       variables,
-  //     })
-  //     .then((response) => {
-  //       if (response?.data?.voucher) {
-  //         const voucher = response.data.voucher;
-  //         // .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
-  //         if (!voucher) {
-  //           return;
-  //         }
-  //         const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
-  //         // const payload_object = JSON.parse(decodedPayload);
-  //         // console.log(payload_object.data);
-  //         if (!voucher.proof) {
-  //           throw new Error("no proof");
-  //         }
-  //         const proof: OutputValidityProofStruct = {
-  //           ...voucher.proof,
-  //           epochIndex: voucher.input.epoch.index,
-  //           inputIndex: voucher.input.index,
-  //           outputIndex: voucher.index,
-  //         };
-  //         console.log(voucher.payload);
-  //         RollupService.getContracts()
-  //           .outputContract.executeVoucher(voucher.destination, voucher.payload, proof)
-  //           .then((value) => {
-  //             console.log(value);
-  //           });
-  //       }
-  //     })
-  //     .catch((error: GraphQLError) => {
-  //       console.log(error.message);
-  //     });
+  // bunch of validation (test purposes)
+  if (!props.voucher.generated_voucher) {
+    throw new Error("no voucher");
+  }
+
+  if (!props.voucher.generated_voucher.proof) {
+    throw new Error("no proof");
+  }
+
+  if (!props.voucher.generated_voucher.payload) {
+    throw new Error("no payload");
+  }
+
+  if (!props.voucher.generated_voucher.destination) {
+    throw new Error("no destination");
+  }
+
+  if (props.voucher.generated_voucher.proof.machineStateHash == "0x") {
+    throw new Error("no machine state hash (host mode)");
+  }
+
+  const proof: OutputValidityProofStruct = {
+    ...props.voucher.generated_voucher.proof,
+    epochIndex: props.voucher.epoch_index,
+    inputIndex: props.voucher.input_index,
+    outputIndex: props.voucher.voucher_index,
+  };
+
+  RollupService.getContracts()
+    .outputContract.executeVoucher(
+      props.voucher.generated_voucher.destination,
+      props.voucher.generated_voucher.payload,
+      proof
+    )
+    .then(async (tx) => {
+      const receipt = await tx.wait();
+
+      console.log(`voucher executed! (tx="${tx.hash}")`);
+
+      if (receipt.events) {
+        console.log(`resulting events: ${JSON.stringify(receipt.events)}`);
+      }
+    })
+    .catch((value) => {
+      console.error(value);
+    });
 }
 </script>
