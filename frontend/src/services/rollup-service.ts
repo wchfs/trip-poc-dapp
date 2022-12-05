@@ -77,11 +77,12 @@ export abstract class RollupService {
     return !!this.contracts;
   }
 
-  public static getRollupAddress(key: string): string {
+  public static getRollupAddress(key: string): string {    
     const addresses: {
       [key: string]: string,
     } = {
-      "0x7a69": import.meta.env.VITE_APP_DAPP_ADDRESS as string, // local hardhat
+      "0x7a69": import.meta.env.VITE_APP_HARDHAT_DAPP_ADDRESS as string, // local hardhat
+      "0x5": import.meta.env.VITE_APP_GOERLI_DAPP_ADDRESS as string, // goerli
     };
 
     return addresses[key];
