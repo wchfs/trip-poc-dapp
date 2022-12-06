@@ -15,6 +15,6 @@
   - being able to create the zone by uploading the GEO JSON file
 - Be able to validate existing tickets
 - Be able to withdraw ether from the dApp (if you are zone owner)
-    - after generating the voucher in the zone details view. There is a list of pending and approved vouchers
+  - after generating the voucher in the zone details view. There is a list of pending and approved vouchers
 
 Please refer to the backend and frontend README files.
