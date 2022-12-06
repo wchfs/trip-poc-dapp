@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia';
-import type { GeoJSON } from 'geojson';
-import type { ParkingZone } from '@/interfaces/parking-zone';
-import { RollupService } from '@/services/rollup-service';
-import type { InspectResponseDecodedPayload } from '@/interfaces/rollup-api';
+import { defineStore } from "pinia";
+import type { GeoJSON } from "geojson";
+import type { ParkingZone } from "@/interfaces/parking-zone";
+import { RollupService } from "@/services/rollup-service";
+import type { InspectResponseDecodedPayload } from "@/interfaces/rollup-api";
 
-export const useParkingZoneStore = defineStore('parking-zone', {
+export const useParkingZoneStore = defineStore("parking-zone", {
   state: () => ({
     zones: [] as ParkingZone[],
     selectedZoneId: null as number | null,
@@ -46,31 +46,31 @@ export const useParkingZoneStore = defineStore('parking-zone', {
                   },
                 },
               },
-            }).then(reports => {
-              reports.forEach(report => {
+            }).then((reports) => {
+              reports.forEach((report) => {
                 z.balance = report.data;
               });
             });
 
             return z;
           });
-      }
+      };
     },
   },
   actions: {
     clearZones() {
       this.zones = [];
     },
-    async fetchZones(
-      force: boolean = false,
-    ): Promise<boolean> {
+    async fetchZones(force: boolean = false): Promise<boolean> {
       if (!force && this.zones.length > 1) {
         return Promise.resolve(true);
       }
 
       this.clearZones();
 
-      let result = null as InspectResponseDecodedPayload<ParkingZone[]>[] | null;
+      let result = null as
+        | InspectResponseDecodedPayload<ParkingZone[]>[]
+        | null;
 
       try {
         result = await RollupService.inspect<ParkingZone[]>({
@@ -80,8 +80,8 @@ export const useParkingZoneStore = defineStore('parking-zone', {
               Get: {
                 zone_id: null,
                 owner_address: null,
-              }
-            }
+              },
+            },
           },
         });
       } catch (e) {
@@ -92,8 +92,8 @@ export const useParkingZoneStore = defineStore('parking-zone', {
         return Promise.reject(false);
       }
 
-      result.forEach(reports => {
-        reports.data.forEach(zoneReport => {
+      result.forEach((reports) => {
+        reports.data.forEach((zoneReport) => {
           this.addZone(zoneReport);
         });
       });
@@ -109,7 +109,7 @@ export const useParkingZoneStore = defineStore('parking-zone', {
       name: string,
       zone_owner_address: string,
       price: string,
-      geoJson: GeoJSON,
+      geoJson: GeoJSON
     ) {
       this.waitingForNewZone = true;
 
@@ -149,8 +149,8 @@ export const useParkingZoneStore = defineStore('parking-zone', {
         this.fetchZones(true);
       });
     },
-    async withdrawFunds(zoneId: number, amount: string): Promise<void> {
-      RollupService.addInput<{
+    async withdrawFunds(zoneId: number, amount: string): Promise<boolean> {
+      return RollupService.addInput<{
         errors: string[];
       }>({
         endpoint: "withdraw_funds",
@@ -159,14 +159,13 @@ export const useParkingZoneStore = defineStore('parking-zone', {
             Withdraw: {
               amount: amount,
               zone_id: zoneId,
-            }
+            },
           },
         },
-      }).then((result) => {
-        console.log("I'm out!");
-        console.log(result.response.then((value) => {
-          console.log(value);
-        }));
+      }).then(() => {
+        return true;
+      }).catch(() => {
+        return false;
       });
     },
     setSelectedZoneId(zoneId: number | null) {

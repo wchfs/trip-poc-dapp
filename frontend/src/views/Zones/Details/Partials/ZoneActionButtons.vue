@@ -18,7 +18,11 @@
 <script setup lang="ts">
 import TButton from "@/components/Controls/Button/TButton.vue";
 import { BanknotesIcon } from "@heroicons/vue/20/solid";
-import { QuestionMarkCircleIcon, TrashIcon } from "@heroicons/vue/24/outline";
+import {
+  IdentificationIcon,
+  QuestionMarkCircleIcon,
+  TrashIcon,
+} from "@heroicons/vue/24/outline";
 import type { ParkingZone } from "@/interfaces/parking-zone";
 import { useParkingZoneStore } from "@/stores/parking-zone";
 import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
@@ -81,10 +85,33 @@ async function deleteZone() {
 }
 
 async function withdrawFunds() {
-  await parkingZoneStore.withdrawFunds(props.zone.id, props.zone.balance ?? "0");
-
-  return router.push({
-    name: "dapp.zones.my",
-  });
+  parkingZoneStore
+    .withdrawFunds(props.zone.id, props.zone.balance ?? "0")
+    .then((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+      confirmDialogRef.value?.open(
+        {
+          confirmed: () => {
+            return router.push({
+              name: "dapp.vouchers.list",
+            });
+          },
+          canceled: () => {
+            return router.push({
+              name: "dapp.zones.my",
+            });
+          },
+        },
+        {
+          title: "Voucher is generated",
+          message: "Status is available on the Voucher list",
+          icon: IdentificationIcon,
+          color: "green",
+          confirmButtonText: "Take me there",
+        }
+      );
+    });
 }
 </script>

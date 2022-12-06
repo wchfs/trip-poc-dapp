@@ -62,9 +62,13 @@ export const useVoucherStore = defineStore("voucher", {
         }
 
         reports.data.forEach((voucherReport) =>
-          this.checkVoucher(voucherReport).then((voucher) => {
-            this.addVoucher(voucher);
-          })
+          this.checkVoucher(voucherReport)
+            .then((voucher) => {
+              this.addVoucher(voucher);
+            })
+            .catch((error) => {
+              console.error(error);
+            })
         );
       });
 
@@ -98,7 +102,7 @@ export const useVoucherStore = defineStore("voucher", {
                 response?.data?.epoch?.input?.voucher;
 
               if (!voucher_to_check.generated_voucher) {
-                reject(voucher_to_check);
+                reject("There is no voucher");
               }
 
               if (
@@ -113,8 +117,7 @@ export const useVoucherStore = defineStore("voucher", {
             }
           })
           .catch((error: GraphQLError) => {
-            console.log(error.message);
-            reject(voucher_to_check);
+            reject(error);
           });
       });
     },

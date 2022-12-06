@@ -24,7 +24,11 @@
             class="relative inline-flex w-0 flex-1 items-center justify-center rounded-br-lg border border-transparent py-4 text-sm font-medium text-gray-700"
           >
             <Bars3BottomLeftIcon class="h-5 w-5 txt-gray-400" aria-hidden="true" />
-            <span class="ml-3">Execute Voucher</span>
+            <span class="ml-3">{{
+              props.voucher.status != "approved"
+                ? "The proof is in progress, but it might take a while."
+                : "Execute Voucher"
+            }}</span>
           </button>
         </div>
       </div>
