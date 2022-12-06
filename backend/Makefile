@@ -3,7 +3,7 @@ BAKE_CMD := docker buildx bake -f docker-bake.hcl -f docker-bake.override.hcl
 PROD_CMD := $(COMPOSE_CMD) -f docker-compose.yml -f docker-compose.override.yml
 TESTNET_CMD := $(COMPOSE_CMD) -f docker-compose.yml -f docker-compose-testnet.yml -f docker-compose.override.yml
 
-.PHONY: bake bake-machine prod prod-down host host-down deploy-contract testnet-prod testnet-prod-down testnet-host testnet-host-down
+.PHONY: bake bake-machine prod prod-down host host-down deploy-contract deploy-contract-down testnet-prod testnet-prod-down testnet-host testnet-host-down
 
 bake:
 	$(BAKE_CMD) --load
