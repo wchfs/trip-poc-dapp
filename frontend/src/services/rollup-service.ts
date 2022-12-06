@@ -14,13 +14,10 @@ import type {
   NoticesByEpochAndInputQuery,
   NoticesByEpochAndInputQueryVariables,
   Proof,
-  Voucher,
-  VouchersByEpochAndInputQuery,
-  VouchersByEpochAndInputQueryVariables
+  Voucher
 } from '@/generated/graphql';
 import { 
-  NoticesByEpochAndInputDocument,
-  VouchersByEpochAndInputDocument
+  NoticesByEpochAndInputDocument
 } from '@/generated/graphql';
 import type { GraphQLError } from 'graphql';
 import type {
@@ -143,7 +140,7 @@ export abstract class RollupService {
     const payloadBytes = ethers.utils.isBytesLike(payload)
       ? payload
       : ethers.utils.toUtf8Bytes(JSON.stringify(payload));
-
+    
     const transaction = deposit === null
       ? await RollupService.getContracts().inputContract.addInput(payloadBytes)
       : await RollupService.getContracts().etherContract.etherDeposit(
@@ -151,7 +148,7 @@ export abstract class RollupService {
           value: ethers.utils.parseEther(deposit)
         }
       );
-
+    
     const receipt = await transaction.wait(1);
 
     return new Promise((resolve) => {
@@ -168,33 +165,6 @@ export abstract class RollupService {
               input_index: keys.input_index,
               epoch_index: keys.epoch_index,
             };
-
-            ApolloService.getClient().query<VouchersByEpochAndInputQuery, VouchersByEpochAndInputQueryVariables>({
-              fetchPolicy: 'no-cache',
-              query: VouchersByEpochAndInputDocument,
-              variables,
-            }).then((response) => {
-              if (response?.data?.epoch?.input?.vouchers) {
-                const voucher = response
-                  .data
-                  .epoch
-                  .input
-                  .vouchers
-                  .nodes
-                  .filter<PartialVoucher>((n: PartialVoucher | null): n is PartialVoucher => n !== null)[0];
-
-                if (!voucher) {
-                  return;
-                }
-                
-                clearInterval(intervalId);
-                const decodedPayload = ethers.utils.toUtf8String(voucher.payload);
-                resolve(JSON.parse(decodedPayload) as InspectResponseDecodedPayload<T>);
-              }
-
-            }).catch((error: GraphQLError) => {
-              console.log(error.message);
-            });
 
             ApolloService.getClient().query<NoticesByEpochAndInputQuery, NoticesByEpochAndInputQueryVariables>({
               fetchPolicy: 'no-cache',
