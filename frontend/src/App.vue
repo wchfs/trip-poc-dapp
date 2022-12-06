@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen justify-between bg-gray-700">
+  <div class="flex flex-col h-screen justify-between">
     <NavMenu />
     <MainContainer class="mb-auto" />
     <FooterContainer />
