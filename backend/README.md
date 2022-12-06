@@ -1,6 +1,6 @@
-## BACK-END
+## BACKEND
 
-### Running the back-end in host mode (step by step)
+### Running the backend in host mode (step by step)
 
 Install Rust (based on):
 ```shell
@@ -15,12 +15,12 @@ Environment is running in docker
 
 Docker Host environment up
 ```shell
-docker compose -f ./docker-compose.yml -f ./docker-compose.override.yml -f ./docker-compose-host.yml up
+make host
 ```
 
 Docker Host environment down
 ```shell
-docker compose -f ./docker-compose.yml -f ./docker-compose.override.yml -f ./docker-compose-host.yml down -v
+make host-down
 ```
 
 ensure that all environment variables are filled properly</br>
