@@ -108,7 +108,7 @@ pub fn buy_ticket(
     let amount = (received_uint / WEI_TO_GWEI_FACTOR).to_string();
 
     let calculated_amount = calculate_amount(data.zone_id, data.duration)?.to_string();
-
+    
     if amount == calculated_amount {
         let received_address = match additional_data.address.clone() {
             Some(value) => value.to_lowercase(),
@@ -159,16 +159,16 @@ pub fn buy_ticket(
 pub fn calculate_amount(zone_id: i32, duration: i32) -> Result<f64, Box<dyn Error>> {
     use crate::schema::zones::{self, *};
     let mut connection = establish_connection();
-
+    
     let zone_price_per_hour = zones::table
         .filter(id.eq(zone_id))
         .select(price)
         .first::<String>(&mut connection)?;
-
+    
     let pricing: f64 = zone_price_per_hour.parse::<f64>()?;
-
-    let hours: f64 = (duration / 60) as f64;
-
+    
+    let hours: f64 = ((duration as f64) / (60 as f64)) as f64;
+    
     return Ok(pricing * hours);
 }
 
