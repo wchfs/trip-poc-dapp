@@ -7,17 +7,21 @@ variable "TAG" {
 }
 
 variable "DOCKER_ORGANIZATION" {
-  default = "cartesi"
+  default = "webchefs"
+}
+
+variable "DAPP_NAME" {
+  default = "parking-dapp"
 }
 
 target "server" {
-  tags = ["${DOCKER_ORGANIZATION}/dapp:trip_poc-${TAG}-server"]
+  tags = ["${DOCKER_ORGANIZATION}/${DAPP_NAME}:${TAG}-server"]
 }
 
 target "console" {
-  tags = ["${DOCKER_ORGANIZATION}/dapp:trip_poc-${TAG}-console"]
+  tags = ["${DOCKER_ORGANIZATION}/${DAPP_NAME}:${TAG}-console"]
 }
 
 target "machine" {
-  tags = ["${DOCKER_ORGANIZATION}/dapp:trip_poc-${TAG}-machine"]
+  tags = ["${DOCKER_ORGANIZATION}/${DAPP_NAME}:${TAG}-machine"]
 }
