@@ -6,6 +6,9 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "preserveValueImports": false,
+    "strictPropertyInitialization": false,
+    "strict": false,
   },
   "references": [
     {

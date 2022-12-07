@@ -8,7 +8,6 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BaseContainer: typeof import('./src/components/Containers/BaseContainer.vue')['default']
-    BaseDialog: typeof import('./src/components/Dialogs/BaseDialog.vue')['default']
     Box: typeof import('./src/components/Box/Box.vue')['default']
     ConfirmDialog: typeof import('./src/components/Dialogs/ConfirmDialog.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -16,7 +15,6 @@ declare module '@vue/runtime-core' {
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
-    ElProgress: typeof import('element-plus/es')['ElProgress']
     ElTimeSelect: typeof import('element-plus/es')['ElTimeSelect']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     FooterContainer: typeof import('./src/components/Containers/FooterContainer.vue')['default']
@@ -34,6 +32,5 @@ declare module '@vue/runtime-core' {
     TInput: typeof import('./src/components/Controls/Input/TInput.vue')['default']
     TInputDropZone: typeof import('./src/components/Controls/Input/TInputDropZone.vue')['default']
     TInputLeftSide: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue')['default']
-    TInputLeftSideText: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSideText.vue')['default']
   }
 }

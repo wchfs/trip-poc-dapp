@@ -31,7 +31,7 @@
   </BaseContainer>
   <BaseContainer v-if="result !== null">
     <Box v-if="result.hasOwnProperty('error')" additionalClass="col-span-3">
-      {{ result.error }}
+      {{ (result as any)?.error }}
     </Box>
     <ParkingTicketBox v-else :ticket="result" :zone="result.zone" />
   </BaseContainer>

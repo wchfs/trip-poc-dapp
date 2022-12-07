@@ -53,7 +53,7 @@
 
     <div class="pt-5">
       <div class="flex justify-end">
-        <TButton @click="this.emit('cancel')" type="button" color="white">
+        <TButton @click="$emit('cancel')" type="button" color="white">
           Cancel
         </TButton>
         <TButton

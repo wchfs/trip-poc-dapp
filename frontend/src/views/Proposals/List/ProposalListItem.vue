@@ -24,7 +24,7 @@
           <div
             class="relative inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 text-sm font-medium text-gray-700"
           >
-            <HashtagIcon class="w-4 w-4 text-gray-400" aria-hidden="true" />
+            <HashtagIcon class="w-4 h-4 text-gray-400" aria-hidden="true" />
             <span class="ml-3">{{ props.proposal.id }}</span>
           </div>
         </div>

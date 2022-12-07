@@ -22,7 +22,7 @@
 
 const props = withDefaults(defineProps<{
   color?: 'white' | 'green' | 'indigo' | 'red';
-  animation?: 'pulse';
+  animation?: 'pulse' | 'none';
 }>(), {
   color: 'indigo',
 });

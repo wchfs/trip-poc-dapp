@@ -67,10 +67,6 @@ const menuItems = ref<MenuItem[]>([
     displayName: "Vouchers",
     routeName: "dapp.vouchers",
   },
-  {
-    displayName: "DApp Summary",
-    routeName: "dapp.summary",
-  },
 ]);
 
 watch(useRouter().currentRoute, async (currentRoute) => {

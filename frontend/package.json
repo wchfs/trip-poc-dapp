@@ -3,16 +3,15 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
-    "build": "run-s codegen tsc",
+    "build": "run-p codegen type-check build-only",
     "codegen": "graphql-codegen",
     "preview": "vite preview --port 4173",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit",
-    "tsc": "tsc"
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@cartesi/rollups": "^0.7.0",
-    "@ethersproject/providers": "^5.7.1",
+    "@ethersproject/providers": "^5.7.2",
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/free-brands-svg-icons": "^6.1.2",
     "@fortawesome/free-regular-svg-icons": "^6.1.2",

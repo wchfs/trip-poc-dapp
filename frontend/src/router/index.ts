@@ -23,11 +23,6 @@ const router = createRouter({
           component: () => import('../views/DApp/DAppView.vue'),
         },
         {
-          path: 'summary',
-          name: 'dapp.summary',
-          component: () => import('../views/Summary/SummaryView.vue'),
-        },
-        {
           path: 'tickets',
           children: [
             {

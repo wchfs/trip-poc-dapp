@@ -155,7 +155,7 @@ export abstract class RollupService {
       resolve({
         transaction,
         receipt,
-        response: new Promise<T>(async (resolve) => {
+        response: new Promise<InspectResponseDecodedPayload<T>>(async (resolve) => {
           const keys = deposit === null
             ? RollupService.getInputKeysFromAdvanceReceipt(receipt)
             : RollupService.getInputKeysFromDepositReceipt(receipt);

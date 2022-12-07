@@ -42,7 +42,7 @@
     <div class="pt-5">
       <div class="flex justify-end">
         <TButton
-          @click="this.emit('cancel')"
+          @click="$emit('cancel')"
           type="button"
           color="white"
         >
@@ -50,7 +50,7 @@
         </TButton>
         <TButton
           class="ml-3"
-          :disabled="costOfProposal <= 0"
+          :disabled="costOfProposal.lte(0)"
           type="submit"
           color="green"
         >
@@ -70,7 +70,7 @@ import { storeToRefs } from 'pinia';
 import { gwei2eth } from '@/helpers/helpers';
 import TButton from '@/components/Controls/Button/TButton.vue';
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   (e: 'cancel'): void;
 }>();
 

@@ -33,13 +33,13 @@
           :id="`input-${controlName}`"
           :placeholder="props.placeholder"
           :value="props.modelValue"
-          @input="$emit('update:modelValue', $event.target.value)"
+          @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
           :class="`
             block
             w-full
             rounded-md
-            ${ this.$slots.right ? 'rounded-r-none' : '' }
-            ${ this.$slots.left ? 'rounded-l-none' : '' }
+            ${ slots.right ? 'rounded-r-none' : '' }
+            ${ slots.left ? 'rounded-l-none' : '' }
             border-gray-300
             focus:border-indigo-500
             focus:ring-indigo-500
@@ -55,6 +55,9 @@
 </template>
 
 <script setup lang="ts">
+import { useSlots } from 'vue';
+
+const slots = useSlots();
 const controlName = Math.random().toString(36).substring(2,10);
 
 const props = defineProps<{
