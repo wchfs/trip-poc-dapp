@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useWalletStore } from '@/stores/wallet';
+import LandingView from '@/views/Landing/LandingView.vue';
+import AppView from '@/views/App/AppView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,19 +10,38 @@ const router = createRouter({
     {
       path: '/',
       name: 'root',
-      component: () => import('../views/Auth/ConnectWallet.vue')
+      redirect: {
+        name: 'home',
+      },
+    },
+    {
+      path: '/home',
+      component: LandingView,
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('../views/Landing/Home/HomeView.vue'),
+        },
+      ],
     },
     {
       path: '/dapp',
       name: 'dapp',
+      component: AppView,
       redirect: {
         name: 'dapp.home',
       },
       children: [
         {
-          path: '',
+          path: 'home',
           name: 'dapp.home',
-          component: () => import('../views/DApp/DAppView.vue'),
+          component: () => import('../views/App/DApp/DAppView.vue'),
+        },
+        {
+          path: 'connect',
+          name: 'dapp.connect',
+          component: () => import('../views/App/Auth/ConnectWallet.vue'),
         },
         {
           path: 'tickets',
@@ -28,12 +49,12 @@ const router = createRouter({
             {
               path: 'my',
               name: 'dapp.tickets.my',
-              component: () => import('../views/Tickets/My/MyTicketsView.vue'),
+              component: () => import('../views/App/Tickets/My/MyTicketsView.vue'),
             },
             {
               path: 'validate',
               name: 'dapp.tickets.validate',
-              component: () => import('../views/Tickets/Validate/ValidateTicketsView.vue'),
+              component: () => import('../views/App/Tickets/Validate/ValidateTicketsView.vue'),
             },
           ],
         },
@@ -43,12 +64,12 @@ const router = createRouter({
             {
               path: 'my',
               name: 'dapp.zones.my',
-              component: () => import('../views/Zones/My/MyZonesView.vue'),
+              component: () => import('../views/App/Zones/My/MyZonesView.vue'),
             },
             {
               path: 'details/:zoneId(\\d+)',
               name: 'dapp.zones.my.details',
-              component: () => import('../views/Zones/Details/ZoneDetailsView.vue'),
+              component: () => import('../views/App/Zones/Details/ZoneDetailsView.vue'),
               props: true,
             },
           ],
@@ -68,12 +89,12 @@ const router = createRouter({
             {
               path: 'list',
               name: 'dapp.proposals.list',
-              component: () => import('../views/Proposals/List/ProposalListView.vue'),
+              component: () => import('../views/App/Proposals/List/ProposalListView.vue'),
             },
             {
               path: 'details/:id(\\d+)',
               name: 'dapp.proposals.details',
-              component: () => import('../views/Proposals/Details/ProposalDetailsView.vue'),
+              component: () => import('../views/App/Proposals/Details/ProposalDetailsView.vue'),
               props: true,
             },
           ],
@@ -88,7 +109,7 @@ const router = createRouter({
             {
               path: 'list',
               name: 'dapp.vouchers.list',
-              component: () => import('../views/Vouchers/List/VoucherListView.vue'),
+              component: () => import('../views/App/Vouchers/List/VoucherListView.vue'),
             }
           ]
         }
@@ -106,10 +127,10 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
     const toNameString = toName.toString();
 
     switch (true) {
-      case toNameString.startsWith('root'):
+      case toNameString === 'dapp.connect':
         await beforeRoot(to, from, next);
         break;
-      case toNameString.startsWith('dapp'):
+      case toNameString.startsWith('dapp') && toNameString !== 'dapp.connect':
         await beforeDApp(to, from, next);
         break;
       default:
@@ -135,7 +156,7 @@ async function beforeDApp(to: RouteLocationNormalized, from: RouteLocationNormal
 
   if (walletStore.connectedWallet === null && !await walletStore.tryConnectUsingPrevConnectedWallet()) {
     next({
-      name: 'root',
+      name: 'dapp.connect',
     });
   } else {
     next();

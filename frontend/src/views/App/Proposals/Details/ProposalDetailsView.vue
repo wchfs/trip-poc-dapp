@@ -154,9 +154,9 @@ import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { DateTime } from 'luxon';
 import TButton from '@/components/Controls/Button/TButton.vue';
-import ProposalDetailRow from '@/views/Proposals/Details/Partials/ProposalDetailRow.vue';
+import ProposalDetailRow from '@/views/App/Proposals/Details/Partials/ProposalDetailRow.vue';
 import type { Proposal, ProposalVote } from '@/interfaces/proposal';
-import ProposalVoteItem from '@/views/Proposals/Details/Partials/ProposalVoteItem.vue';
+import ProposalVoteItem from '@/views/App/Proposals/Details/Partials/ProposalVoteItem.vue';
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps<{

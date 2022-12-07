@@ -37,7 +37,7 @@ import { useParkingZoneStore } from "@/stores/parking-zone";
 import { watch } from "vue";
 import type { Error } from "@/interfaces/rollup-api";
 import Box from "@/components/Box/Box.vue";
-import DAppViewSidebarBuyTicket from "@/views/DApp/DAppViewSidebarBuyTicket.vue";
+import DAppViewSidebarBuyTicket from "@/views/App/DApp/DAppViewSidebarBuyTicket.vue";
 import { RollupService } from "@/services/rollup-service";
 import { gwei2eth } from "@/helpers/helpers";
 import { MapPinIcon, BanknotesIcon } from "@heroicons/vue/24/outline";

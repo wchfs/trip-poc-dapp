@@ -82,7 +82,7 @@ import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
 import { ref } from 'vue';
 import TButton from '@/components/Controls/Button/TButton.vue';
-import ZoneCreateCard from '@/views/Zones/My/Create/ZoneCreateCard.vue';
+import ZoneCreateCard from '@/views/App/Zones/My/Create/ZoneCreateCard.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import ParkingZoneInfoBox from '@/components/Box/Dedicated/ParkingZoneInfoBox.vue';
 import { useWalletStore } from '@/stores/wallet';

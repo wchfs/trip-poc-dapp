@@ -67,14 +67,14 @@
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
 import { ref } from 'vue';
-import ZoneDetailRow from '@/views/Zones/Details/Partials/ZoneDetailRow.vue';
+import ZoneDetailRow from '@/views/App/Zones/Details/Partials/ZoneDetailRow.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import { useWalletStore } from '@/stores/wallet';
 import { gwei2eth } from '@/helpers/helpers';
 import "leaflet/dist/leaflet.css";
 import type { Map } from 'leaflet';
-import ZoneActionButtons from '@/views/Zones/Details/Partials/ZoneActionButtons.vue';
+import ZoneActionButtons from '@/views/App/Zones/Details/Partials/ZoneActionButtons.vue';
 import router from '@/router';
 import GeoJsonMapPreviewBox from '@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue';
 

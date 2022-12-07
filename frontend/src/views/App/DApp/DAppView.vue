@@ -26,7 +26,7 @@
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
 import Map from '@/components/Map/Map.vue';
-import DAppViewSidebar from '@/views/DApp/DAppViewSidebar.vue';
+import DAppViewSidebar from '@/views/App/DApp/DAppViewSidebar.vue';
 import { useParkingZoneStore } from '@/stores/parking-zone';
 import { storeToRefs } from 'pinia';
 import ParkingZoneInfoBox from '@/components/Box/Dedicated/ParkingZoneInfoBox.vue';

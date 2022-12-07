@@ -45,7 +45,7 @@
 import Box from '@/components/Box/Box.vue';
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import { ref } from 'vue';
-import ProposalCreateCard from '@/views/Proposals/List/Create/ProposalCreateCard.vue';
+import ProposalCreateCard from '@/views/App/Proposals/List/Create/ProposalCreateCard.vue';
 import TButton from '@/components/Controls/Button/TButton.vue';
 
 const showForm = ref(false);

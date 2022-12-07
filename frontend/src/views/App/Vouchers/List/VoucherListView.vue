@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import BaseContainer from "@/components/Containers/BaseContainer.vue";
-import VoucherListItem from "@/views/Vouchers/List/VoucherListItem.vue";
+import VoucherListItem from "@/views/App/Vouchers/List/VoucherListItem.vue";
 import { useVoucherStore } from "@/stores/voucher";
 import { storeToRefs } from "pinia";
 import { onMounted } from "vue";

@@ -10,9 +10,7 @@
         <div class="w-3 h-3 bg-gray-500 rounded-full"></div>
       </div>
     </div>
-    <RouterView
-      v-else
-    />
+    <slot v-else />
   </main>
 </template>
 
@@ -34,7 +32,7 @@ watch(onboard.alreadyConnectedWallets, (newState, oldState) => {
     walletStore.clearLastConnectedWallet();
 
     router.push({
-      name: 'root',
+      name: 'dapp.connect',
     });
 
     return;

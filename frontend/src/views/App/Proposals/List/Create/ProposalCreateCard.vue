@@ -62,9 +62,9 @@
 </template>
 
 <script setup lang="ts">
-import ProposalChangeZonePriceForm from '@/views/Proposals/List/Create/Forms/ProposalChangeZonePriceForm.vue';
+import ProposalChangeZonePriceForm from '@/views/App/Proposals/List/Create/Forms/ProposalChangeZonePriceForm.vue';
 import { ref } from 'vue';
-import ProposalAddNewZoneForm from '@/views/Proposals/List/Create/Forms/ProposalAddNewZoneForm.vue';
+import ProposalAddNewZoneForm from '@/views/App/Proposals/List/Create/Forms/ProposalAddNewZoneForm.vue';
 import { useProposalStore } from '@/stores/proposal';
 import { storeToRefs } from 'pinia';
 import { gwei2eth } from '@/helpers/helpers';
