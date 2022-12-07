@@ -69,8 +69,11 @@ export const useParkingTicketStore = defineStore('parking-ticket', {
       }, price);
 
       transactionResponse.response.then((r) => {
-        this.waitingForNewTicket = false;
         this.addTicket(r.data);
+      }).catch((error) => {
+        console.log(error);
+      }).finally(() => {
+        this.waitingForNewTicket = false;
       });
     },
     addTicket(ticket: ParkingTicket) {

@@ -1,20 +1,21 @@
 import type {
   VoucherByEpochInputAndVoucherIndexQuery,
-  VoucherByEpochInputAndVoucherIndexQueryVariables,
+  VoucherByEpochInputAndVoucherIndexQueryVariables
 } from "@/generated/graphql";
 import { VoucherByEpochInputAndVoucherIndexDocument } from "@/generated/graphql";
-import { RollupService } from "@/services/rollup-service";
-import type { InspectResponseDecodedPayload } from "@/interfaces/rollup-api";
-import { defineStore } from "pinia";
+import type { RollupResponseDecodedPayload } from "@/interfaces/rollup-api";
 import type { Voucher } from "@/interfaces/voucher";
-import { useWalletStore } from "@/stores/wallet";
 import { ApolloService } from "@/services/apollo-service";
+import { RollupService } from "@/services/rollup-service";
+import { useWalletStore } from "@/stores/wallet";
 import type { GraphQLError } from "graphql";
+import { defineStore } from "pinia";
 
 const walletStore = useWalletStore();
 
 export const useVoucherStore = defineStore("voucher", {
   state: () => ({
+    waitingForVoucher: false as boolean,
     vouchers: [] as Voucher[],
   }),
   getters: {},
@@ -29,7 +30,7 @@ export const useVoucherStore = defineStore("voucher", {
 
       this.clearVouchers();
 
-      let result = null as InspectResponseDecodedPayload<Voucher[]>[] | null;
+      let result = null as RollupResponseDecodedPayload<Voucher[]>[] | null;
 
       try {
         result = await RollupService.inspect<Voucher[]>({
@@ -77,6 +78,29 @@ export const useVoucherStore = defineStore("voucher", {
     addVoucher(voucher: Voucher) {
       this.vouchers.push(voucher);
     },
+    async withdrawFunds(zoneId: number, amount: string): Promise<void> {
+      this.waitingForVoucher = true;
+
+      RollupService.addInput<{
+        errors: string[];
+      }>({
+        endpoint: "withdraw_funds",
+        payload: {
+          Balance: {
+            Withdraw: {
+              amount: amount,
+              zone_id: zoneId,
+            },
+          },
+        },
+      }).then(() => {
+        this.fetchVouchers(true);
+      }).catch((error) => {
+        console.log(error);
+      }).finally(() => {
+        this.waitingForVoucher = false;
+      });
+    },
     async checkVoucher(voucher_to_check: Voucher): Promise<Voucher> {
       const variables: VoucherByEpochInputAndVoucherIndexQueryVariables = {
         input_index: voucher_to_check.input_index,
@@ -108,7 +132,7 @@ export const useVoucherStore = defineStore("voucher", {
               if (
                 voucher_to_check.generated_voucher.proof &&
                 voucher_to_check.generated_voucher.proof?.machineStateHash !=
-                  "0x"
+                "0x"
               ) {
                 voucher_to_check.status = "approved";
               }

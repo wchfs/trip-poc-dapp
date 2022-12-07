@@ -59,6 +59,39 @@ query noticesByEpochAndInput($epoch_index: Int!, $input_index: Int!) {
   }
 }
 
+query noticesAndReportsByEpochAndInput($epoch_index: Int!, $input_index: Int!) {
+  epoch: epochI(index: $epoch_index) {
+    input(index: $input_index) {
+      reports {
+        nodes {
+          id
+          index
+          payload
+          input {
+            index
+            epoch {
+              index
+            }
+          }
+        }
+      }
+      notices {
+        nodes {
+          id
+          index
+          payload
+          input {
+            index
+            epoch {
+              index
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 query noticesByEpoch($epoch_index: Int!) {
   epoch: epochI(index: $epoch_index) {
     inputs {

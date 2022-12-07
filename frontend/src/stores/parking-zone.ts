@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import type { GeoJSON } from "geojson";
 import type { ParkingZone } from "@/interfaces/parking-zone";
+import type { RollupResponseDecodedPayload } from "@/interfaces/rollup-api";
 import { RollupService } from "@/services/rollup-service";
-import type { InspectResponseDecodedPayload } from "@/interfaces/rollup-api";
+import type { GeoJSON } from "geojson";
+import { defineStore } from "pinia";
 
 export const useParkingZoneStore = defineStore("parking-zone", {
   state: () => ({
@@ -69,7 +69,7 @@ export const useParkingZoneStore = defineStore("parking-zone", {
       this.clearZones();
 
       let result = null as
-        | InspectResponseDecodedPayload<ParkingZone[]>[]
+        | RollupResponseDecodedPayload<ParkingZone[]>[]
         | null;
 
       try {
@@ -110,10 +110,10 @@ export const useParkingZoneStore = defineStore("parking-zone", {
       zone_owner_address: string,
       price: string,
       geoJson: GeoJSON
-    ) {
+    ): Promise<void> {
       this.waitingForNewZone = true;
 
-      const result = await RollupService.addInput<ParkingZone>({
+      const transactionResponse = await RollupService.addInput<ParkingZone>({
         endpoint: "seed_zone",
         payload: {
           Seed: {
@@ -127,16 +127,16 @@ export const useParkingZoneStore = defineStore("parking-zone", {
         },
       });
 
-      result.response.then((zone) => {
-        this.waitingForNewZone = false;
-
+      transactionResponse.response.then((zone) => {
         this.addZone(zone.data);
+      }).catch((error) => {
+        console.error(error);
+      }).finally(() => {
+        this.waitingForNewZone = false;
       });
-
-      return result;
     },
     async deleteZone(zoneId: number): Promise<void> {
-      RollupService.addInput<{
+      const transactionResponse = await RollupService.addInput<{
         errors: string[];
       }>({
         endpoint: "remove_zone",
@@ -145,27 +145,14 @@ export const useParkingZoneStore = defineStore("parking-zone", {
             id: zoneId,
           },
         },
-      }).then((result) => {
-        this.fetchZones(true);
       });
-    },
-    async withdrawFunds(zoneId: number, amount: string): Promise<boolean> {
-      return RollupService.addInput<{
-        errors: string[];
-      }>({
-        endpoint: "withdraw_funds",
-        payload: {
-          Balance: {
-            Withdraw: {
-              amount: amount,
-              zone_id: zoneId,
-            },
-          },
-        },
-      }).then(() => {
-        return true;
-      }).catch(() => {
-        return false;
+
+      transactionResponse.response.then(() => {
+        // this.fetchZones(true);
+      }).catch((error) => {
+        console.error(error);
+      }).finally(() => {
+        this.fetchZones(true);
       });
     },
     setSelectedZoneId(zoneId: number | null) {

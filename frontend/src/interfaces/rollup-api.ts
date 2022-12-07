@@ -18,7 +18,7 @@ export enum CompletionStatus {
   TimeLimitExceeded = 'TimeLimitExceeded',
 }
 
-export type InspectResponseDecodedPayload<T> = {
+export type RollupResponseDecodedPayload<T> = {
   data: T,
   error: string | null,
   status: number,

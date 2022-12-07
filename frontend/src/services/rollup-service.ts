@@ -1,38 +1,33 @@
-import type { ContractReceipt, ContractTransaction } from 'ethers';
-import { ethers } from 'ethers';
-import type { InputAddedEvent } from '@cartesi/rollups/dist/src/types/contracts/interfaces/IInput';
-import type { ERC20PortalFacet, EtherPortalFacet, InputFacet, OutputFacet, } from "@cartesi/rollups";
+import {
+  Input,
+  Notice, NoticesAndReportsByEpochAndInputDocument,
+  NoticesAndReportsByEpochAndInputQuery,
+  NoticesAndReportsByEpochAndInputQueryVariables, Proof, Report, Voucher
+} from '@/generated/graphql';
+import { hex2str } from '@/helpers/helpers';
+import type {
+  AdvanceRequest,
+  Error as InspectError,
+  InspectRequest,
+  InspectResponse,
+  RollupResponseDecodedPayload
+} from '@/interfaces/rollup-api';
+import { ApolloService } from '@/services/apollo-service';
+import { useRollupStore } from '@/stores/rollup';
+import { useWalletStore } from '@/stores/wallet';
+import type { ERC20PortalFacet, EtherPortalFacet, InputFacet, OutputFacet } from "@cartesi/rollups";
 import {
   ERC20PortalFacet__factory,
   EtherPortalFacet__factory,
   InputFacet__factory,
   OutputFacet__factory
 } from '@cartesi/rollups';
-import type {
-  Input,
-  Notice,
-  NoticesByEpochAndInputQuery,
-  NoticesByEpochAndInputQueryVariables,
-  Proof,
-  Voucher
-} from '@/generated/graphql';
-import { 
-  NoticesByEpochAndInputDocument
-} from '@/generated/graphql';
-import type { GraphQLError } from 'graphql';
-import type {
-  AdvanceRequest,
-  Error as InspectError,
-  InspectRequest,
-  InspectResponse,
-  InspectResponseDecodedPayload,
-  Report
-} from '@/interfaces/rollup-api';
-import { ApolloService } from '@/services/apollo-service';
-import { useWalletStore } from '@/stores/wallet';
-import fetch from 'cross-fetch';
-import { hex2str } from '@/helpers/helpers';
+import type { InputAddedEvent } from '@cartesi/rollups/dist/src/types/contracts/interfaces/IInput';
 import type { Event } from '@ethersproject/contracts/src.ts';
+import fetch from 'cross-fetch';
+import type { ContractReceipt, ContractTransaction } from 'ethers';
+import { ethers } from 'ethers';
+import type { GraphQLError } from 'graphql';
 
 export interface InputKeys {
   epoch_index: number;
@@ -57,12 +52,17 @@ export type PartialInput = PartialEpoch & { epoch: PartialEpoch };
 export type PartialNotice = Pick<Notice, "__typename" | "id" | "index" | "payload"> & {
   input: PartialInput;
 };
+export type PartialReport = Pick<Report, "__typename" | "id" | "index" | "payload"> & {
+  input: PartialInput;
+};
 export type PartialVoucher = Pick<Voucher, "__typename" | "destination" | "id" | "index" | "payload"> & {
   proof?: Proof | null;
 };
 
 export abstract class RollupService {
   private static contracts?: RollupsContracts;
+
+  private static rollupStore = useRollupStore();
 
   public static setContracts(contracts: RollupsContracts) {
     this.contracts = contracts;
@@ -84,7 +84,7 @@ export abstract class RollupService {
     return !!this.contracts;
   }
 
-  public static getRollupAddress(key: string): string {    
+  public static getRollupAddress(key: string): string {
     const addresses: {
       [key: string]: string,
     } = {
@@ -136,57 +136,57 @@ export abstract class RollupService {
   public static async addInput<T>(
     payload: AdvanceRequest,
     deposit: string | null = null,
-  ): Promise<ContractTransactionResponse<InspectResponseDecodedPayload<T>>> {
+  ): Promise<ContractTransactionResponse<RollupResponseDecodedPayload<T>>> {
     const payloadBytes = ethers.utils.isBytesLike(payload)
       ? payload
       : ethers.utils.toUtf8Bytes(JSON.stringify(payload));
-    
+
     const transaction = deposit === null
       ? await RollupService.getContracts().inputContract.addInput(payloadBytes)
-      : await RollupService.getContracts().etherContract.etherDeposit(
-        payloadBytes, {
-          value: ethers.utils.parseEther(deposit)
-        }
-      );
-    
+      : await RollupService.getContracts().etherContract.etherDeposit(payloadBytes, {
+        value: ethers.utils.parseEther(deposit)
+      });
+
     const receipt = await transaction.wait(1);
 
     return new Promise((resolve) => {
       resolve({
         transaction,
         receipt,
-        response: new Promise<InspectResponseDecodedPayload<T>>(async (resolve) => {
-          const keys = deposit === null
-            ? RollupService.getInputKeysFromAdvanceReceipt(receipt)
-            : RollupService.getInputKeysFromDepositReceipt(receipt);
+        response: new Promise<RollupResponseDecodedPayload<T>>(async (resolve, reject) => {
+          const keys = (deposit === null) ? RollupService.getInputKeysFromAdvanceReceipt(receipt) : RollupService.getInputKeysFromDepositReceipt(receipt);
 
           const intervalId = setInterval(async () => {
-            const variables: NoticesByEpochAndInputQueryVariables = {
+            const variables: NoticesAndReportsByEpochAndInputQueryVariables = {
               input_index: keys.input_index,
               epoch_index: keys.epoch_index,
             };
 
-            ApolloService.getClient().query<NoticesByEpochAndInputQuery, NoticesByEpochAndInputQueryVariables>({
+            ApolloService.getClient().query<NoticesAndReportsByEpochAndInputQuery, NoticesAndReportsByEpochAndInputQueryVariables>({
               fetchPolicy: 'no-cache',
-              query: NoticesByEpochAndInputDocument,
+              query: NoticesAndReportsByEpochAndInputDocument,
               variables,
             }).then((response) => {
               if (response?.data?.epoch?.input?.notices) {
-                const notice = response
-                  .data
-                  .epoch
-                  .input
-                  .notices
-                  .nodes
-                  .filter<PartialNotice>((n: PartialNotice | null): n is PartialNotice => n !== null)[0];
+                const notice = response.data.epoch.input.notices.nodes.filter<PartialNotice>((n: PartialNotice | null): n is PartialNotice => n !== null)[0];
+                const report = response.data.epoch.input.reports.nodes.filter<PartialReport>((n: PartialReport | null): n is PartialReport => n !== null)[0];
 
-                if (!notice) {
+                if (!notice && !report) {
                   return;
                 }
 
                 clearInterval(intervalId);
-                const decodedNoticePayload = ethers.utils.toUtf8String(notice.payload);
-                resolve(JSON.parse(decodedNoticePayload) as InspectResponseDecodedPayload<T>);
+
+                if (notice) {
+                  const decodedNoticePayload = JSON.parse(ethers.utils.toUtf8String(notice.payload)) as RollupResponseDecodedPayload<T>;
+
+                  return resolve(decodedNoticePayload);
+                }
+
+                const decodedReportPayload = JSON.parse(ethers.utils.toUtf8String(report.payload)) as RollupResponseDecodedPayload<T>;
+                this.rollupStore.addError(decodedReportPayload.error);
+
+                return reject(decodedReportPayload);
               }
             }).catch((error: GraphQLError) => {
               console.log(error.message);
@@ -197,7 +197,7 @@ export abstract class RollupService {
     });
   }
 
-  public static async inspect<T>(params: InspectRequest): Promise<InspectResponseDecodedPayload<T>[]> {
+  public static async inspect<T>(params: InspectRequest): Promise<RollupResponseDecodedPayload<T>[]> {
     const url = import.meta.env.VITE_APP_INSPECT_ENDPOINT;
     const response = await fetch(`${url}/${JSON.stringify(params)}`);
 
@@ -211,7 +211,7 @@ export abstract class RollupService {
 
       response.json().then((r: InspectResponse) => {
         const decodedReports = r.reports.map((report: Report) => {
-          return JSON.parse(hex2str(report.payload)) as InspectResponseDecodedPayload<T>;
+          return JSON.parse(hex2str(report.payload)) as RollupResponseDecodedPayload<T>;
         });
 
         resolve(decodedReports);

@@ -60,10 +60,6 @@ const menuItems = ref<MenuItem[]>([
     routeName: "dapp.tickets.validate",
   },
   {
-    displayName: "Proposals",
-    routeName: "dapp.proposals",
-  },
-  {
     displayName: "Vouchers",
     routeName: "dapp.vouchers",
   },

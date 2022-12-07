@@ -9,7 +9,7 @@
           justify-center
         "
       >
-        <p v-if="waitingForNewTicket" class="text-indigo-900 text-center">
+        <p v-if="waitingForNewTicket" class="text-indigo-900 text-center animate-pulse">
           Some ticket is already on the way, please wait...
         </p>
         <p v-else class="text-indigo-900 text-center">

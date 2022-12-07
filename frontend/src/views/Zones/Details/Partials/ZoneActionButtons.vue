@@ -9,7 +9,11 @@
     <BanknotesIcon class="h-4 w-4 text-white" />
     <span class="pl-1"> Generate voucher </span>
   </TButton>
-  <TButton class="px-3" color="red" @click="showDeleteDialog()">
+  <TButton
+    class="px-3"
+    color="red"
+    @click="showDeleteDialog()"
+  >
     <TrashIcon class="h-4 w-4 text-white" />
     <span class="pl-1"> Delete zone </span>
   </TButton>
@@ -17,24 +21,26 @@
 
 <script setup lang="ts">
 import TButton from "@/components/Controls/Button/TButton.vue";
+import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
+import { gwei2eth } from "@/helpers/helpers";
+import type { ParkingZone } from "@/interfaces/parking-zone";
+import router from "@/router";
+import { useParkingZoneStore } from "@/stores/parking-zone";
+import { useVoucherStore } from "@/stores/voucher";
 import { BanknotesIcon } from "@heroicons/vue/20/solid";
 import {
   IdentificationIcon,
   QuestionMarkCircleIcon,
-  TrashIcon,
+  TrashIcon
 } from "@heroicons/vue/24/outline";
-import type { ParkingZone } from "@/interfaces/parking-zone";
-import { useParkingZoneStore } from "@/stores/parking-zone";
-import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
 import { ref } from "vue";
-import router from "@/router";
-import { gwei2eth } from "@/helpers/helpers";
 
 const props = defineProps<{
   zone: ParkingZone;
 }>();
 
 const parkingZoneStore = useParkingZoneStore();
+const voucherStore = useVoucherStore();
 
 const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 
@@ -85,33 +91,10 @@ async function deleteZone() {
 }
 
 async function withdrawFunds() {
-  parkingZoneStore
-    .withdrawFunds(props.zone.id, props.zone.balance ?? "0")
-    .then((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-      confirmDialogRef.value?.open(
-        {
-          confirmed: () => {
-            return router.push({
-              name: "dapp.vouchers.list",
-            });
-          },
-          canceled: () => {
-            return router.push({
-              name: "dapp.zones.my",
-            });
-          },
-        },
-        {
-          title: "Voucher is generated",
-          message: "Status is available on the Voucher list",
-          icon: IdentificationIcon,
-          color: "green",
-          confirmButtonText: "Take me there",
-        }
-      );
-    });
+  router.push({
+    name: 'dapp.vouchers.list',
+  });
+
+  voucherStore.withdrawFunds(props.zone.id, props.zone.balance ?? "0");
 }
 </script>

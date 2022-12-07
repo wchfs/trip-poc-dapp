@@ -9,7 +9,7 @@
           justify-center
         "
       >
-        <p v-if="parkingZoneStore.waitingForNewZone" class="text-orange-700 text-center">
+        <p v-if="parkingZoneStore.waitingForNewZone" class="text-orange-700 text-center animate-pulse">
           Your new parking zone is already on the way, please wait...
         </p>
         <p v-else class="text-indigo-900 text-center">

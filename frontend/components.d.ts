@@ -10,11 +10,13 @@ declare module '@vue/runtime-core' {
     BaseContainer: typeof import('./src/components/Containers/BaseContainer.vue')['default']
     Box: typeof import('./src/components/Box/Box.vue')['default']
     ConfirmDialog: typeof import('./src/components/Dialogs/ConfirmDialog.vue')['default']
+    copy: typeof import('./src/components/Containers/MainContainer copy.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
+    ElProgress: typeof import('element-plus/es')['ElProgress']
     ElTimeSelect: typeof import('element-plus/es')['ElTimeSelect']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     FooterContainer: typeof import('./src/components/Containers/FooterContainer.vue')['default']
@@ -23,6 +25,7 @@ declare module '@vue/runtime-core' {
     MainContainer: typeof import('./src/components/Containers/MainContainer.vue')['default']
     Map: typeof import('./src/components/Map/Map.vue')['default']
     NavMenu: typeof import('./src/components/Nav/NavMenu.vue')['default']
+    NotificationContainer: typeof import('./src/components/Containers/NotificationContainer.vue')['default']
     ParkingTicketBox: typeof import('./src/components/ParkingTicket/ParkingTicketBox.vue')['default']
     ParkingZoneInfoBox: typeof import('./src/components/Box/Dedicated/ParkingZoneInfoBox.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
@@ -32,5 +35,6 @@ declare module '@vue/runtime-core' {
     TInput: typeof import('./src/components/Controls/Input/TInput.vue')['default']
     TInputDropZone: typeof import('./src/components/Controls/Input/TInputDropZone.vue')['default']
     TInputLeftSide: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue')['default']
+    TNotification: typeof import('./src/components/Common/TNotification/TNotification.vue')['default']
   }
 }

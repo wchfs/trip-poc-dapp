@@ -59,6 +59,11 @@ const router = createRouter({
           redirect: {
             name: 'dapp.proposals.list',
           },
+          beforeEnter: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+            next({
+              name: 'root',
+            });
+          },
           children: [
             {
               path: 'list',

@@ -1,5 +1,30 @@
 <template>
   <BaseContainer>
+    <Box
+      additionalClass="col-span-3 border border-indigo-600 mb-5"
+    >
+      <div
+        class="
+          flex
+          justify-center
+        "
+      >
+        <p v-if="voucherStore.waitingForVoucher" class="text-indigo-900 text-center animate-pulse">
+          Some voucher is already on the way, please wait...
+        </p>
+        <p v-else class="text-indigo-900 text-center">
+          If you do not see your just-generated voucher, wait a moment and then hit
+          <ElButton
+            type="success"
+            @click="voucherStore.fetchVouchers(true)"
+          >
+            reload vouchers
+          </ElButton>
+        </p>
+      </div>
+    </Box>
+  </BaseContainer>
+  <BaseContainer>
     <VoucherListItem
       v-for="voucher of vouchers"
       :key="voucher.id"
