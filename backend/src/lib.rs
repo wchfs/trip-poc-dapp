@@ -2,11 +2,15 @@
 extern crate diesel_migrations;
 extern crate dotenv;
 
-pub mod core;
 pub mod models;
 pub mod router;
 pub mod schema;
 pub mod structures;
+pub mod zone_module;
+pub mod ticket_module;
+pub mod helper;
+pub mod balance_module;
+pub mod voucher_module;
 
 use diesel::prelude::*;
 use dotenv::dotenv;
