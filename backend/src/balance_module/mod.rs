@@ -149,11 +149,9 @@ pub fn withdraw_funds(
     let mut payload = ETHER_WITHDRAWAL_HEADER.as_slice().to_vec();
     payload.append(&mut data);
 
-    let encoded_payload = hex::encode(payload);
-
     remove_funds_from_balance(withdraw_struct.amount, &withdraw_struct.zone_id)?;
 
     return Ok(object! {
-        "data": format!("0x{}", encoded_payload)
+        "data": payload
     });
 }

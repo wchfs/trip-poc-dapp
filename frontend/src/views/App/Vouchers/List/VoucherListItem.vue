@@ -95,8 +95,9 @@ async function execute() {
       proof
     )
     .then(async (tx) => {
+      console.log(tx);
       const receipt = await tx.wait();
-
+      console.log(receipt);
       console.log(`voucher executed! (tx="${tx.hash}")`);
 
       if (receipt.events) {
