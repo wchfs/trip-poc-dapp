@@ -136,9 +136,9 @@ pub fn withdraw_funds(
 
     let address_token = ethabi::Token::Address(parsed_address);
     
-    let uint_parsed_token = ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount)?;
+    let uint_parsed_token = ethabi::ethereum_types::U256::from_dec_str(&withdraw_struct.amount)?;
     
-    let amount_token = ethabi::Token::Uint(uint_parsed_token);
+    let amount_token = ethabi::Token::Uint(uint_parsed_token * GWEI_TO_WEI_FACTOR);
 
     let withdrawal_data = ethabi::encode(&[address_token, amount_token]);
 
