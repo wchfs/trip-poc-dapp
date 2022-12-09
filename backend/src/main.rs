@@ -156,46 +156,37 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
 
     let mut response_type = response_type_handler(&route);
 
-    let output_payload: JsonValue = match router(route, &data) {
+    let output_payload: String = match router(route, &data) {
         Ok(data) => {
             if matches!(response_type, ResponseType::Voucher) {
-                data["data"].clone()
+                data["data"].to_string()
             } else {
-                object! {
+                format!("0x{}", hex::encode(object! {
                     "status" => StatusCode::OK.as_u16(),
                     "data" => data["data"].clone(),
                     "error" => json::Null,
-                }
+                }.to_string()))
+                
             }
         }
         Err(err) => {
             status = ResponseStatus::Reject;
             response_type = ResponseType::Report;
 
-            object! {
+            format!("0x{}", hex::encode(object! {
                 "status" => StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
                 "data" => json::Null,
                 "error" => err.to_string(),
-            }
-        }
-    };
-
-    let formatted_output = match response_type {
-        ResponseType::Voucher => output_payload.to_string(),
-        _ => {
-            let stringify_payload = output_payload.to_string();
-
-            format!("0x{}", hex::encode(stringify_payload))
+            }.to_string()))
         }
     };
     
-
     return Ok(object! {
         "address" => get_db_env_var(ROLLUP_ADDRESS),
         "requested_by" => data.address,
         "epoch_index" => data.request["data"]["metadata"]["epoch_index"].as_i32(),
         "input_index" => data.request["data"]["metadata"]["input_index"].as_i32(),
-        "payload" => formatted_output,
+        "payload" => output_payload,
         "status" => status.to_string(),
         "response_type" => response_type,
     });
