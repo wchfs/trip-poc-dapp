@@ -137,7 +137,7 @@ pub fn withdraw_funds(
     let address_token = ethabi::Token::Address(parsed_address);
     
     let uint_parsed_token = ethabi::ethereum_types::U256::from_str(&withdraw_struct.amount)?;
-
+    
     let amount_token = ethabi::Token::Uint(uint_parsed_token);
 
     let withdrawal_data = ethabi::encode(&[address_token, amount_token]);
@@ -149,9 +149,11 @@ pub fn withdraw_funds(
     let mut payload = ETHER_WITHDRAWAL_HEADER.as_slice().to_vec();
     payload.append(&mut data);
 
+    let encoded_payload = hex::encode(payload);
+
     remove_funds_from_balance(withdraw_struct.amount, &withdraw_struct.zone_id)?;
 
     return Ok(object! {
-        "data": payload
+        "data": format!("0x{}", encoded_payload)
     });
 }

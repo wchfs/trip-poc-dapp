@@ -82,9 +82,9 @@ pub async fn handle_advance(
     request: JsonValue,
 ) -> Result<String, Box<dyn std::error::Error>> {
     println!("Received advance request data {}", &request);
-
+    
     let request_input = handle_input(request);
-
+    
     let input = match abi_decoder(&request_input) {
         Ok(deposit) => deposit,
         Err(_) => request_input,
@@ -180,9 +180,15 @@ fn handle_output(route: Route, data: StandardInput) -> Result<JsonValue, Box<dyn
         }
     };
 
-    let stringify_payload = output_payload.to_string();
+    let formatted_output = match response_type {
+        ResponseType::Voucher => output_payload.to_string(),
+        _ => {
+            let stringify_payload = output_payload.to_string();
 
-    let formatted_output = format!("0x{}", hex::encode(stringify_payload));
+            format!("0x{}", hex::encode(stringify_payload))
+        }
+    };
+    
 
     return Ok(object! {
         "address" => get_db_env_var(ROLLUP_ADDRESS),
