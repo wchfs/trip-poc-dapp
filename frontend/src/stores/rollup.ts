@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import 'element-plus/es/components/notification/style/css';
 
 export const useRollupStore = defineStore('rollup', {
   state: () => ({

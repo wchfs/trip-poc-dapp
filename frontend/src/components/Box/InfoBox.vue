@@ -1,41 +1,27 @@
 <template>
-  <Box
-    :additionalClass="props.additionalClass"
-  >
-    <div
-      class="
+  <Box :additionalClass="props.additionalClass">
+    <div class="
         flex
         flex-row
         justify-between
         items-start
         my-auto
-      "
-    >
+      ">
       <div class="flex flex-col overflow-hidden">
         <p class="text-xs text-gray-600 tracking-wide">
           {{ props.topText }}
         </p>
-        <h3
-          :class="`
-            mt-1
-            text-lg
-            ${props.textColor}
-            text-ellipsis
-            overflow-hidden
-            whitespace-nowrap
-          `"
-        >
-          <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="props.featuredText"
-            placement="bottom"
-          >
-            {{ props.featuredText }}
-          </el-tooltip>
+        <h3 :class="`
+          mt-1
+          text-lg
+          ${props.textColor}
+          text-ellipsis
+          overflow-hidden
+          whitespace-nowrap
+        `">
+          {{ props.featuredText }}
         </h3>
-        <span
-          class="
+        <span class="
             mt-4
             text-xs
             text-gray-500
@@ -43,8 +29,7 @@
             overflow-hidden
             whitespace-nowrap
             cursor-pointer
-          "
-        >
+          ">
           {{ props.bottomText }}
         </span>
       </div>
@@ -64,7 +49,7 @@
         <i
           v-if="typeof icon === 'string' || icon instanceof String"
           :class="`
-            ${ icon }
+            ${icon}
             w-auto
             h-7
             w-7

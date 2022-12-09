@@ -1,25 +1,27 @@
 <template>
   <BaseContainer>
-    <Box
-      additionalClass="col-span-3 border border-indigo-600 mb-5"
-    >
-      <div
-        class="
+    <Box additionalClass="col-span-3 border border-indigo-600 mb-5">
+      <div class="
           flex
           justify-center
-        "
-      >
-        <p v-if="voucherStore.waitingForVoucher" class="text-indigo-900 text-center animate-pulse">
+        ">
+        <p
+          v-if="voucherStore.waitingForVoucher"
+          class="text-indigo-900 text-center animate-pulse"
+        >
           Some voucher is already on the way, please wait...
         </p>
-        <p v-else class="text-indigo-900 text-center">
+        <p
+          v-else
+          class="text-indigo-900 text-center"
+        >
           If you do not see your just-generated voucher, wait a moment and then hit
-          <ElButton
-            type="success"
+          <TButton
             @click="voucherStore.fetchVouchers(true)"
+            color="green"
           >
             reload vouchers
-          </ElButton>
+          </TButton>
         </p>
       </div>
     </Box>
@@ -36,10 +38,12 @@
 
 <script setup lang="ts">
 import BaseContainer from "@/components/Containers/BaseContainer.vue";
-import VoucherListItem from "@/views/App/Vouchers/List/VoucherListItem.vue";
+import TButton from "@/components/Controls/Button/TButton.vue";
 import { useVoucherStore } from "@/stores/voucher";
+import VoucherListItem from "@/views/App/Vouchers/List/VoucherListItem.vue";
 import { storeToRefs } from "pinia";
 import { onMounted } from "vue";
+import Box from "@/components/Box/Box.vue";
 
 const voucherStore = useVoucherStore();
 const { vouchers } = storeToRefs(voucherStore);

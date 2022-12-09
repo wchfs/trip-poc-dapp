@@ -1,42 +1,40 @@
 <template>
   <BaseContainer>
-    <Box
-      additionalClass="col-span-3 border border-orange-500 mb-5"
-    >
-      <div
-        class="
+    <Box additionalClass="col-span-3 border border-orange-500 mb-5">
+      <div class="
           flex
           justify-center
-        "
-      >
-        <p v-if="parkingZoneStore.waitingForNewZone" class="text-orange-700 text-center animate-pulse">
+        ">
+        <p
+          v-if="parkingZoneStore.waitingForNewZone"
+          class="text-orange-700 text-center animate-pulse"
+        >
           Your new parking zone is already on the way, please wait...
         </p>
-        <p v-else class="text-indigo-900 text-center">
+        <p
+          v-else
+          class="text-indigo-900 text-center"
+        >
           If you do not see your just-created parking zone, wait a moment and then hit
-          <ElButton
-            type="success"
+          <TButton
             @click="parkingZoneStore.fetchZones(true)"
+            color="green"
           >
             reload zones
-          </ElButton>
+          </TButton>
         </p>
       </div>
     </Box>
   </BaseContainer>
   <BaseContainer>
-    <Box
-      additionalClass="col-span-3 p-0 mb-6"
-    >
-      <div
-        :class="`
-          ${showForm ? 'border-b border-gray-200' : ''}
-          bg-white
-          px-4
-          py-5
-          sm:px-6
-        `"
-      >
+    <Box additionalClass="col-span-3 p-0 mb-6">
+      <div :class="`
+        ${showForm ? 'border-b border-gray-200' : ''}
+        bg-white
+        px-4
+        py-5
+        sm:px-6
+      `">
         <div class="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
           <div class="ml-4 mt-4">
             <h3 class="text-lg font-medium leading-6 text-gray-900">Create new parking zone</h3>
@@ -60,7 +58,7 @@
         v-if="showForm"
         class="py-6 px-6 md:py-10 md:px-10"
       >
-        <ZoneCreateCard @cancel="showForm = false"/>
+        <ZoneCreateCard @cancel="showForm = false" />
       </div>
     </Box>
   </BaseContainer>
@@ -77,7 +75,6 @@
 </template>
 
 <script setup lang="ts">
-import 'element-plus/es/components/alert/style/css';
 import BaseContainer from '@/components/Containers/BaseContainer.vue';
 import Box from '@/components/Box/Box.vue';
 import { ref } from 'vue';

@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { useRollupStore } from '@/stores/rollup';
-import type TNotification from '../Common/TNotification/TNotification.vue';
+import TNotification from '../Common/TNotification/TNotification.vue';
 
 const rollupStore = useRollupStore();
 </script>

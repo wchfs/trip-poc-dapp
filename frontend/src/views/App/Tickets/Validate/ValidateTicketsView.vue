@@ -47,6 +47,8 @@ import { useRollupStore } from "@/stores/rollup";
 import { DateTime } from "luxon";
 import type { Ref } from "vue";
 import { reactive, ref } from "vue";
+import TButton from "@/components/Controls/Button/TButton.vue";
+import TInput from "@/components/Controls/Input/TInput.vue";
 
 const validateTicketForm = reactive({
   plate_number: "",

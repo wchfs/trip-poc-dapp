@@ -19,6 +19,7 @@
             v-model="newZone.owner_address"
             type="text"
             placeholder="Your wallet address..."
+            error="You must be the owner of the zone."
           >
             <template #label> Zone owner wallet address </template>
           </TInput>
