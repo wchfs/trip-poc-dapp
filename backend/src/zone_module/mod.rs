@@ -2,7 +2,7 @@ use crate::diesel::prelude::*;
 use crate::{establish_connection, helper, balance_module};
 use crate::models::{Zone};
 use crate::structures::*;
-use geo::{Contains, Coordinate, Point};
+use geo::{Contains, Coord, Point};
 use geo_types::GeometryCollection;
 use geojson::{quick_collection, GeoJson};
 use json::{object, JsonValue};
@@ -46,7 +46,7 @@ pub fn check_point_in_zone(point: GeoPoint) -> Result<JsonValue, Box<dyn Error>>
 }
 
 fn point_mapper(point: GeoPoint) -> Point {
-    return Point(Coordinate {
+    return Point(Coord {
         x: point.longitude,
         y: point.latitude,
     });

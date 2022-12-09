@@ -1,6 +1,7 @@
 use crate::diesel::prelude::*;
 use crate::establish_connection;
 use crate::structures::*;
+use chrono::LocalResult;
 use chrono::prelude::*;
 use std::error::Error;
 
@@ -25,7 +26,14 @@ fn parse_request_timestamp(data: &StandardInput) -> Result<DateTime<Utc>, Box<dy
         }
     };
 
-    return Ok(Utc.timestamp(timestamp, 0));
+    let timezone: LocalResult<DateTime<Utc>> = Utc.timestamp_opt(timestamp, 0);
+
+    match timezone.single() {
+        Some(datetime) => return Ok(datetime),
+        _ => Err(Box::new(ErrorOutput {
+            error: "Unsuccessful timestamp conversion".into(),
+        })),
+    }
 }
 
 pub fn super_wallet_validator(sender_address: String) -> Result<bool, Box<dyn Error>> {
