@@ -5,7 +5,7 @@
   >
     <Dialog
       as="div"
-      class="relative z-10"
+      class="relative z-[1000]"
       @close="close()"
     >
       <TransitionChild
@@ -23,7 +23,7 @@
       </TransitionChild>
 
       <div
-        class="fixed inset-0 z-10 overflow-y-auto"
+        class="fixed inset-0 z-auto overflow-y-auto"
       >
         <div
           class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"

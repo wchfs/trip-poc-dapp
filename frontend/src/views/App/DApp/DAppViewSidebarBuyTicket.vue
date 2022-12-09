@@ -1,140 +1,106 @@
 <template>
-  <ConfirmDialog
-    ref="confirmDialogRef"
-  />
-  <ElForm
-    @submit.prevent
-    ref="addTicketFormRef"
-    :model="addTicketForm"
-    :rules="rules"
-    size="large"
-  >
+  <ConfirmDialog ref="confirmDialogRef" />
+  <form @submit.prevent="submitForm()">
     <div class="flex flex-col">
-      <div class="flex flex-row md:flex-col lg:flex-row">
-        <ElFormItem
-          prop="date"
-        >
-          <ElDatePicker
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-row gap-2">
+          <TInput
+            type="text"
             v-model="addTicketForm.date"
-            type="datetime"
-            placeholder="Start at"
-            format="YYYY-MM-DD HH:mm"
-          />
-        </ElFormItem>
-        <ElFormItem
-          prop="duration"
-        >
-          <ElTimeSelect
+            size="sm"
+            :disabled="true"
+          >
+            <template #left>
+              <TInputLeftSide
+                size="sm"
+                :disabled="true"
+              >
+                Start
+              </TInputLeftSide>
+            </template>
+          </TInput>
+          <TSelect
+            class="grow"
             v-model="addTicketForm.duration"
-            start="00:15"
-            end="23:45"
-            step="00:15"
             placeholder="Duration"
+            :items="durationItems"
+            size="sm"
           />
-        </ElFormItem>
-      </div>
-      <div class="flex flex-row items-stretch justify-between gap-3">
-        <ElFormItem
-          class="grow"
-          prop="plate_number"
-        >
-          <ElInput
-            v-model="addTicketForm.plate_number"
+        </div>
+        <div class="flex flex-col md:flex-row gap-2">
+          <TInput
+            class="grow"
+            type="text"
             placeholder="Plate number"
-            :clearable="true"
-            :formatter="(value) => formatPlateNumber(value)"
-            :parser="(value) => formatPlateNumber(value)"
+            v-model="addTicketForm.plate_number"
+            size="sm"
+            :required="true"
+            :inputCallback="formatPlateNumber"
           />
-        </ElFormItem>
-        <ElFormItem>
           <TButton
             class="grow"
             color="indigo"
-            type="button"
-            @click="submitForm(addTicketFormRef)"
+            type="submit"
           >
             Buy ticket
           </TButton>
-        </ElFormItem>
+        </div>
       </div>
     </div>
-  </ElForm>
+  </form>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import type { FormInstance, FormRules } from 'element-plus';
-import { useLocationStore } from '@/stores/location';
-import { useParkingZoneStore } from '@/stores/parking-zone';
-import 'element-plus/es/components/message-box/style/css';
-import { DateTime } from 'luxon';
-import { useParkingTicketStore } from '@/stores/parking-ticket';
-import router from '@/router';
-import type { ParkingZone } from '@/interfaces/parking-zone';
-import { useWalletStore } from '@/stores/wallet';
-import { gwei2eth } from '@/helpers/helpers';
-import { BigNumber } from 'ethers';
 import TButton from '@/components/Controls/Button/TButton.vue';
+import TInputLeftSide from '@/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue';
+import TInput from '@/components/Controls/Input/TInput.vue';
+import TSelect, { SelectOption } from '@/components/Controls/Select/TSelect.vue';
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
+import { gwei2eth } from '@/helpers/helpers';
+import type { ParkingZone } from '@/interfaces/parking-zone';
+import router from '@/router';
+import { useLocationStore } from '@/stores/location';
+import { useParkingTicketStore } from '@/stores/parking-ticket';
+import { useParkingZoneStore } from '@/stores/parking-zone';
+import { useWalletStore } from '@/stores/wallet';
 import { TicketIcon } from '@heroicons/vue/24/outline';
+import { BigNumber } from 'ethers';
+import { range } from 'lodash';
+import { DateTime } from 'luxon';
+import { onMounted, reactive, ref } from 'vue';
 
 const locationStore = useLocationStore();
 const parkingZoneStore = useParkingZoneStore();
 const parkingTicketStore = useParkingTicketStore();
 
-const addTicketFormRef = ref<FormInstance>();
-
 const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 
 const addTicketForm = reactive({
-  date: DateTime.now().toJSDate(),
+  date: DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss'),
   duration: '01:00',
   plate_number: '',
 });
 
-const rules = reactive<FormRules>({
-  date: [
-    {
-      type: 'date',
-      required: true,
-      message: 'Please pick a date',
-      trigger: 'change',
-    },
-  ],
-  duration: [
-    {
-      required: true,
-      message: 'Please pick a duration',
-      trigger: 'change',
-    },
-  ],
-  plate_number: [
-    {
-      required: true,
-      message: 'Please enter your plate number',
-      trigger: 'change',
-    },
-    {
-      min: 3,
-      max: 10,
-      message: 'Length should be 3 to 10',
-      trigger: 'blur',
-    },
-  ],
+const durationItems = range(1, 23).map<SelectOption>((hour) => {
+  const hourString = hour < 10 ? `0${hour}` : hour.toString();
+
+  return {
+    value: `${hourString}:00`,
+    label: `${hourString}:00`,
+  };
 });
 
-const submitForm = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
+const dateFormat = 'yyyy-MM-dd HH:mm:ss';
 
-  await formEl.validate((valid, fields) => {
-    if (!valid) {
-      console.log('error submit!', fields);
+onMounted(() => {
+  setInterval(() => {
+    addTicketForm.date = DateTime.now().toFormat(dateFormat);
+  }, 1000);
+});
 
-      return;
-    }
 
-    sendToRollup();
-  })
+const submitForm = async () => {
+  sendToRollup();
 };
 
 const sendToRollup = async () => {
@@ -162,14 +128,14 @@ const sendToRollup = async () => {
     color: 'green',
     icon: TicketIcon,
     title: 'Buy ticket',
-    message: `You should pay ${ price } ETH. Continue?`,
+    message: `You should pay ${price} ETH. Continue?`,
     confirmButtonText: 'Yes, buy ticket',
     cancelButtonText: 'Cancel',
   });
 };
 
 const executeDepositConfirmed = (duration: number, price: string) => {
-  const startDate = DateTime.fromJSDate(addTicketForm.date);
+  const startDate = DateTime.fromFormat(addTicketForm.date, dateFormat);
 
   const selectedZone = parkingZoneStore.selectedZone;
   const walletAddress = useWalletStore().walletAddress;
@@ -211,7 +177,11 @@ function getDurationFromTimeString(time: string): number {
   return (hours * 60) + minutes;
 }
 
-function formatPlateNumber(value: string) {
+const formatPlateNumber = (value?: string): string => {
+  if (!value) {
+    return '';
+  }
+
   return value.toUpperCase().replace(/[\W_]+/g, '');
-}
+};
 </script>

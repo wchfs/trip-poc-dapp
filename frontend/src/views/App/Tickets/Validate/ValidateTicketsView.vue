@@ -1,94 +1,72 @@
 <template>
   <BaseContainer>
-    <Box additionalClass="col-span-1 md:col-start-2 mb-5">
-      <ElForm
-        @submit.prevent
-        ref="validateTicketFormRef"
-        :model="validateTicketForm"
-        :rules="rules"
-        size="large"
-      >
+    <Box additionalClass="col-span-1 sm:col-span-2 lg:col-span-1 lg:col-start-2 mb-5">
+      <form @submit.prevent="submitForm">
         <div class="flex flex-col">
-          <div class="flex flex-col lg:flex-row justify-between">
-            <ElFormItem prop="plate_number">
-              <ElInput
-                v-model="validateTicketForm.plate_number"
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2">
+              <TInput
+                class="grow"
+                type="text"
                 placeholder="Plate number"
-                :clearable="true"
-                :formatter="(value) => formatPlateNumber(value)"
-                :parser="(value) => formatPlateNumber(value)"
+                v-model="validateTicketForm.plate_number"
+                size="sm"
+                :required="true"
+                :inputCallback="formatPlateNumber"
               />
-            </ElFormItem>
-            <ElFormItem>
-              <ElButton type="danger" @click="submitForm(validateTicketFormRef)">
+              <TButton
+                class="grow"
+                color="indigo"
+                type="submit"
+              >
                 Get ticket
-              </ElButton>
-            </ElFormItem>
+              </TButton>
+            </div>
           </div>
         </div>
-      </ElForm>
+      </form>
     </Box>
   </BaseContainer>
   <BaseContainer v-if="result !== null">
-    <Box v-if="result.hasOwnProperty('error')" additionalClass="col-span-3">
-      {{ (result as any)?.error }}
-    </Box>
-    <ParkingTicketBox v-else :ticket="result" :zone="result.zone" />
+    <ParkingTicketBox
+      v-if="(result.error === null && result.data !== null)"
+      :ticket="result.data"
+      :zone="result.data.zone"
+    />
   </BaseContainer>
 </template>
 
 <script setup lang="ts">
-import BaseContainer from "@/components/Containers/BaseContainer.vue";
 import Box from "@/components/Box/Box.vue";
+import BaseContainer from "@/components/Containers/BaseContainer.vue";
+import ParkingTicketBox from "@/components/ParkingTicket/ParkingTicketBox.vue";
+import type { ParkingTicket } from "@/interfaces/parking-ticket";
+import type { Error, RollupResponseDecodedPayload } from "@/interfaces/rollup-api";
+import { RollupService } from "@/services/rollup-service";
+import { useRollupStore } from "@/stores/rollup";
+import { DateTime } from "luxon";
 import type { Ref } from "vue";
 import { reactive, ref } from "vue";
-import type { FormInstance, FormRules } from "element-plus";
-import { RollupService } from "@/services/rollup-service";
-import type { Error } from "@/interfaces/rollup-api";
-import type { ParkingTicket } from "@/interfaces/parking-ticket";
-import ParkingTicketBox from "@/components/ParkingTicket/ParkingTicketBox.vue";
-import { DateTime } from "luxon";
 
-const validateTicketFormRef = ref<FormInstance>();
 const validateTicketForm = reactive({
   plate_number: "",
 });
 
-const rules = reactive<FormRules>({
-  plate_number: [
-    {
-      required: true,
-      message: "Please enter plate number",
-      trigger: "change",
-    },
-    {
-      min: 3,
-      max: 10,
-      message: "Length should be 3 to 10",
-      trigger: "blur",
-    },
-  ],
-});
+const rollupStore = useRollupStore();
 
-function formatPlateNumber(value: string) {
-  return value.toUpperCase().replace(/[\W_]+/g, "");
-}
+const formatPlateNumber = (value?: string): string => {
+  if (!value) {
+    return '';
+  }
 
-const submitForm = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-
-  await formEl.validate((valid, fields) => {
-    if (!valid) {
-      console.log("error submit!", fields);
-
-      return;
-    }
-
-    sendInspect();
-  });
+  return value.toUpperCase().replace(/[\W_]+/g, '');
 };
 
-const result: Ref<ParkingTicket | null> = ref(null);
+const submitForm = async () => {
+  sendInspect();
+};
+
+const result: Ref<RollupResponseDecodedPayload<ParkingTicket> | null> = ref(null);
 
 function sendInspect() {
   RollupService.inspect<ParkingTicket>({
@@ -104,7 +82,11 @@ function sendInspect() {
   })
     .then((reports) => {
       reports.forEach((report) => {
-        result.value = report.data;
+        if (report.error) {
+          rollupStore.addError(report.error);
+        }
+        
+        result.value = report;
       });
     })
     .catch((error: Error) => {

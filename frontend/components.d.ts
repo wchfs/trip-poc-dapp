@@ -34,5 +34,6 @@ declare module '@vue/runtime-core' {
     TInputDropZone: typeof import('./src/components/Controls/Input/TInputDropZone.vue')['default']
     TInputLeftSide: typeof import('./src/components/Controls/Input/Partials/Sides/Left/TInputLeftSide.vue')['default']
     TNotification: typeof import('./src/components/Common/TNotification/TNotification.vue')['default']
+    TSelect: typeof import('./src/components/Controls/Select/TSelect.vue')['default']
   }
 }

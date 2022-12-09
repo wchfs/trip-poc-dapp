@@ -5,7 +5,10 @@ export const useLocationStore = defineStore('location', {
     loading: true as boolean,
     error: false as boolean,
     coords: null as GeolocationCoordinates | null,
-    markerPosition: null as {
+    markerPosition: {
+      lat: 50.0531980546981,
+      lng: 19.937084978737403,
+    } as {
       lat: number,
       lng: number,
     } | null,
@@ -63,7 +66,7 @@ export const useLocationStore = defineStore('location', {
       return true;
     },
     setMarkerPosition(lat: number, lng: number) {
-      this.markerPosition = {lat, lng};
+      this.markerPosition = { lat, lng };
     },
   },
 });
