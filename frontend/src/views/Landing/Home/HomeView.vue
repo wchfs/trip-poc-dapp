@@ -1,10 +1,13 @@
 <template>
-      <RouterLink :to="{ name: 'dapp' }">
-            <TButton color="green">Go to dapp</TButton>
-      </RouterLink>
+  <Header />
+  <main>
+    <Hero />
+    <PrimaryFeatures />
+  </main>
 </template>
 
 <script setup lang="ts">
-import TButton from '@/components/Controls/Button/TButton.vue';
-
+import Header from "@/components/Landing/Header.vue";
+import Hero from "@/components/Landing/Hero.vue";
+import PrimaryFeatures from "@/components/Landing/PrimaryFeatures.vue";
 </script>
