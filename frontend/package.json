@@ -10,7 +10,7 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@cartesi/rollups": "^0.7.0",
+    "@cartesi/rollups": "^0.8.1",
     "@ethersproject/providers": "^5.7.2",
     "@headlessui/vue": "^1.7.3",
     "@heroicons/vue": "^2.0.12",

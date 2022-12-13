@@ -8,7 +8,7 @@ services:
       - machine:/opt/cartesi/share/dapp-bin
 
   deployer:
-    image: cartesi/rollups-cli:0.7.0
+    image: cartesi/rollups-cli:0.8.1
     depends_on:
       machine:
         condition: service_started
@@ -22,7 +22,7 @@ services:
         "--templateHashFile",
         "/opt/cartesi/share/dapp-bin/hash",
         "--outputFile",
-        "/deployments/${NETWORK:?undefined NETWORK}/parking-dapp.address",
+        "/deployments/${NETWORK:?undefined NETWORK}/parking-dapp.json",
       ]
     volumes:
       - machine:/opt/cartesi/share/dapp-bin:ro
