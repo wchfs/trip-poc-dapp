@@ -2,14 +2,18 @@ COMPOSE_CMD := docker compose
 BAKE_CMD := docker buildx bake -f docker-bake.hcl -f docker-bake.override.hcl
 PROD_CMD := $(COMPOSE_CMD) -f docker-compose.yml -f docker-compose.override.yml
 TESTNET_CMD := $(COMPOSE_CMD) -f docker-compose.yml -f docker-compose-testnet.yml -f docker-compose.override.yml
+TESTNET_CONTRACT_CMD := docker compose --env-file network_env/env.goerli -f deploy-testnet.yml
 
-.PHONY: bake bake-machine prod prod-down host host-down deploy-contract deploy-contract-down testnet-prod testnet-prod-down testnet-host testnet-host-down
+.PHONY: bake bake-machine bake-server prod prod-down host host-down deploy-contract deploy-contract-down testnet-prod testnet-prod-down testnet-host testnet-host-down
 
 bake:
 	$(BAKE_CMD) --load
 
 bake-machine:
 	$(BAKE_CMD) machine --load
+
+bake-server:
+	$(BAKE_CMD) server
 
 prod:
 	$(PROD_CMD) up
@@ -24,10 +28,10 @@ host-down:
 	$(PROD_CMD) -f docker-compose-host.yml down -v
 
 deploy-contract:
-	docker compose -f deploy-testnet.yml up && make deploy-contract-down
+	$(TESTNET_CONTRACT_CMD) up && make deploy-contract-down
 
 deploy-contract-down:
-	docker compose -f deploy-testnet.yml down -v
+	$(TESTNET_CONTRACT_CMD) down -v
 
 testnet-prod:
 	$(TESTNET_CMD) up

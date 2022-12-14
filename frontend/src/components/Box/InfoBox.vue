@@ -50,7 +50,6 @@
           v-if="typeof icon === 'string' || icon instanceof String"
           :class="`
             ${icon}
-            w-auto
             h-7
             w-7
             md:h-6
@@ -65,7 +64,6 @@
           v-else
           :is="icon"
           :class="`
-            w-auto
             h-7
             w-7
             md:h-6

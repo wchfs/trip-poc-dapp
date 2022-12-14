@@ -2,4 +2,4 @@ version: "3"
 
 services:
   server_manager:
-    image: ${DAPP_IMAGE:-webchefs/parking-dapp:devel-server}
+    image: ${DAPP_IMAGE:-webchefs/parking-dapp:0.5.0-server}

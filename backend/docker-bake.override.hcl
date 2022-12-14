@@ -3,7 +3,7 @@ target "dapp" {
 }
 
 variable "TAG" {
-  default = "devel"
+  default = "0.5.0"
 }
 
 variable "DOCKER_ORGANIZATION" {
