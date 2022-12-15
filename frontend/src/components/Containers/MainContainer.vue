@@ -15,11 +15,10 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router';
-import { watch } from 'vue';
+import router from '@/router';
 import { useWalletStore } from '@/stores/wallet';
 import { useOnboard } from '@web3-onboard/vue';
-import router from '@/router';
+import { watch } from 'vue';
 
 const walletStore = useWalletStore();
 

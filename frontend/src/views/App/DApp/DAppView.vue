@@ -1,14 +1,10 @@
 <template>
-  <BaseContainer
-    class="mb-5"
-  >
-    <DAppViewSidebar/>
+  <BaseContainer class="mb-5">
+    <DAppViewSidebar />
   </BaseContainer>
-  <BaseContainer
-    class="mb-5"
-  >
+  <BaseContainer class="mb-5">
     <Box additionalClass="col-span-3">
-      <Map/>
+      <Map />
     </Box>
   </BaseContainer>
   <BaseContainer>

@@ -34,7 +34,7 @@
   />
   <Box
     v-if="!!selectedZoneId"
-    additionalClass="col-span-1 md:col-span-2 lg:col-span-1 overflow-visible z-10"
+    additionalClass="col-span-1 md:col-span-1 lg:col-span-2 xl:col-span-1 overflow-visible z-10"
   >
     <DAppViewSidebarBuyTicket />
   </Box>
