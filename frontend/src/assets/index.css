@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+:root {
+      --account-center-z-index: 9999;
+      --onboard-modal-z-index: 9999;
+      --onboard-account-select-modal-z-index: 9999;
+      --onboard-login-modal-z-index: 9999;
+      --notify-onboard-z-index: 9999;
+}
