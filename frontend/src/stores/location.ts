@@ -1,17 +1,16 @@
 import { defineStore } from 'pinia';
 
+export type MarkerPosition = {
+  lat: number,
+  lng: number,
+};
+
 export const useLocationStore = defineStore('location', {
   state: () => ({
     loading: true as boolean,
     error: false as boolean,
     coords: null as GeolocationCoordinates | null,
-    markerPosition: {
-      lat: 50.0531980546981,
-      lng: 19.937084978737403,
-    } as {
-      lat: number,
-      lng: number,
-    } | null,
+    markerPosition: null as MarkerPosition | null,
   }),
   getters: {
     coordsArray: (state) => {
@@ -64,6 +63,9 @@ export const useLocationStore = defineStore('location', {
       );
 
       return true;
+    },
+    clearMarkerPosition() {
+      this.markerPosition = null;
     },
     setMarkerPosition(lat: number, lng: number) {
       this.markerPosition = { lat, lng };

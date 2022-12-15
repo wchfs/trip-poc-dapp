@@ -1,13 +1,21 @@
 <template>
   <InfoBox
-    topText="Marker localization"
     :featuredText="
       markerPositionWithSpaceSeparator ? markerPositionWithSpaceSeparator : `Loading...`
     "
-    bottomText="Drag marker on map to change"
+    bottomText="Drag vehicle marker on map to change"
     :icon="MapPinIcon"
     textColor="text-red-500"
-  />
+  >
+    <template #topText>
+      <div class="text-xs text-gray-600 tracking-wide">
+        Your location <strong
+          @click="takeToTestLocation()"
+          class="hover:text-red-500 cursor-pointer"
+        >(take me to test location)</strong>
+      </div>
+    </template>
+  </InfoBox>
   <InfoBox
     v-if="markerPositionWithSpaceSeparator !== '' && selectedZoneId !== null"
     topText="Price per hour"
@@ -24,7 +32,10 @@
     :icon="BanknotesIcon"
     textColor="text-green-500"
   />
-  <Box v-if="!!selectedZoneId" additionalClass="col-span-1 md:col-span-2 lg:col-span-1 overflow-visible z-50">
+  <Box
+    v-if="!!selectedZoneId"
+    additionalClass="col-span-1 md:col-span-2 lg:col-span-1 overflow-visible z-50"
+  >
     <DAppViewSidebarBuyTicket />
   </Box>
 </template>
@@ -77,5 +88,12 @@ function check() {
     .catch((error: Error) => {
       console.log(error); // TODO handle it
     });
+}
+
+function takeToTestLocation() {
+  locationStore.setMarkerPosition(
+    50.0531980546981,
+    19.937084978737403,
+  );
 }
 </script>
