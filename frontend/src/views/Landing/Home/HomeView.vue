@@ -6,6 +6,7 @@
     <SecondaryFeatures />
     <CallToAction />
     <Faqs />
+    <Footer />
   </main>
 </template>
 
@@ -16,4 +17,5 @@ import Header from "@/components/Landing/Header.vue";
 import Hero from "@/components/Landing/Hero.vue";
 import PrimaryFeatures from "@/components/Landing/PrimaryFeatures.vue";
 import SecondaryFeatures from "@/components/Landing/SecondaryFeatures.vue";
+import Footer from "@/components/Landing/Footer.vue";
 </script>
