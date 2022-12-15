@@ -5,7 +5,7 @@
         <Logo className="mx-auto h-10 w-auto" />
       </div>
       <div class="flex flex-col items-center border-t border-slate-400/10 py-10 sm:flex-row-reverse sm:justify-between">
-        <div class="flex gap-x-6 text-sm text-slate-500">
+        <div class="flex gap-x-6 text-smPrzy text-slate-500">
           <p class="mt-6 sm:mt-0">
             Cartesi:
           </p>
@@ -53,8 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@/components/Landing/Button.vue";
 import Container from "@/components/Landing/Container.vue";
 import Logo from "@/components/Landing/Logo.vue";
-import NavLink from "@/components/Landing/NavLink.vue";
 </script>
