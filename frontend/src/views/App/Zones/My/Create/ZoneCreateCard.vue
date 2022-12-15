@@ -18,10 +18,12 @@
             class="col-span-2 sm:col-span-6 sm:col-start-4"
             v-model="newZone.owner_address"
             type="text"
-            placeholder="Your wallet address..."
-            error="You must be the owner of the zone."
+            placeholder="Wallet account address..."
+            error="This address will be able to withdraw funds from the zone"
           >
-            <template #label> Zone owner wallet address </template>
+            <template #label>
+              Zone owner wallet address
+            </template>
           </TInput>
 
           <TInput
@@ -39,7 +41,10 @@
           </TInput>
 
           <div class="col-span-2 sm:col-span-6 sm:col-start-4">
-            <TInputDropZone class="mb-3" @fileChanged="fileChanged" />
+            <TInputDropZone
+              class="mb-3"
+              @fileChanged="fileChanged"
+            />
             <GeoJsonMapPreviewBox
               v-if="newZone.geo_json"
               class="border border-gray-300 rounded-md shadow-sm"
@@ -54,7 +59,11 @@
 
     <div class="pt-5">
       <div class="flex justify-end">
-        <TButton @click="$emit('cancel')" type="button" color="white">
+        <TButton
+          @click="$emit('cancel')"
+          type="button"
+          color="white"
+        >
           Cancel
         </TButton>
         <TButton

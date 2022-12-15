@@ -156,23 +156,31 @@ export interface SelectOption {
 
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
-import { onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
+
+const emits = defineEmits<{
+  (e: 'update:modelValue', v: string | undefined): void;
+}>();
 
 const controlName = Math.random().toString(36).substring(2, 10);
 const showAllErrors = ref(false);
-const modelValue = ref<string | undefined>(undefined);
 
-onMounted(() => {
-  modelValue.value = props.modelValue;
-});
+const modelValue = computed<string | undefined>({
+  get() {
+    return props.modelValue === null ? undefined : props.modelValue;
+  },
+  set(newValue) {
+    if (newValue === null) {
+      newValue = undefined;
+    }
 
-watch(modelValue, (value) => {
-  emits('update:modelValue', value);
+    emits('update:modelValue', newValue);
+  },
 });
 
 const props = withDefaults(defineProps<{
   label?: string;
-  modelValue?: string;
+  modelValue?: string | null;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
@@ -186,8 +194,4 @@ const props = withDefaults(defineProps<{
   error: false,
   size: 'md',
 });
-
-const emits = defineEmits<{
-  (e: 'update:modelValue', v: string | undefined): void;
-}>();
 </script>

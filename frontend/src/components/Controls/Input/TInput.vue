@@ -39,8 +39,7 @@
           :name="controlName"
           :id="`input-${controlName}`"
           :placeholder="props.placeholder"
-          :value="props.modelValue"
-          @input="onInput(($event.target as HTMLInputElement)?.value)"
+          v-model="modelValue"
           :autocomplete="props.autocomplete"
           :class="[
             `block w-full rounded-md`,
@@ -63,8 +62,7 @@
           :id="`input-${controlName}`"
           :placeholder="props.placeholder"
           :rows="props.rows"
-          :value="props.modelValue"
-          @input="onInput(($event.target as HTMLInputElement)?.value)"
+          v-model="modelValue"
           :autocomplete="props.autocomplete"
           :class="`
             block
@@ -112,18 +110,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useSlots } from 'vue';
+import { computed, ref, useSlots } from 'vue';
 const controlName = Math.random().toString(36).substring(2, 10);
 
 const showAllErrors = ref(false);
 const slots = useSlots();
+
+const modelValue = computed<string>({
+  get() {
+    if (props.modelValue) {
+      return props.modelValue;
+    }
+
+    return '';
+  },
+  set(newValue) {
+    emits('update:modelValue', newValue);
+  },
+});
 
 const props = withDefaults(defineProps<{
   label?: string;
   placeholder?: string;
   type: 'text' | 'number' | 'email' | 'password' | 'textarea';
   rows?: number;
-  modelValue: string;
+  modelValue: string | null;
   disabled?: boolean;
   required?: boolean;
   error?: string[] | string | boolean;
@@ -139,11 +150,7 @@ const props = withDefaults(defineProps<{
   size: 'md',
 });
 
-function onInput(value?: string) {
-  emits('update:modelValue', props.inputCallback ? props.inputCallback(value) : value);
-}
-
 const emits = defineEmits<{
-  (e: 'update:modelValue', s?: string): void;
+  (e: 'update:modelValue', v: string): void;
 }>();
 </script>
