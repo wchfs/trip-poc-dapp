@@ -62,15 +62,15 @@ export const useVoucherStore = defineStore("voucher", {
           return Promise.reject(false);
         }
 
-        reports.data.forEach((voucherReport) =>
-          this.checkVoucher(voucherReport)
-            .then((voucher) => {
-              this.addVoucher(voucher);
-            })
-            .catch((error) => {
-              console.error(error);
-            })
-        );
+        reports.data.forEach(async (voucherReport) => {
+          try {
+            const voucher = await this.checkVoucher(voucherReport);
+
+            this.addVoucher(voucher);
+          } catch (e) {            
+            // ...
+          }
+        });
       });
 
       return Promise.resolve(true);
@@ -111,38 +111,30 @@ export const useVoucherStore = defineStore("voucher", {
       voucher_to_check.status = "pending";
 
       return new Promise((resolve, reject) => {
-        ApolloService.getClient()
-          .query<
-            VoucherByEpochInputAndVoucherIndexQuery,
-            VoucherByEpochInputAndVoucherIndexQueryVariables
-          >({
-            fetchPolicy: "no-cache",
-            query: VoucherByEpochInputAndVoucherIndexDocument,
-            variables,
-          })
-          .then((response) => {
-            if (response?.data?.epoch?.input?.voucher) {
-              voucher_to_check.generated_voucher =
-                response?.data?.epoch?.input?.voucher;
+        ApolloService.getClient().query<
+          VoucherByEpochInputAndVoucherIndexQuery,
+          VoucherByEpochInputAndVoucherIndexQueryVariables
+        >({
+          fetchPolicy: "no-cache",
+          query: VoucherByEpochInputAndVoucherIndexDocument,
+          variables,
+        }).then((response) => {
+          if (response?.data?.epoch?.input?.voucher) {
+            voucher_to_check.generated_voucher = response?.data?.epoch?.input?.voucher;
 
-              if (!voucher_to_check.generated_voucher) {
-                reject("There is no voucher");
-              }
-
-              if (
-                voucher_to_check.generated_voucher.proof &&
-                voucher_to_check.generated_voucher.proof?.machineStateHash !=
-                "0x"
-              ) {
-                voucher_to_check.status = "approved";
-              }
-
-              resolve(voucher_to_check);
+            if (!voucher_to_check.generated_voucher) {
+              reject("There is no voucher");
             }
-          })
-          .catch((error: GraphQLError) => {
-            reject(error);
-          });
+
+            if (voucher_to_check.generated_voucher.proof && voucher_to_check.generated_voucher.proof?.machineStateHash != "0x") {
+              voucher_to_check.status = "approved";
+            }
+
+            resolve(voucher_to_check);
+          }
+        }).catch((error: GraphQLError) => {
+          reject(error);
+        });
       });
     },
   },
