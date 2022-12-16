@@ -75,7 +75,7 @@
             Instagram
           </a>
           <a href="https://www.webchefs.tech/" class="group" aria-label="Webchefs on Web">
-            Instagram
+            WWW
           </a>
         </div>
         <p class="mt-6 text-sm text-slate-500 sm:mt-0">
