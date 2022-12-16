@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 px-4 xl:p-0 gap-4 xl:gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 px-4 xl:p-0 gap-4 xl:gap-6">
     <div
       v-if="props.caption"
       class="col-span-1 md:col-span-3 lg:col-span-3 flex justify-between"

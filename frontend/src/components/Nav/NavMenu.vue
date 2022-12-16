@@ -1,16 +1,16 @@
 <template>
   <nav class="p-4 md:py-8 xl:px-0 md:container md:mx-w-6xl md:mx-auto">
-    <div class="hidden lg:flex lg:justify-between lg:items-center">
-      <ul class="flex items-center space-x-4 text-sm font-semibold">
+    <div class="flex lg:justify-between lg:items-center">
+      <ul class="flex flex-wrap pr-32 sm:pr-0 items-center gap-4 text-sm font-semibold">
         <li v-for="menuItem of menuItems">
           <router-link
             :to="{
               name: menuItem.routeName,
             }"
             :class="`
-              px-2
-              xl:px-4
+              px-4
               py-2
+              my-2
               ${menuItem.active ? 'text-gray-900' : 'text-gray-500'}
               rounded-md
               ${menuItem.active ? 'bg-gray-300' : 'bg-gray-200'}
@@ -19,13 +19,6 @@
           >
             {{ menuItem.displayName }}
           </router-link>
-        </li>
-      </ul>
-      <ul class="flex items-center gap-6">
-        <li>
-          <span class="text-sm font-sans text-gray-800 font-semibold tracking-wider">
-            Parking DApp
-          </span>
         </li>
       </ul>
     </div>

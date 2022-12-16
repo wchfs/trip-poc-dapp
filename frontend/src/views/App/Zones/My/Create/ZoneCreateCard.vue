@@ -18,10 +18,12 @@
             class="col-span-2 sm:col-span-6 sm:col-start-4"
             v-model="newZone.owner_address"
             type="text"
-            placeholder="Your wallet address..."
-            error="You must be the owner of the zone."
+            placeholder="Wallet account address..."
+            error="This address will be able to withdraw funds from the zone"
           >
-            <template #label> Zone owner wallet address </template>
+            <template #label>
+              Zone owner wallet address
+            </template>
           </TInput>
 
           <TInput
@@ -39,7 +41,10 @@
           </TInput>
 
           <div class="col-span-2 sm:col-span-6 sm:col-start-4">
-            <TInputDropZone class="mb-3" @fileChanged="fileChanged" />
+            <TInputDropZone
+              class="mb-3"
+              @fileChanged="fileChanged"
+            />
             <GeoJsonMapPreviewBox
               v-if="newZone.geo_json"
               class="border border-gray-300 rounded-md shadow-sm"
@@ -54,7 +59,11 @@
 
     <div class="pt-5">
       <div class="flex justify-end">
-        <TButton @click="$emit('cancel')" type="button" color="white">
+        <TButton
+          @click="$emit('cancel')"
+          type="button"
+          color="white"
+        >
           Cancel
         </TButton>
         <TButton
@@ -106,7 +115,7 @@ reader.onload = (e) => {
 const newZone = reactive<{
   name: string;
   owner_address: string;
-  price: string;
+  price: string | number;
   geo_json: GeoJSON | null;
 }>({
   name: "",
@@ -115,11 +124,11 @@ const newZone = reactive<{
   geo_json: null,
 });
 
-const disableSubmit = computed(() => {
+const disableSubmit = computed<boolean>(() => {
   let bigNumberPrice = eth2gwei("0");
 
   try {
-    bigNumberPrice = eth2gwei(newZone.price);
+    bigNumberPrice = eth2gwei(newZone.price.toString());
   } catch (e) {
     return true;
   }
@@ -151,7 +160,7 @@ function submit() {
   parkingZoneStore.createZone(
     newZone.name,
     newZone.owner_address,
-    eth2gwei(newZone.price).toString(),
+    eth2gwei(newZone.price.toString()).toString(),
     newZone.geo_json as GeoJSON
   );
 

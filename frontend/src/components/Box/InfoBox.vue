@@ -8,7 +8,14 @@
         my-auto
       ">
       <div class="flex flex-col overflow-hidden">
-        <p class="text-xs text-gray-600 tracking-wide">
+        <slot
+          v-if="slots.topText"
+          name="topText"
+        />
+        <p
+          v-else
+          class="text-xs text-gray-600 tracking-wide"
+        >
           {{ props.topText }}
         </p>
         <h3 :class="`
@@ -105,13 +112,16 @@
 <script setup lang="ts">
 import Box from '@/components/Box/Box.vue';
 import TButton from '@/components/Controls/Button/TButton.vue';
+import { useSlots } from 'vue';
 
 const emit = defineEmits<{
   (e: 'buttonClick'): void;
 }>();
 
+const slots = useSlots();
+
 const props = withDefaults(defineProps<{
-  topText: string;
+  topText?: string;
   featuredText: string;
   bottomText: string;
   icon: any;
