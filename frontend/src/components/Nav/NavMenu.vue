@@ -99,6 +99,10 @@ const menuItems = ref<MenuItem[]>([
     displayName: "Vouchers",
     routeName: "dapp.vouchers",
   },
+  {
+    displayName: "About",
+    routeName: "home",
+  },
 ]);
 
 function markCurrentRoute(currentRouteName: string) {
