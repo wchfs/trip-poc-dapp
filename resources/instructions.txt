@@ -1,0 +1,33 @@
+1. /home
+At the bottom is a list of the existing Zones with the hourly rate.
+The car on the map can be moved which is displayed in the location box respectively.
+The page automatically checks whether the vehicle is in the zone and shows that with the price per hour.
+The start time of the ticket is prefilled and auto-updating,
+the duration can be safely chosen in the select box,
+and after filling in the plate number ticket can be securely bought.
+
+2. /tickets/my
+This is the simple list that is filtered by the connected wallet.
+After the ticket purchase, this list should update.
+
+3. /zones/my
+Creating a new zone is only possible for entitled wallets.
+The list is filtered by wallet by default.
+
+4. /zones/my - create
+The zone is based on the premade GeoJSON file.
+Please note that the owner's wallet will get all of the rights to the zone (withdraw funds, delete the zone).
+
+5. /zones/details/{id}
+This page displays all of the saved information about the zone.
+This is also the place that provides actions for zone deletion and generating the voucher (withdraw funds).
+
+6. /tickets/validate
+Based on the plate number this validator can return information if "There is no valid ticket available" or just display the ticket.
+
+7. /vouchers/list
+The vouchers tab is the place where those can be executed.
+Pending status informs that voucher is generated successfully.
+The process of confirming the ticket can take as long as one week.
+Approved status indicated that proofs are generated and vouchers can be safely executed.
+After execution, ether should just appear on the wallet.
