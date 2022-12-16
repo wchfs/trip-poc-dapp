@@ -19,7 +19,7 @@
                 color="indigo"
                 type="submit"
               >
-                Get ticket
+                Check ticket
               </TButton>
             </div>
           </div>
