@@ -115,7 +115,7 @@ reader.onload = (e) => {
 const newZone = reactive<{
   name: string;
   owner_address: string;
-  price: string;
+  price: string | number;
   geo_json: GeoJSON | null;
 }>({
   name: "",
@@ -124,11 +124,11 @@ const newZone = reactive<{
   geo_json: null,
 });
 
-const disableSubmit = computed(() => {
+const disableSubmit = computed<boolean>(() => {
   let bigNumberPrice = eth2gwei("0");
 
   try {
-    bigNumberPrice = eth2gwei(newZone.price);
+    bigNumberPrice = eth2gwei(newZone.price.toString());
   } catch (e) {
     return true;
   }
@@ -160,7 +160,7 @@ function submit() {
   parkingZoneStore.createZone(
     newZone.name,
     newZone.owner_address,
-    eth2gwei(newZone.price).toString(),
+    eth2gwei(newZone.price.toString()).toString(),
     newZone.geo_json as GeoJSON
   );
 

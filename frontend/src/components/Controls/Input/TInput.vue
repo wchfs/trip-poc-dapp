@@ -116,15 +116,15 @@ const controlName = Math.random().toString(36).substring(2, 10);
 const showAllErrors = ref(false);
 const slots = useSlots();
 
-const modelValue = computed<string>({
+const modelValue = computed<string | number>({
   get() {
-    if (props.modelValue) {
-      return props.modelValue;
+    if (props.modelValue === null) {
+      return '';
     }
 
-    return '';
+    return props.modelValue;
   },
-  set(newValue) {
+  set(newValue) {    
     emits('update:modelValue', newValue);
   },
 });
@@ -134,7 +134,7 @@ const props = withDefaults(defineProps<{
   placeholder?: string;
   type: 'text' | 'number' | 'email' | 'password' | 'textarea';
   rows?: number;
-  modelValue: string | null;
+  modelValue: number | string | null;
   disabled?: boolean;
   required?: boolean;
   error?: string[] | string | boolean;
@@ -151,6 +151,6 @@ const props = withDefaults(defineProps<{
 });
 
 const emits = defineEmits<{
-  (e: 'update:modelValue', v: string): void;
+  (e: 'update:modelValue', v: string | number): void;
 }>();
 </script>
