@@ -1,6 +1,6 @@
 <template>
   <TDialog ref="dialogRef" />
-  <div @click="openHelp()" class="fixed right-16 bottom-16 w-8 h-8 flex place-content-center items-center">
+  <div @click="openHelp()" class="fixed right-16 bottom-16 w-8 h-8 flex place-content-center items-center z-50">
     <div
       class="flex p-8 absulute w-full h-full items-center border-2 border-solid border-gray-100 bg-white place-content-center rounded-full shadow-md cursor-pointer z-20"
     >
