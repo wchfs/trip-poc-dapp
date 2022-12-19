@@ -30,8 +30,10 @@
 </template>
 
 <script setup lang="ts">
+export type TButtonColors = 'indigo' | 'red' | 'green' | 'yellow' | 'white';
+
 const props = withDefaults(defineProps<{
-  color?: 'indigo' | 'red' | 'green' | 'yellow' | 'white',
+  color?: TButtonColors,
   type?: 'button' | 'submit' | 'reset',
   disabled?: boolean,
 }>(), {

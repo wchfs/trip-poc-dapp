@@ -1,4 +1,5 @@
 <template>
+  <HelperContainer :message="helpMessage" />
   <BaseContainer>
     <Box additionalClass="col-span-1 sm:col-span-2 lg:col-span-1 lg:col-start-2 mb-5">
       <form @submit.prevent="submitForm">
@@ -49,6 +50,7 @@ import type { Ref } from "vue";
 import { reactive, ref } from "vue";
 import TButton from "@/components/Controls/Button/TButton.vue";
 import TInput from "@/components/Controls/Input/TInput.vue";
+import HelperContainer from '@/components/Containers/HelperContainer.vue';
 
 const validateTicketForm = reactive({
   plate_number: "",
@@ -95,4 +97,7 @@ function sendInspect() {
       console.log(error); // TODO handle it
     });
 }
+
+const helpMessage = `Based on the plate number this validator can return information.
+If "There is no valid ticket available" or just display the ticket.`;
 </script>

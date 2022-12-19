@@ -1,4 +1,5 @@
 <template>
+  <HelperContainer :message="helpMessage" />
   <BaseContainer>
     <Box additionalClass="col-span-3 border border-orange-500 mb-5">
       <div class="
@@ -85,6 +86,7 @@ import ParkingZoneInfoBox from '@/components/Box/Dedicated/ParkingZoneInfoBox.vu
 import { useWalletStore } from '@/stores/wallet';
 import type { ParkingZone } from '@/interfaces/parking-zone';
 import router from '@/router';
+import HelperContainer from '@/components/Containers/HelperContainer.vue';
 
 const showForm = ref(false);
 
@@ -101,4 +103,9 @@ function showDetails(zone: ParkingZone) {
     },
   });
 }
+
+const helpMessage = `Creating a new zone is only possible for entitled wallets.
+The list is filtered by wallet by default.
+The zone is based on the premade GeoJSON file.
+Please note that the owner's wallet will get all of the rights to the zone (withdraw funds, delete the zone).`;
 </script>

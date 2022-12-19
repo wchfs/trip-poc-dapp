@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import NavMenu from "@/components/Nav/NavMenu.vue";
-import MainContainer from "@/components/Containers/MainContainer.vue";
 import FooterContainer from "@/components/Containers/FooterContainer.vue";
+import MainContainer from "@/components/Containers/MainContainer.vue";
 import NotificationContainer from "@/components/Containers/NotificationContainer.vue";
+import NavMenu from "@/components/Nav/NavMenu.vue";
 </script>

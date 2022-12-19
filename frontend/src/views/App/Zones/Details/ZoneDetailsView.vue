@@ -1,4 +1,5 @@
 <template>
+  <HelperContainer :message="helpMessage" />
   <div
     v-if="zone"
   >
@@ -77,6 +78,8 @@ import type { Map } from 'leaflet';
 import ZoneActionButtons from '@/views/App/Zones/Details/Partials/ZoneActionButtons.vue';
 import router from '@/router';
 import GeoJsonMapPreviewBox from '@/components/Box/Dedicated/GeoJsonMapPreviewBox.vue';
+import HelperContainer from '@/components/Containers/HelperContainer.vue';
+
 
 const props = defineProps<{
   zoneId: string;
@@ -100,4 +103,7 @@ parkingZoneStore.fetchZones(true).then(() => {
 
   zone.value = filteredZone;
 });
+
+const helpMessage = `This page displays all of the saved information about the zone.
+This is also the place that provides actions for zone deletion and generating the voucher (withdraw funds).`;
 </script>
