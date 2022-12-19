@@ -2,25 +2,13 @@
   <HelperContainer :message="helpMessage" />
   <BaseContainer>
     <Box additionalClass="col-span-3 border border-indigo-600 mb-5">
-      <div class="
-          flex
-          justify-center
-        ">
-        <p
-          v-if="waitingForNewTicket"
-          class="text-indigo-900 text-center animate-pulse"
-        >
+      <div class="flex justify-center">
+        <p v-if="waitingForNewTicket" class="text-indigo-900 text-center animate-pulse">
           Some ticket is already on the way, please wait...
         </p>
-        <p
-          v-else
-          class="text-indigo-900 text-center"
-        >
+        <p v-else class="text-indigo-900 text-center">
           If you do not see your just-purchased ticket, wait a moment and then hit
-          <TButton
-            @click="parkingTicketStore.fetchTickets(true)"
-            color="green"
-          >
+          <TButton @click="parkingTicketStore.fetchTickets(true)" color="green">
             reload tickets
           </TButton>
         </p>
@@ -37,23 +25,20 @@
 </template>
 
 <script setup lang="ts">
-import BaseContainer from '@/components/Containers/BaseContainer.vue';
-import Box from '@/components/Box/Box.vue';
-import { useParkingTicketStore } from '@/stores/parking-ticket';
-import { storeToRefs } from 'pinia';
-import { useParkingZoneStore } from '@/stores/parking-zone';
-import { onMounted } from 'vue';
-import ParkingTicketBox from '@/components/ParkingTicket/ParkingTicketBox.vue';
-import TButton from '@/components/Controls/Button/TButton.vue';
-import HelperContainer from '@/components/Containers/HelperContainer.vue';
+import BaseContainer from "@/components/Containers/BaseContainer.vue";
+import Box from "@/components/Box/Box.vue";
+import { useParkingTicketStore } from "@/stores/parking-ticket";
+import { storeToRefs } from "pinia";
+import { useParkingZoneStore } from "@/stores/parking-zone";
+import { onMounted } from "vue";
+import ParkingTicketBox from "@/components/ParkingTicket/ParkingTicketBox.vue";
+import TButton from "@/components/Controls/Button/TButton.vue";
+import HelperContainer from "@/components/Containers/HelperContainer.vue";
 
 const parkingTicketStore = useParkingTicketStore();
 const parkingZoneStore = useParkingZoneStore();
 
-const {
-  waitingForNewTicket,
-  tickets,
-} = storeToRefs(parkingTicketStore);
+const { waitingForNewTicket, tickets } = storeToRefs(parkingTicketStore);
 
 onMounted(() => {
   parkingZoneStore.fetchZones();
@@ -62,6 +47,9 @@ onMounted(() => {
 
 const getZone = parkingZoneStore.getZone;
 
-const helpMessage = `This is the simple list that is filtered by the connected wallet.
-After the ticket purchase, this list should update.`;
+const helpMessage = `
+<ul>
+  <li>This is the simple list that is filtered by the connected wallet.</li><br>
+  <li>After the ticket purchase, this list should update.</li>
+</ul>`;
 </script>

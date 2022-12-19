@@ -15,13 +15,7 @@
                 :required="true"
                 :inputCallback="formatPlateNumber"
               />
-              <TButton
-                class="grow"
-                color="indigo"
-                type="submit"
-              >
-                Check ticket
-              </TButton>
+              <TButton class="grow" color="indigo" type="submit"> Check ticket </TButton>
             </div>
           </div>
         </div>
@@ -30,7 +24,7 @@
   </BaseContainer>
   <BaseContainer v-if="result !== null">
     <ParkingTicketBox
-      v-if="(result.error === null && result.data !== null)"
+      v-if="result.error === null && result.data !== null"
       :ticket="result.data"
       :zone="result.data.zone"
     />
@@ -50,7 +44,7 @@ import type { Ref } from "vue";
 import { reactive, ref } from "vue";
 import TButton from "@/components/Controls/Button/TButton.vue";
 import TInput from "@/components/Controls/Input/TInput.vue";
-import HelperContainer from '@/components/Containers/HelperContainer.vue';
+import HelperContainer from "@/components/Containers/HelperContainer.vue";
 
 const validateTicketForm = reactive({
   plate_number: "",
@@ -60,10 +54,10 @@ const rollupStore = useRollupStore();
 
 const formatPlateNumber = (value?: string): string => {
   if (!value) {
-    return '';
+    return "";
   }
 
-  return value.toUpperCase().replace(/[\W_]+/g, '');
+  return value.toUpperCase().replace(/[\W_]+/g, "");
 };
 
 const submitForm = async () => {
@@ -89,7 +83,7 @@ function sendInspect() {
         if (report.error) {
           rollupStore.addError(report.error);
         }
-        
+
         result.value = report;
       });
     })
@@ -98,6 +92,5 @@ function sendInspect() {
     });
 }
 
-const helpMessage = `Based on the plate number this validator can return information.
-If "There is no valid ticket available" or just display the ticket.`;
+const helpMessage = `Based on the plate number this validator can return "There is no valid ticket available" or display the ticket (with information about the expiration date).`;
 </script>

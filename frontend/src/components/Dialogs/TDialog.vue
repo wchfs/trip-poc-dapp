@@ -1,13 +1,6 @@
 <template>
-  <TransitionRoot
-    as="template"
-    :show="isOpen"
-  >
-    <Dialog
-      as="div"
-      class="relative z-[1000]"
-      @close="close()"
-    >
+  <TransitionRoot as="template" :show="isOpen">
+    <Dialog as="div" class="relative z-[1000]" @close="close()">
       <TransitionChild
         as="template"
         enter="ease-out duration-300"
@@ -21,7 +14,9 @@
       </TransitionChild>
 
       <div class="fixed inset-0 z-auto overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div
+          class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
+        >
           <TransitionChild
             as="template"
             enter="ease-out duration-300"
@@ -36,7 +31,8 @@
             >
               <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                  <div :class="`
+                  <div
+                    :class="`
                     mx-auto
                     flex
                     h-12
@@ -49,7 +45,8 @@
                     sm:mx-0
                     sm:h-10
                     sm:w-10
-                  `">
+                  `"
+                  >
                     <component
                       v-if="options.icon"
                       :is="options.icon"
@@ -65,23 +62,20 @@
                       {{ options.title }}
                     </DialogTitle>
                     <div class="mt-2">
-                      <p class="text-sm text-gray-500">
-                        {{ options.message }}
-                      </p>
+                      <p class="text-sm text-gray-500" v-html="options.message"></p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="bg-gray-50 px-4 py-3 flex flex-col sm:flex-row-reverse sm:px-6 gap-2">
+              <div
+                class="bg-gray-50 px-4 py-3 flex flex-col sm:flex-row-reverse sm:px-6 gap-2"
+              >
                 <TButton
                   v-for="button in options.buttons"
                   @click="buttonClick(button)"
                   :color="button.color"
                   :disabled="pendingClick"
-                  :class="[
-                    `w-full sm:w-auto`,
-                    pendingClick ? `animate-pulse` : ``,
-                  ]"
+                  :class="[`w-full sm:w-auto`, pendingClick ? `animate-pulse` : ``]"
                 >
                   {{ button.text }}
                 </TButton>
